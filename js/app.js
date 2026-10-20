@@ -1,13 +1,15 @@
-// 筆順描字本: practice flow, word bank, 俠客 profile (local + optional cloud), 江湖 rewards.
+// 筆順描字本: practice flow, MOE word bank, 俠客 levels and shop, profiles (local + optional cloud).
 
 const N_CHUNKS = 128;
 const TRANSPARENT = 'rgba(0,0,0,0)';
-const COMPARE_RED = 'rgba(178,58,46,0.38)';
+const COMPARE_RED = 'rgba(210,15,57,0.35)';
 const ARENA_PAD = 12;
 const NUMERALS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
 const TAELS_FOR_GRADE = { 3: 10, 2: 6, 1: 3 };
 const RECENT_MAX = 15;
+const MAX_TIER = 6;
+const MAX_LEVEL = TITLES.length * LEVELS_PER_TITLE;
 
 const CURRENT_KEY = 'bishun.current';
 const PROFILE_PREFIX = 'bishun.profile.';
@@ -28,44 +30,18 @@ const resultEl = document.getElementById('result');
 const sealEl = document.getElementById('seal');
 const keepBtn = document.getElementById('keepBtn');
 const compareBtn = document.getElementById('compareBtn');
-const stepCountEl = document.getElementById('stepCount');
-
-const RADICAL_NAMES = {
-  '氵': '三點水', '冫': '兩點水', '口': '口字旁', '艹': '草字頭', '艸': '草字頭', '木': '木字旁',
-  '扌': '提手旁', '手': '手字底', '亻': '單人旁', '人': '人字旁', '彳': '雙人旁',
-  '钅': '金字旁', '釒': '金字旁', '金': '金字旁', '虫': '虫字旁', '土': '土字旁',
-  '⺼': '肉月旁', '月': '月字旁', '忄': '豎心旁', '心': '心字底', '阝': '耳朵旁', '卩': '單耳旁',
-  '女': '女字旁', '言': '言字旁', '訁': '言字旁', '讠': '言字旁', '⺮': '竹字頭', '竹': '竹字頭',
-  '纟': '絞絲旁', '糹': '絞絲旁', '糸': '絞絲旁', '辶': '走馬旁', '辵': '走馬旁',
-  '火': '火字旁', '灬': '四點火', '疒': '病字旁', '足': '足字旁', '日': '日字旁', '石': '石字旁',
-  '山': '山字旁', '王': '斜玉旁', '玉': '玉字底', '目': '目字旁', '犭': '反犬旁', '犬': '犬字旁',
-  '魚': '魚字旁', '鱼': '魚字旁', '鳥': '鳥字旁', '鸟': '鳥字旁', '衤': '衣字旁', '衣': '衣字底',
-  '刂': '立刀旁', '刀': '刀字旁', '宀': '寶蓋頭', '冖': '禿寶蓋', '穴': '穴寶蓋', '酉': '酉字旁',
-  '禾': '禾木旁', '貝': '貝字旁', '贝': '貝字旁', '广': '廣字頭', '厂': '廠字頭', '尸': '尸字頭',
-  '馬': '馬字旁', '马': '馬字旁', '巾': '巾字旁', '車': '車字旁', '车': '車字旁', '米': '米字旁',
-  '門': '門字框', '门': '門字框', '囗': '國字框', '冂': '同字框', '匚': '匚字框',
-  '頁': '頁字旁', '页': '頁字旁', '力': '力字旁', '飠': '食字旁', '饣': '食字旁', '食': '食字旁',
-  '礻': '示字旁', '示': '示字底', '雨': '雨字頭', '攵': '反文旁', '攴': '反文旁', '舟': '舟字旁',
-  '戈': '戈字旁', '牛': '牛字旁', '耳': '耳字旁', '子': '子字旁', '弓': '弓字旁', '歹': '歹字旁',
-  '皿': '皿字底', '欠': '欠字旁', '羽': '羽字旁', '革': '革字旁', '儿': '兒字底', '罒': '四字頭',
-  '羊': '羊字旁', '走': '走字旁', '白': '白字旁', '又': '又字旁', '骨': '骨字旁', '亠': '文字頭',
-  '寸': '寸字旁', '方': '方字旁', '黑': '黑字旁', '水': '水字底', '彡': '三撇', '立': '立字旁',
-  '勹': '包字頭', '見': '見字旁', '见': '見字旁', '角': '角字旁', '虍': '虎字頭', '斤': '斤字旁',
-  '止': '止字旁', '行': '行字旁', '缶': '缶字旁', '士': '士字旁', '夕': '夕字旁', '矢': '矢字旁',
-  '小': '小字頭', '⺌': '小字頭', '廾': '廾字底', '風': '風字旁', '豆': '豆字旁', '舌': '舌字旁',
-  '工': '工字旁', '文': '文字旁', '爫': '爪字頭', '片': '片字旁', '皮': '皮字旁', '身': '身字旁',
-  '覀': '西字頭', '廴': '建字底', '耂': '老字頭', '老': '老字頭', '大': '大字頭', '田': '田字旁',
-  '十': '十字旁', '气': '氣字頭', '髟': '髮字頭', '鬼': '鬼字旁', '殳': '殳字旁', '毛': '毛字旁',
-};
+const hintText = watchActions.querySelector('span');
 
 const state = {
   // current exercise
   text: '',
-  meaning: '',
   chars: [],
   idx: 0,
   mode: 'watch',
   // settings
+  content: 'mix',
+  theme: 'light',
+  voice: '',
   grid: 'tian',
   lenient: true,
   slow: true,
@@ -76,14 +52,15 @@ const state = {
   stars: {},
   myName: '',
   recent: [],
+  list: [],
 };
+// xp: every tael ever earned (spending never lowers it); gear: what the 俠客 holds, wears, brings along
 const purse = {
   taels: 0,
   ingots: 0,
-  earned: 0,
+  xp: 0,
   owned: [],
-  equipped: '',
-  scrolls: [],
+  gear: { weapon: '', acc: '', pet: '' },
   lastDay: '',
   streak: 0,
 };
@@ -92,6 +69,7 @@ const strokeCount = {};
 const glyphData = {};
 const sessionDone = new Set();
 let words = [];
+let shopSlot = 'weapon';
 
 let writer = null;
 let charData = null;
@@ -207,19 +185,51 @@ function getCharData(ch) {
   return loadChunk(i).then(function (chunk) { return chunk[ch] || null; });
 }
 
+// ---------- levels and titles ----------
+function xpForLevel(level) {
+  return 20 + 4 * (level - 1);
+}
+function levelInfo(xp) {
+  let level = 1;
+  let rest = xp;
+  while (level < MAX_LEVEL && rest >= xpForLevel(level)) {
+    rest -= xpForLevel(level);
+    level += 1;
+  }
+  return { level: level, into: rest, need: xpForLevel(level) };
+}
+function titleIndexFor(level) {
+  return Math.min(TITLES.length - 1, Math.floor((level - 1) / LEVELS_PER_TITLE));
+}
+function titleIndex() {
+  return titleIndexFor(levelInfo(purse.xp).level);
+}
+function itemById(id) {
+  for (const it of ITEMS) {
+    if (it.id === id) return it;
+  }
+  return null;
+}
+function qiColor() {
+  const w = itemById(purse.gear.weapon);
+  if (w && w.qi) return w.qi;
+  return token('--qi');
+}
+
 // ---------- profile: what gets saved per 俠客 ----------
 function serializeProfile() {
   return {
+    v: 3,
     savedAt: Date.now(),
     settings: {
-      grid: state.grid, lenient: state.lenient, slow: state.slow,
-      sound: state.sound, radical: state.radical, keep: state.keep,
+      content: state.content, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
+      slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
     myName: state.myName,
     recent: state.recent,
+    list: state.list,
     text: state.text,
-    meaning: state.meaning,
     purse: purse,
   };
 }
@@ -227,16 +237,18 @@ function resetProgress() {
   state.stars = {};
   state.myName = '';
   state.recent = [];
+  state.list = [];
   state.text = '';
-  state.meaning = '';
-  Object.assign(purse, { taels: 0, ingots: 0, earned: 0, owned: [], equipped: '', scrolls: [], lastDay: '', streak: 0 });
+  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', acc: '', pet: '' }, lastDay: '', streak: 0 });
 }
 function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
   const p = JSON.parse(JSON.stringify(source));
   resetProgress();
   if (p.settings) {
-    if (p.settings.grid) state.grid = p.settings.grid;
+    for (const key of ['content', 'theme', 'voice', 'grid']) {
+      if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
+    }
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
       if (typeof p.settings[key] === 'boolean') state[key] = p.settings[key];
     }
@@ -244,14 +256,25 @@ function applyProfile(source) {
   if (p.stars) state.stars = p.stars;
   if (p.myName) state.myName = p.myName;
   if (p.recent) state.recent = p.recent;
+  if (p.list) state.list = p.list;
   if (p.text) state.text = p.text;
-  if (p.meaning) state.meaning = p.meaning;
-  if (p.purse) Object.assign(purse, p.purse);
+  if (p.purse) {
+    const old = p.purse;
+    purse.taels = old.taels || 0;
+    purse.ingots = old.ingots || 0;
+    // earlier versions called it 'earned' and held one weapon in 'equipped'
+    purse.xp = old.xp !== undefined ? old.xp : (old.earned || 0);
+    purse.owned = old.owned || [];
+    if (old.gear) Object.assign(purse.gear, old.gear);
+    else if (old.equipped) purse.gear.weapon = old.equipped;
+    purse.lastDay = old.lastDay || '';
+    purse.streak = old.streak || 0;
+  }
   shown.taels = purse.taels;
   shown.ingots = purse.ingots;
 }
 
-// one-time move of the progress saved by earlier versions into the guest profile
+// one-time move of the progress saved by the first versions into the guest profile
 function legacyProfile() {
   const raw = localStorage.getItem(LEGACY_STORE);
   const rawPurse = localStorage.getItem(LEGACY_PURSE);
@@ -386,7 +409,7 @@ async function login(alias, pass) {
       note.textContent = e.wrongPass ? '密碼不對喔，再試一次。' : '連不上雲端，請稍後再試。';
       return;
     }
-    let data = res ? res.data : carry;
+    const data = res ? res.data : carry;
     if (!res) {
       try {
         await rpc('profile_save', { p_alias: alias, p_pass: pass, p_data: data || {} });
@@ -413,8 +436,9 @@ async function login(alias, pass) {
   }
   localStorage.setItem(PASSHASH_PREFIX + alias, hash);
   let data = loadLocalProfile(alias);
-  if (data) toast('歡迎回來，' + alias);
-  else {
+  if (data) {
+    toast('歡迎回來，' + alias);
+  } else {
     data = carry;
     toast('建立新俠客「' + alias + '」');
   }
@@ -447,13 +471,34 @@ function renderProfileStatus() {
   btn.title = '俠客帳號：' + name;
 }
 
-// ---------- word bank ----------
+// ---------- word bank (教育部 國小學童常用字詞, tiered by character frequency) ----------
+function wordTier() {
+  return Math.min(MAX_TIER, Math.floor(titleIndex() / 2));
+}
+function pickFromList() {
+  const fresh = [];
+  for (const t of state.list) {
+    if (state.recent.indexOf(t) < 0) fresh.push(t);
+  }
+  if (fresh.length) return { w: fresh[Math.floor(Math.random() * fresh.length)] };
+  // every item practiced lately: take the one practiced longest ago, so the list goes round
+  let oldest = state.list[0];
+  for (const t of state.list) {
+    if (state.recent.indexOf(t) > state.recent.indexOf(oldest)) oldest = t;
+  }
+  return { w: oldest };
+}
 function pickWord() {
-  const tier = Math.min(rankIndex(purse.earned), 6);
+  if (state.content === 'list' && state.list.length) return pickFromList();
+  let single = Math.random() < 0.4;
+  if (state.content === 'words') single = false;
+  if (state.content === 'chars') single = true;
+  const tier = wordTier();
   const pool = [];
   let total = 0;
   for (const w of words) {
     if (w.t > tier) continue;
+    if ((w.w.length === 1) !== single) continue;
     if (state.recent.indexOf(w.w) >= 0) continue;
     let weight = 1;
     if (w.t === tier) weight = 4;
@@ -469,27 +514,19 @@ function pickWord() {
   }
   return pool[pool.length - 1].w;
 }
-function meaningFor(text) {
-  for (const w of words) {
-    if (w.w === text) return w.m;
-  }
-  return '';
-}
 function nextWord(speak) {
-  if (!words.length) return;
-  const w = pickWord();
-  loadText(w.w, w.m, speak);
+  if (!words.length && !(state.content === 'list' && state.list.length)) return;
+  loadText(pickWord().w, speak);
 }
 
 // ---------- the current exercise ----------
-function loadText(text, meaning, speak) {
+function loadText(text, speak) {
   const chars = parseText(text);
   if (chars.length === 0) {
     toast('請輸入中文字');
     return;
   }
   state.text = chars.join('');
-  state.meaning = meaning || meaningFor(state.text);
   state.chars = chars;
   state.idx = 0;
   state.mode = 'watch';
@@ -502,7 +539,6 @@ function loadText(text, meaning, speak) {
 
   save();
   renderModes();
-  renderMeaning();
   renderChips();
   build();
   if (speak && state.sound) say(state.text);
@@ -516,15 +552,9 @@ function loadText(text, meaning, speak) {
 }
 // resume what this 俠客 was practicing, else their name, else a word from the bank
 function startText() {
-  if (state.text) loadText(state.text, state.meaning);
+  if (state.text) loadText(state.text);
   else if (state.myName) loadText(state.myName);
   else if (words.length) nextWord(false);
-}
-
-function renderMeaning() {
-  const el = document.getElementById('meaning');
-  el.textContent = state.meaning;
-  el.title = state.meaning;
 }
 
 // ---------- seal + ink ----------
@@ -567,41 +597,37 @@ function addMine(points) {
   mineEl.append(line);
 }
 
-// ---------- 江湖: ranks, 武功, purse, weapons ----------
-function rankIndex(earned) {
-  let idx = 0;
-  for (let i = 0; i < RANKS.length; i++) {
-    if (earned >= RANKS[i].at) idx = i;
-  }
-  return idx;
+// ---------- rewards, level-ups, celebrations ----------
+// big moments (a finished word, a new title) wait for each other instead of overlapping
+let celebrationFreeAt = 0;
+function queueCelebration(delay, fn) {
+  const now = performance.now();
+  const at = Math.max(now + delay, celebrationFreeAt);
+  celebrationFreeAt = at + 5200;
+  setTimeout(fn, at - now);
 }
-function kungfuIndex() {
-  let idx = 0;
-  for (let i = 0; i < KUNGFU.length; i++) {
-    if (purse.scrolls.length >= KUNGFU[i].at) idx = i;
-  }
-  return idx;
+function titleCanvas(idx) {
+  const c = document.createElement('canvas');
+  c.width = AV_W;
+  c.height = AV_H;
+  const ctx = c.getContext('2d');
+  drawFloor(ctx);
+  drawAvatar(ctx, idx, purse.gear, 'jump', 0, qiColor());
+  return c;
 }
-function weaponById(id) {
-  for (const w of WEAPONS) {
-    if (w.id === id) return w;
-  }
-  return null;
-}
-function qiColor() {
-  const w = weaponById(purse.equipped);
-  if (w) return w.qi;
-  return token('--qi');
-}
-function renderPurse() {
-  document.getElementById('rankTag').textContent = RANKS[rankIndex(purse.earned)].name;
-  let kf = '武功・' + KUNGFU[kungfuIndex()].name;
-  if (purse.streak > 1) kf += '　<small>連續 ' + purse.streak + ' 天</small>';
-  document.getElementById('kungfuTag').innerHTML = kf;
-  renderCounters();
+function showLevelUp(level) {
+  const card = document.getElementById('playerCard');
+  const tag = document.getElementById('lvup');
+  tag.textContent = 'Lv ' + level + '！';
+  tag.hidden = false;
+  restartAnimation(tag, 'lvup');
+  restartAnimation(card, 'leveled');
+  setTimeout(function () { tag.hidden = true; }, 1700);
+  sfxGong(0.35);
+  avatarPlay('cheer');
 }
 
-function award(ch, grade, mistakes) {
+function award(grade, mistakes) {
   let taels = TAELS_FOR_GRADE[grade];
   if (state.mode === 'write') taels *= 2;
 
@@ -614,7 +640,7 @@ function award(ch, grade, mistakes) {
     purse.lastDay = today;
     const bonus = 5 + Math.min(purse.streak, 7);
     taels += bonus;
-    let note = '今日練功　+' + bonus + ' 兩';
+    let note = '今日練功　+' + bonus;
     if (purse.streak > 1) note += '（連續 ' + purse.streak + ' 天）';
     toast(note);
   }
@@ -622,168 +648,164 @@ function award(ch, grade, mistakes) {
   let ingots = 0;
   if (state.mode === 'write' && mistakes === 0) ingots += 1;
 
-  const rankBefore = rankIndex(purse.earned);
+  const before = levelInfo(purse.xp).level;
   purse.taels += taels;
-  purse.earned += taels;
+  purse.xp += taels;
   purse.ingots += ingots;
-  const rankAfter = rankIndex(purse.earned);
-  if (rankAfter > rankBefore) {
-    toast('晉升「' + RANKS[rankAfter].name + '」');
-    setTimeout(function () { sfxGong(0.5); }, 600);
-  }
-
-  if (state.mode === 'write' && grade === 3 && purse.scrolls.indexOf(ch) < 0) {
-    const kfBefore = kungfuIndex();
-    purse.scrolls.push(ch);
-    toast('習得「' + ch + '字訣」');
-    const kfAfter = kungfuIndex();
-    if (kfAfter > kfBefore) {
-      toast('武功精進：「' + KUNGFU[kfAfter].name + '」');
-      setTimeout(function () { sfxGong(0.4); }, 1200);
-    }
-  }
+  const after = levelInfo(purse.xp).level;
 
   save();
-  renderPurse();
-  return { taels: taels, ingots: ingots };
+  return { taels: taels, ingots: ingots, levelBefore: before, levelAfter: after };
 }
 
-function renderArmory() {
-  const idx = rankIndex(purse.earned);
-  document.getElementById('armoryRank').textContent = RANKS[idx].name;
-  const next = RANKS[idx + 1];
-  const nextEl = document.getElementById('armoryNext');
-  const bar = document.getElementById('rankBar');
-  if (next) {
-    nextEl.textContent = '再 ' + (next.at - purse.earned) + ' 兩 →「' + next.name + '」';
-    const span = next.at - RANKS[idx].at;
-    bar.style.width = Math.round(100 * (purse.earned - RANKS[idx].at) / span) + '%';
-  } else {
-    nextEl.textContent = '最高名號';
-    bar.style.width = '100%';
+// level-ups land when the coins reach the purse
+function announceLevels(before, after) {
+  if (after <= before) return;
+  const titleBefore = titleIndexFor(before);
+  const titleAfter = titleIndexFor(after);
+  setTimeout(function () {
+    showLevelUp(after);
+    renderPurse();
+  }, 1900);
+  if (titleAfter > titleBefore) {
+    queueCelebration(2600, function () {
+      celebrate([titleCanvas(titleAfter)], '晉升「' + TITLES[titleAfter].name + '」');
+      avatarPlay('cheer');
+    });
   }
+}
 
-  // every rank as a little 俠客; ranks not reached yet are shown as a shadow
+function renderPurse() {
+  const info = levelInfo(purse.xp);
+  document.getElementById('rankTag').textContent = TITLES[titleIndexFor(info.level)].name;
+  document.getElementById('lvTag').textContent = 'Lv ' + info.level;
+  document.getElementById('xpBar').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
+  renderCounters();
+}
+
+// ---------- 我的俠客: avatar, titles so far, shop ----------
+function renderHero() {
+  const info = levelInfo(purse.xp);
+  const tIdx = titleIndexFor(info.level);
+  document.getElementById('heroRank').textContent = TITLES[tIdx].name;
+  document.getElementById('heroLv').textContent = 'Lv ' + info.level;
+  document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
+  document.getElementById('heroNext').textContent = info.level >= MAX_LEVEL
+    ? '已經是天下第一'
+    : '再 ' + (info.need - info.into) + ' 經驗升到 Lv ' + (info.level + 1);
+  document.getElementById('heroTaels').textContent = purse.taels;
+  document.getElementById('heroIngots').textContent = purse.ingots;
+
+  const hc = document.getElementById('heroAvatar').getContext('2d');
+  hc.clearRect(0, 0, AV_W, AV_H);
+  drawFloor(hc);
+  drawAvatar(hc, tIdx, purse.gear, 'stand', 0, null);
+
+  // titles reached so far, the current one framed, the next one as a black silhouette
   const ladder = document.getElementById('ladder');
   ladder.innerHTML = '';
-  RANKS.forEach(function (r, i) {
+  for (let i = 0; i <= Math.min(tIdx + 1, TITLES.length - 1); i++) {
     const item = document.createElement('div');
     item.className = 'ladder-item';
-    if (i === idx) item.classList.add('now');
-    if (i > idx) item.classList.add('locked');
     const c = document.createElement('canvas');
     c.width = AV_W;
     c.height = AV_H;
     const ctx = c.getContext('2d');
-    drawAvatar(ctx, i, '', 'stand', 0, null, 0);
-    if (i > idx) {
+    drawAvatar(ctx, i, {}, 'stand', 0, null);
+    const label = document.createElement('span');
+    if (i === tIdx) {
+      item.classList.add('now');
+      label.textContent = TITLES[i].name;
+    } else if (i > tIdx) {
+      item.classList.add('next');
       ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = 'rgba(110, 100, 90, 0.9)';
+      ctx.fillStyle = '#11111b';
       ctx.fillRect(0, 0, AV_W, AV_H);
       ctx.globalCompositeOperation = 'source-over';
+      label.textContent = '？？？';
+    } else {
+      label.textContent = TITLES[i].name;
     }
-    const label = document.createElement('span');
-    label.textContent = r.name;
     item.append(c, label);
     ladder.append(item);
-  });
+  }
 
-  const kf = kungfuIndex();
-  document.getElementById('armoryKungfu').textContent = KUNGFU[kf].name;
-  const kfNext = KUNGFU[kf + 1];
-  document.getElementById('armoryKungfuNext').textContent = kfNext
-    ? '字訣 ' + purse.scrolls.length + ' / ' + kfNext.at + ' →「' + kfNext.name + '」'
-    : '武功已達最高境界';
-  const kfLadder = document.getElementById('kungfuLadder');
-  kfLadder.innerHTML = '';
-  KUNGFU.forEach(function (k, i) {
-    const s = document.createElement('span');
-    s.textContent = k.name;
-    if (i < kf) s.className = 'reached';
-    if (i === kf) s.className = 'now';
-    kfLadder.append(s);
-  });
+  const tabs = document.getElementById('shopTabs');
+  tabs.innerHTML = '';
+  for (const slot of SLOTS) {
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.setAttribute('role', 'tab');
+    t.setAttribute('aria-selected', slot.id === shopSlot ? 'true' : 'false');
+    t.textContent = slot.name;
+    t.addEventListener('click', function () {
+      shopSlot = slot.id;
+      renderHero();
+    });
+    tabs.append(t);
+  }
 
-  const grid = document.getElementById('weapons');
+  const grid = document.getElementById('items');
   grid.innerHTML = '';
-  for (const w of WEAPONS) {
-    const owned = purse.owned.indexOf(w.id) >= 0;
+  for (const it of ITEMS) {
+    if (it.slot !== shopSlot) continue;
+    const owned = purse.owned.indexOf(it.id) >= 0;
+    const wearing = purse.gear[it.slot] === it.id;
     const card = document.createElement('div');
-    card.className = 'weapon';
+    card.className = 'item';
     if (!owned) card.classList.add('locked');
-    if (purse.equipped === w.id) card.classList.add('equipped');
+    if (wearing) card.classList.add('equipped');
 
     const c = document.createElement('canvas');
     c.width = 32;
     c.height = 20;
-    drawWeaponCard(c, w.id);
+    drawItemCard(c, it);
 
     const name = document.createElement('div');
-    name.className = 'w-name';
-    name.textContent = w.name;
+    name.className = 'item-name';
+    name.textContent = it.name;
 
     const btn = document.createElement('button');
     btn.type = 'button';
     if (owned) {
-      if (purse.equipped === w.id) {
-        btn.textContent = '✓ 拿著';
-        btn.addEventListener('click', function () { equip(''); });
-      } else {
-        btn.textContent = '拿起來';
-        btn.addEventListener('click', function () { equip(w.id); });
-      }
+      btn.textContent = wearing ? '✓ 使用中' : '換上';
+      btn.addEventListener('click', function () { equip(it.slot, wearing ? '' : it.id); });
     } else {
-      const canBuy = w.ingots ? purse.ingots >= w.ingots : purse.taels >= w.taels;
-      btn.innerHTML = w.ingots ? syceeHtml('gold') + w.ingots : syceeHtml('silver') + w.taels;
-      btn.setAttribute('aria-label', '買' + w.name);
+      const canBuy = it.ingots ? purse.ingots >= it.ingots : purse.taels >= it.taels;
+      btn.innerHTML = it.ingots ? syceeHtml('gold') + it.ingots : syceeHtml('silver') + it.taels;
+      btn.setAttribute('aria-label', '買' + it.name);
       btn.disabled = !canBuy;
-      btn.addEventListener('click', function () { buy(w); });
+      btn.addEventListener('click', function () { buy(it); });
     }
 
     card.append(c, name, btn);
     grid.append(card);
   }
-
-  const scrolls = document.getElementById('scrolls');
-  scrolls.innerHTML = '';
-  if (purse.scrolls.length === 0) {
-    const p = document.createElement('span');
-    p.className = 'quiet';
-    p.textContent = '還沒有';
-    scrolls.append(p);
-  }
-  for (const ch of purse.scrolls) {
-    const s = document.createElement('span');
-    s.className = 'scroll-item';
-    s.textContent = ch + '字訣';
-    scrolls.append(s);
-  }
 }
 
-function buy(w) {
-  if (w.ingots) {
-    if (purse.ingots < w.ingots) return;
-    purse.ingots -= w.ingots;
+function buy(it) {
+  if (it.ingots) {
+    if (purse.ingots < it.ingots) return;
+    purse.ingots -= it.ingots;
   } else {
-    if (purse.taels < w.taels) return;
-    purse.taels -= w.taels;
+    if (purse.taels < it.taels) return;
+    purse.taels -= it.taels;
   }
-  purse.owned.push(w.id);
-  purse.equipped = w.id;
+  purse.owned.push(it.id);
+  purse.gear[it.slot] = it.id;
   shown.taels = purse.taels;
   shown.ingots = purse.ingots;
   save();
   renderPurse();
-  renderArmory();
+  renderHero();
   sfxTick(1568);
   avatarPlay('attack');
-  toast('得到「' + w.name + '」');
+  toast('得到「' + it.name + '」');
 }
-function equip(id) {
-  purse.equipped = id;
+function equip(slot, id) {
+  purse.gear[slot] = id;
   save();
-  renderPurse();
-  renderArmory();
+  renderHero();
   avatarPlay('attack');
 }
 
@@ -797,7 +819,7 @@ function avatarDraw(poseName) {
   const ctx = avatar.ctx;
   ctx.clearRect(0, 0, AV_W, AV_H);
   drawFloor(ctx);
-  drawAvatar(ctx, rankIndex(purse.earned), purse.equipped, poseName, avatar.frame, qiColor(), kungfuIndex());
+  drawAvatar(ctx, titleIndex(), purse.gear, poseName, avatar.frame, qiColor());
 }
 function avatarTick(now) {
   const wait = avatar.queue.length ? 95 : 170;
@@ -824,7 +846,7 @@ function startAvatar() {
   requestAnimationFrame(avatarTick);
 }
 
-// ---------- info: vertical 注音, radical ----------
+// ---------- character card: model glyph, vertical 注音 ----------
 function renderZhuyin(el, zy) {
   el.innerHTML = '';
   if (!zy) return;
@@ -861,25 +883,13 @@ function renderZhuyin(el, zy) {
 
 function renderInfo(data) {
   const zyEl = document.getElementById('zy');
-  const radLine = document.getElementById('radLine');
   const mini = document.getElementById('mini');
   if (!data) {
     zyEl.innerHTML = '';
-    radLine.textContent = '';
     mini.innerHTML = '';
     return;
   }
-
   renderZhuyin(zyEl, data.zy && data.zy.length ? data.zy[0] : '');
-
-  const rad = data.rad || '';
-  if (rad) {
-    const name = RADICAL_NAMES[rad];
-    radLine.innerHTML = '部首 <b></b>' + (name ? '　' + name : '');
-    radLine.querySelector('b').textContent = rad;
-  } else {
-    radLine.textContent = '';
-  }
 
   // the model character, with the radical strokes colored
   const radSet = new Set(data.radStrokes || []);
@@ -891,7 +901,7 @@ function renderInfo(data) {
   mini.innerHTML = paths + '</g>';
 }
 
-// ---------- name tags in the top bar ----------
+// ---------- the word's characters in the top bar ----------
 function renderChips() {
   chipsEl.innerHTML = '';
   state.chars.forEach(function (ch, i) {
@@ -1012,7 +1022,7 @@ function showMissing(msg) {
 
 function startMode(myToken) {
   stepNum = 0;
-  stepCountEl.textContent = '';
+  hintText.textContent = '點格子：下一筆';
   resultEl.hidden = true;
   watchActions.hidden = state.mode !== 'watch';
   quizActions.hidden = state.mode === 'watch';
@@ -1025,7 +1035,7 @@ function startMode(myToken) {
         if (myToken !== buildToken || state.mode !== 'watch' || stepNum > 0) return;
         if (state.idx < state.chars.length - 1) {
           setTimeout(function () {
-            if (myToken !== buildToken || state.mode !== 'watch') return;
+            if (myToken !== buildToken || state.mode !== 'watch' || stepNum > 0) return;
             state.idx += 1;
             renderChips();
             build();
@@ -1069,6 +1079,30 @@ function startMode(myToken) {
   });
 }
 
+// 看筆順: each tap on the box shows the next stroke, with a press + ripple at the finger
+function stepStroke(e) {
+  if (state.mode !== 'watch' || !writer) return;
+  const total = strokeCount[currentChar()];
+  if (stepNum === 0 || stepNum >= total) {
+    writer.hideCharacter();
+    stepNum = 0;
+  }
+  writer.animateStroke(stepNum);
+  stepNum += 1;
+  hintText.textContent = stepNum + ' / ' + total;
+
+  const rect = box.getBoundingClientRect();
+  const ring = document.createElement('span');
+  ring.className = 'ripple';
+  ring.style.left = (e.clientX - rect.left) + 'px';
+  ring.style.top = (e.clientY - rect.top) + 'px';
+  box.append(ring);
+  setTimeout(function () { ring.remove(); }, 520);
+  restartAnimation(box, 'press');
+  sfxTick(1318);
+}
+box.addEventListener('pointerdown', stepStroke);
+
 function finish(mistakes) {
   const myToken = buildToken;
   const ch = currentChar();
@@ -1077,7 +1111,7 @@ function finish(mistakes) {
   const prev = state.stars[ch][state.mode] || 0;
   if (grade > prev) state.stars[ch][state.mode] = grade;
 
-  const reward = award(ch, grade, mistakes);
+  const reward = award(grade, mistakes);
   renderChips();
   avatarPlay('cheer');
 
@@ -1090,12 +1124,13 @@ function finish(mistakes) {
     if (reward.ingots) setTimeout(function () { flyCoins('gold', reward.ingots); }, 500);
   }, 800);
 
-  // the whole word done in this mode: fireworks and read the whole word
-  sessionDone.add(ch);
+  // the whole word done in this mode: read the whole word, fireworks for words of 2+ characters
+  // positions, not characters, so a word like 弟弟 needs both written
+  sessionDone.add(state.idx);
   let allDone = true;
-  for (const c of state.chars) {
-    if (!sessionDone.has(c) && strokeCount[c] !== 0) allDone = false;
-  }
+  state.chars.forEach(function (c, i) {
+    if (!sessionDone.has(i) && strokeCount[c] !== 0) allDone = false;
+  });
   if (allDone) {
     sessionDone.clear();
     if (state.mode === 'write' && state.chars.length > 1) {
@@ -1106,20 +1141,23 @@ function finish(mistakes) {
     }
     setTimeout(function () {
       if (state.sound) say(state.text);
-      if (state.chars.length > 1) {
+    }, 1500);
+    if (state.chars.length > 1) {
+      queueCelebration(1500, function () {
         const glyphs = [];
         for (const c of state.chars) {
           if (glyphData[c]) glyphs.push(glyphSvg(glyphData[c]));
         }
-        celebrate(glyphs);
+        celebrate(glyphs, '練成了！');
         avatarPlay('cheer');
-      }
-    }, 1500);
+      });
+    }
   } else {
     setTimeout(function () {
       if (myToken === buildToken && state.sound) say(ch);
     }, 1300);
   }
+  announceLevels(reward.levelBefore, reward.levelAfter);
 
   quizActions.hidden = true;
   document.getElementById('resultMarks').innerHTML = marksHtml(grade);
@@ -1153,6 +1191,7 @@ function renderModes() {
   });
 }
 function setMode(mode) {
+  if (mode !== 'watch' && state.mode === 'watch') state.idx = 0;
   state.mode = mode;
   sessionDone.clear();
   renderModes();
@@ -1161,28 +1200,12 @@ function setMode(mode) {
 }
 document.querySelectorAll('#modes button').forEach(function (b) {
   b.addEventListener('click', function () {
-    if (b.dataset.mode !== 'watch') state.idx = state.mode === 'watch' ? 0 : state.idx;
+    if (state.sound) say(b.textContent.trim());
     setMode(b.dataset.mode);
   });
 });
 
-document.getElementById('playBtn').addEventListener('click', function () {
-  if (!writer) return;
-  startMode(buildToken);
-});
-document.getElementById('stepBtn').addEventListener('click', function () {
-  if (!writer) return;
-  const total = strokeCount[currentChar()];
-  if (stepNum === 0 || stepNum >= total) {
-    writer.hideCharacter();
-    stepNum = 0;
-  }
-  writer.animateStroke(stepNum);
-  stepNum += 1;
-  stepCountEl.textContent = stepNum + '/' + total;
-});
 document.getElementById('restartBtn').addEventListener('click', function () { build(); });
-document.getElementById('demoBtn').addEventListener('click', function () { setMode('watch'); });
 document.getElementById('againBtn').addEventListener('click', function () { build(); });
 document.getElementById('sayBtn').addEventListener('click', function () {
   const ch = currentChar();
@@ -1216,6 +1239,7 @@ document.getElementById('nextBtn').addEventListener('click', function (e) {
   }
 });
 document.getElementById('diceBtn').addEventListener('click', function () { nextWord(true); });
+document.getElementById('banner').addEventListener('click', function (e) { e.currentTarget.hidden = true; });
 
 // ---------- sheets ----------
 function openSheet(el) {
@@ -1236,13 +1260,12 @@ document.addEventListener('keydown', function (e) {
   document.querySelectorAll('.sheet').forEach(function (sheet) { closeSheet(sheet); });
 });
 
-function openArmory() {
-  renderArmory();
-  openSheet(document.getElementById('armory'));
-}
-document.getElementById('armoryBtn').addEventListener('click', openArmory);
-document.getElementById('avatarTile').addEventListener('click', openArmory);
+document.getElementById('playerCard').addEventListener('click', function () {
+  renderHero();
+  openSheet(document.getElementById('heroSheet'));
+});
 document.getElementById('settingsBtn').addEventListener('click', function () {
+  renderVoices();
   openSheet(document.getElementById('settingsSheet'));
 });
 
@@ -1254,14 +1277,39 @@ function renderRecent() {
     b.type = 'button';
     b.textContent = t;
     b.addEventListener('click', function () {
-      loadText(t, '', true);
+      loadText(t, true);
       closeSheet(document.getElementById('customSheet'));
     });
     list.append(b);
   }
 }
+function renderListCount() {
+  document.getElementById('listCount').textContent = state.list.length ? '目前 ' + state.list.length + ' 個' : '';
+}
+document.getElementById('saveListBtn').addEventListener('click', function () {
+  const raw = document.getElementById('listInput').value;
+  const items = [];
+  for (const part of raw.split(/[\s,，、;；]+/)) {
+    const t = parseText(part).join('');
+    if (t && items.indexOf(t) < 0) items.push(t);
+  }
+  if (items.length === 0) {
+    toast('請輸入中文字');
+    return;
+  }
+  state.list = items;
+  state.content = 'list';
+  renderOptions();
+  renderListCount();
+  save();
+  toast('生字本：' + items.length + ' 個');
+  closeSheet(document.getElementById('customSheet'));
+  nextWord(true);
+});
 document.getElementById('customBtn').addEventListener('click', function () {
   const input = document.getElementById('customInput');
+  document.getElementById('listInput').value = state.list.join(' ');
+  renderListCount();
   input.value = '';
   input.placeholder = state.myName ? '例如：' + state.myName : '例如：劉岱恬';
   renderRecent();
@@ -1274,7 +1322,7 @@ document.getElementById('customForm').addEventListener('submit', function (e) {
     toast('請輸入中文字');
     return;
   }
-  loadText(text, '', true);
+  loadText(text, true);
   closeSheet(document.getElementById('customSheet'));
 });
 document.getElementById('useNameBtn').addEventListener('click', function () {
@@ -1282,7 +1330,7 @@ document.getElementById('useNameBtn').addEventListener('click', function () {
     toast('先輸入名字，再按「設為我的名字」');
     return;
   }
-  loadText(state.myName, '', true);
+  loadText(state.myName, true);
   closeSheet(document.getElementById('customSheet'));
 });
 document.getElementById('saveNameBtn').addEventListener('click', function () {
@@ -1313,27 +1361,43 @@ document.getElementById('logoutBtn').addEventListener('click', function () {
   toast('換回訪客');
 });
 
-// settings
+// ---------- settings ----------
+function applyTheme() {
+  if (state.theme === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', state.theme);
+}
 function renderOptions() {
+  applyTheme();
   box.classList.toggle('mi', state.grid === 'mi');
   keepBtn.setAttribute('aria-pressed', state.keep ? 'true' : 'false');
-  document.querySelectorAll('.opt-row').forEach(function (row) {
+  document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
-    if (opt === 'grid') current = state.grid;
+    if (opt === 'grid' || opt === 'theme' || opt === 'content') current = state[opt];
     else current = state[opt] ? '1' : '0';
     row.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
     });
   });
 }
-document.querySelectorAll('.opt-row').forEach(function (row) {
+document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
   row.addEventListener('click', function (e) {
     const b = e.target.closest('button');
     if (!b) return;
     const opt = row.dataset.opt;
-    if (opt === 'grid') {
-      state.grid = b.dataset.val;
+    if (opt === 'content') {
+      if (b.dataset.val === 'list' && state.list.length === 0) {
+        toast('先在「自己出題」存一份生字本');
+        return;
+      }
+      state.content = b.dataset.val;
+      renderOptions();
+      save();
+      nextWord(true);
+      return;
+    }
+    if (opt === 'grid' || opt === 'theme') {
+      state[opt] = b.dataset.val;
       renderOptions();
       save();
       return;
@@ -1349,11 +1413,39 @@ document.querySelectorAll('.opt-row').forEach(function (row) {
   });
 });
 
+// the device's Chinese voices, each one tried out with 甲 when picked
+function renderVoices() {
+  const row = document.getElementById('voiceRow');
+  row.querySelectorAll('button, .quiet').forEach(function (el) { el.remove(); });
+  const voices = 'speechSynthesis' in window ? chineseVoices() : [];
+  if (voices.length === 0) {
+    const none = document.createElement('span');
+    none.className = 'quiet';
+    none.textContent = '這台裝置沒有中文語音';
+    row.append(none);
+    return;
+  }
+  const current = pickVoice();
+  for (const v of voices.slice(0, 6)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = v.name.replace(/\s*\(.*\)\s*$/, '') + (/TW/i.test(v.lang) ? '（台灣）' : /HK/i.test(v.lang) ? '（香港）' : '（中國）');
+    b.setAttribute('aria-pressed', current && v.voiceURI === current.voiceURI ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      state.voice = v.voiceURI;
+      save();
+      renderVoices();
+      say('甲');
+    });
+    row.append(b);
+  }
+}
+if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', renderVoices);
+
 function renderAll() {
   renderOptions();
   renderPurse();
   renderModes();
-  renderMeaning();
   renderProfileStatus();
 }
 
@@ -1381,7 +1473,7 @@ sealEl.style.webkitMaskImage = sealMaskUrl;
 sealEl.style.maskImage = sealMaskUrl;
 
 getCharData('武').then(function (d) {
-  if (d) document.getElementById('titleSeal').append(glyphSvg(d));
+  if (d) document.getElementById('cornerSeal').append(glyphSvg(d));
 }, function () {});
 
 (function boot() {
@@ -1399,11 +1491,7 @@ getCharData('武').then(function (d) {
 
   fetch('data/words.json').then(function (r) { return r.json(); }).then(function (list) {
     words = list;
-    if (!state.text) startText();
-    else if (!state.meaning) {
-      state.meaning = meaningFor(state.text);
-      renderMeaning();
-    }
+    if (!state.text && !state.myName) startText();
   }, function () {});
   if (state.text || state.myName) startText();
   cloudRefresh();

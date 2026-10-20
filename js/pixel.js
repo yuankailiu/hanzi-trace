@@ -1,43 +1,58 @@
 // Pixel 俠客: drawn on a 48x36 canvas and shown scaled up with image-rendering: pixelated.
 
-// 江湖名號 by 修為 (all taels ever earned); each rank changes the outfit
-const RANKS = [
-  { at: 0, name: '初入江湖', robe: '#9A948A', belt: '#5A4632', gear: 'none' },
-  { at: 30, name: '武館學徒', robe: '#3F6FB0', belt: '#2A3F66', gear: 'band' },
-  { at: 100, name: '少俠', robe: '#2E8B7A', belt: '#1D5A4F', gear: 'bandTails' },
-  { at: 250, name: '俠客', robe: '#3A3A44', belt: '#B23A2E', gear: 'hat' },
-  { at: 500, name: '大俠', robe: '#E9E4D8', belt: '#2F5D7C', gear: 'hat', cape: '#A8322A' },
-  { at: 900, name: '一代宗師', robe: '#6B4C9A', belt: '#D9B25A', gear: 'goldBand', cape: '#2F2A44' },
-  { at: 1500, name: '武林盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
+// 頭銜: one title spans LEVELS_PER_TITLE levels; the outfit changes only when the title changes
+const LEVELS_PER_TITLE = 5;
+const TITLES = [
+  { name: '新手', robe: '#9A948A', belt: '#5A4632', gear: 'none' },
+  { name: '學徒', robe: '#B9A27A', belt: '#5A4632', gear: 'band' },
+  { name: '入門弟子', robe: '#3F6FB0', belt: '#2A3F66', gear: 'band' },
+  { name: '練家子', robe: '#2E8B7A', belt: '#1D5A4F', gear: 'bandTails' },
+  { name: '武師', robe: '#7A4A2A', belt: '#2B2522', gear: 'bandTails' },
+  { name: '俠客', robe: '#3A3A44', belt: '#B23A2E', gear: 'hat' },
+  { name: '江湖好手', robe: '#4C6A3A', belt: '#C9A03A', gear: 'hat', cape: '#6E4A2E' },
+  { name: '成名高手', robe: '#2F4A6E', belt: '#C5CCD2', gear: 'hat', cape: '#A8322A' },
+  { name: '大俠', robe: '#E9E4D8', belt: '#2F5D7C', gear: 'hat', cape: '#B8322A' },
+  { name: '一方豪傑', robe: '#8E2F2A', belt: '#E0B957', gear: 'topknot', cape: '#3A3A44' },
+  { name: '武林名宿', robe: '#5E5A7A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
+  { name: '宗師', robe: '#6B4C9A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
+  { name: '大宗師', robe: '#F2EEE4', belt: '#C9A03A', gear: 'goldBand', cape: '#C9A03A' },
+  { name: '武林泰斗', robe: '#1F3A5A', belt: '#E0B957', gear: 'jadeCrown', cape: '#B8322A' },
+  { name: '盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
+  { name: '天下第一', robe: '#E0B957', belt: '#B8322A', gear: 'crown', cape: '#B8322A' },
 ];
 
-// 武功境界 by 字訣 (characters written alone with three marks); higher levels add an aura
-const KUNGFU = [
-  { at: 0, name: '初學乍練' },
-  { at: 3, name: '略有小成' },
-  { at: 8, name: '駕輕就熟' },
-  { at: 15, name: '融會貫通' },
-  { at: 25, name: '爐火純青' },
-  { at: 40, name: '登峰造極' },
-  { at: 60, name: '出神入化' },
-  { at: 90, name: '返璞歸真' },
+// shop: weapons (held), accessories (worn), companions (stand beside); price in taels or ingots
+const ITEMS = [
+  { id: 'wood', slot: 'weapon', name: '木劍', taels: 20, qi: '#A9834F' },
+  { id: 'staff', slot: 'weapon', name: '竹棍', taels: 35, qi: '#7E9A4E' },
+  { id: 'fan', slot: 'weapon', name: '鐵扇', taels: 60, qi: '#7F8C99' },
+  { id: 'brush', slot: 'weapon', name: '判官筆', taels: 80, qi: '#3B3B3B' },
+  { id: 'whip', slot: 'weapon', name: '長鞭', taels: 100, qi: '#8E5A34' },
+  { id: 'spear', slot: 'weapon', name: '紅纓槍', taels: 130, qi: '#C2453C' },
+  { id: 'emei', slot: 'weapon', name: '峨嵋刺', taels: 160, qi: '#9AA4AE' },
+  { id: 'ring', slot: 'weapon', name: '九環刀', taels: 200, qi: '#C9A03A' },
+  { id: 'hammer', slot: 'weapon', name: '流星錘', taels: 240, qi: '#5F6B76' },
+  { id: 'guandao', slot: 'weapon', name: '青龍偃月刀', taels: 300, qi: '#3E8E7E' },
+  { id: 'zhanlu', slot: 'weapon', name: '湛盧劍', ingots: 3, qi: '#5B7FB5' },
+  { id: 'ganjiang', slot: 'weapon', name: '干將莫邪', ingots: 5, qi: '#8E6FB8' },
+  { id: 'bell', slot: 'acc', name: '鈴鐺', taels: 30 },
+  { id: 'gourd', slot: 'acc', name: '葫蘆', taels: 50 },
+  { id: 'jade', slot: 'acc', name: '玉佩', taels: 80 },
+  { id: 'cloak', slot: 'acc', name: '披風', taels: 120 },
+  { id: 'bunny', slot: 'pet', name: '小白兔', taels: 60 },
+  { id: 'dog', slot: 'pet', name: '小黃狗', taels: 90 },
+  { id: 'panda', slot: 'pet', name: '熊貓寶寶', ingots: 2 },
+  { id: 'crane', slot: 'pet', name: '仙鶴', ingots: 4 },
 ];
-
-// 兵器譜: price in taels or ingots; the held weapon also tints the 劍氣
-const WEAPONS = [
-  { id: 'wood', name: '木劍', taels: 20, qi: '#A9834F' },
-  { id: 'staff', name: '竹棍', taels: 35, qi: '#7E9A4E' },
-  { id: 'fan', name: '鐵扇', taels: 60, qi: '#7F8C99' },
-  { id: 'spear', name: '紅纓槍', taels: 100, qi: '#C2453C' },
-  { id: 'ring', name: '九環刀', taels: 160, qi: '#C9A03A' },
-  { id: 'guandao', name: '青龍偃月刀', taels: 260, qi: '#3E8E7E' },
-  { id: 'zhanlu', name: '湛盧劍', ingots: 3, qi: '#5B7FB5' },
-  { id: 'ganjiang', name: '干將莫邪', ingots: 5, qi: '#8E6FB8' },
+const SLOTS = [
+  { id: 'weapon', name: '兵器' },
+  { id: 'acc', name: '飾品' },
+  { id: 'pet', name: '夥伴' },
 ];
 
 const AV_W = 48;
 const AV_H = 36;
-const AV_CX = 17;
+const AV_CX = 19;
 const AV_GY = 32;
 const PX = {
   skin: '#F2C49B',
@@ -50,6 +65,7 @@ const PX = {
   strawDark: '#8C6B32',
   band: '#C8463F',
   gold: '#E0B957',
+  jade: '#4FA37A',
   aura: '#F2C84B',
 };
 
@@ -125,6 +141,21 @@ function drawWeapon(ctx, id, hx, hy, angDeg) {
         dot(k, o, edge ? '#5F6B76' : '#AEB8C2');
       }
     }
+  } else if (id === 'brush') {
+    span(-2, 7, 0, '#8E5A34');
+    dot(8, 0, '#E0B957');
+    span(9, 11, 0, '#2B2522');
+    dot(9, -1, '#2B2522');
+    dot(9, 1, '#2B2522');
+  } else if (id === 'whip') {
+    span(-1, 1, 0, '#3B2A20');
+    for (let k = 2; k <= 15; k++) dot(k, Math.round(Math.sin(k * 0.9) * 1.5), '#8E5A34');
+  } else if (id === 'emei') {
+    span(-4, 6, 0, '#C5CCD2');
+    dot(-5, 0, '#FFFFFF');
+    dot(7, 0, '#FFFFFF');
+    dot(0, -1, '#C9A03A');
+    dot(0, 1, '#C9A03A');
   } else if (id === 'spear') {
     span(-4, 12, 0, '#7A5230');
     span(13, 15, 0, '#E3E8EE');
@@ -140,6 +171,12 @@ function drawWeapon(ctx, id, hx, hy, angDeg) {
     span(3, 10, 0, '#DDE3EA');
     span(3, 9, 1, '#B9C2CC');
     for (const k of [4, 6, 8]) dot(k, -1, '#C9A03A');
+  } else if (id === 'hammer') {
+    for (let k = 0; k <= 9; k += 1.4) dot(k, 0, '#9AA4AE');
+    for (let k = 10; k <= 12; k++) {
+      for (const o of [-1, 0, 1]) dot(k, o, '#5F6B76');
+    }
+    dot(11, 0, '#AEB8C2');
   } else if (id === 'guandao') {
     span(-7, 10, 0, '#3E6B4E');
     dot(10, -1, '#C8463F');
@@ -173,6 +210,9 @@ function drawGear(ctx, gear, cx, ht, f) {
     pxRect(ctx, cx - 6, ht + 2 + f, 1, 1, PX.band);
     pxRect(ctx, cx - 7, ht + 3 + f, 1, 1, PX.band);
   }
+  if (gear === 'topknot') {
+    pxRect(ctx, cx - 4, ht - 2, 4, 1, PX.gold);
+  }
   if (gear === 'goldBand') {
     pxRect(ctx, cx - 4, ht + 2, 8, 1, PX.gold);
     pxRect(ctx, cx - 5, ht + 3, 1, 3, PX.hair);
@@ -183,10 +223,88 @@ function drawGear(ctx, gear, cx, ht, f) {
     pxRect(ctx, cx - 6, ht, 12, 1, PX.straw);
     pxRect(ctx, cx - 7, ht + 1, 14, 1, PX.strawDark);
   }
+  if (gear === 'jadeCrown') {
+    pxRect(ctx, cx - 2, ht - 3, 4, 3, PX.jade);
+    pxRect(ctx, cx - 1, ht - 2, 2, 1, PX.gold);
+    pxRect(ctx, cx - 4, ht + 2, 8, 1, PX.jade);
+  }
   if (gear === 'crown') {
     pxRect(ctx, cx - 2, ht - 3, 4, 3, PX.gold);
     pxRect(ctx, cx - 1, ht - 2, 2, 1, PX.band);
     pxRect(ctx, cx - 4, ht + 2, 8, 1, PX.gold);
+  }
+}
+
+// worn accessory, drawn over the robe at the belt
+function drawAcc(ctx, id, cx, beltY) {
+  if (id === 'bell') {
+    pxRect(ctx, cx + 2, beltY + 1, 2, 2, '#E0B957');
+    pxRect(ctx, cx + 2, beltY + 3, 1, 1, '#8C6B32');
+  } else if (id === 'gourd') {
+    pxRect(ctx, cx - 3, beltY + 1, 2, 1, '#C9822E');
+    pxRect(ctx, cx - 4, beltY + 2, 3, 2, '#D9963A');
+    pxRect(ctx, cx - 2, beltY, 1, 1, '#B23A2E');
+  } else if (id === 'jade') {
+    pxRect(ctx, cx, beltY + 1, 2, 2, PX.jade);
+    pxRect(ctx, cx, beltY + 3, 1, 2, '#C8463F');
+  }
+}
+
+// companion standing on the floor at the left, with a dark outline so white animals show on light tiles
+function drawPet(ctx, id, x, gy, f) {
+  for (const o of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+    ctx.save();
+    ctx.translate(o[0], o[1]);
+    drawPetBody(ctx, id, x, gy, f, '#5c5f77');
+    ctx.restore();
+  }
+  drawPetBody(ctx, id, x, gy, f, null);
+}
+
+function drawPetBody(ctx, id, x, gy, f, flat) {
+  function pxRect(ctx, x, y, w, h, c) {
+    ctx.fillStyle = flat || c;
+    ctx.fillRect(x, y, w, h);
+  }
+  const h = f % 2;
+  if (id === 'bunny') {
+    const y = gy - 5 - h;
+    pxRect(ctx, x, y + 1, 5, 4, '#F4F1EA');
+    pxRect(ctx, x + 3, y - 1, 3, 3, '#F4F1EA');
+    pxRect(ctx, x + 3, y - 4, 1, 3, '#F4F1EA');
+    pxRect(ctx, x + 5, y - 4, 1, 3, '#F4F1EA');
+    pxRect(ctx, x + 5, y, 1, 1, '#E8968A');
+    pxRect(ctx, x - 1, y + 2, 1, 1, '#FFFFFF');
+  } else if (id === 'dog') {
+    const y = gy - 5;
+    pxRect(ctx, x, y + 1, 6, 3, '#D9A441');
+    pxRect(ctx, x + 5, y - 1, 3, 3, '#D9A441');
+    pxRect(ctx, x + 5, y - 1, 1, 2, '#8E5A34');
+    pxRect(ctx, x + 7, y, 1, 1, '#2B2522');
+    pxRect(ctx, x, y + 4, 1, 1, '#8E5A34');
+    pxRect(ctx, x + 4, y + 4, 1, 1, '#8E5A34');
+    pxRect(ctx, x - 1, y + h, 1, 2, '#D9A441');
+  } else if (id === 'panda') {
+    const y = gy - 7 + h;
+    pxRect(ctx, x, y + 2, 6, 5, '#F4F1EA');
+    pxRect(ctx, x + 1, y - 1, 5, 4, '#F4F1EA');
+    pxRect(ctx, x + 1, y - 2, 1, 1, '#2B2522');
+    pxRect(ctx, x + 5, y - 2, 1, 1, '#2B2522');
+    pxRect(ctx, x + 2, y, 1, 1, '#2B2522');
+    pxRect(ctx, x + 4, y, 1, 1, '#2B2522');
+    pxRect(ctx, x, y + 4, 6, 1, '#2B2522');
+    pxRect(ctx, x, y + 6, 2, 1, '#2B2522');
+    pxRect(ctx, x + 4, y + 6, 2, 1, '#2B2522');
+  } else if (id === 'crane') {
+    const y = gy - 12;
+    pxRect(ctx, x + 1, y + 6, 4, 3, '#F4F1EA');
+    pxRect(ctx, x, y + 7, 1, 2, '#2B2522');
+    pxRect(ctx, x + 4, y + 1 + h, 1, 5, '#F4F1EA');
+    pxRect(ctx, x + 4, y + h, 2, 1, '#F4F1EA');
+    pxRect(ctx, x + 4, y - 1 + h, 1, 1, '#C8463F');
+    pxRect(ctx, x + 6, y + h, 1, 1, '#D9963A');
+    pxRect(ctx, x + 2, y + 9, 1, 3, '#2B2522');
+    pxRect(ctx, x + 4, y + 9, 1, 3, '#2B2522');
   }
 }
 
@@ -196,10 +314,11 @@ function drawFloor(ctx) {
   for (let x = 3; x < AV_W; x += 8) pxRect(ctx, x, AV_GY + 1, 1, AV_H - AV_GY - 1, '#55381F');
 }
 
-// aura: 武功 level index; from 略有小成 up, flickering dots circle the body
-function drawAura(ctx, aura, cx, gy, frame) {
-  if (aura < 1) return;
-  const n = aura * 3;
+// the two highest titles glow: flickering dots circle the body
+function drawAura(ctx, titleIdx, cx, gy, frame) {
+  const strength = titleIdx - 11;
+  if (strength < 1) return;
+  const n = strength * 4;
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 + frame * 0.35;
     const r = 12 + ((i + frame) % 3);
@@ -209,21 +328,26 @@ function drawAura(ctx, aura, cx, gy, frame) {
   }
 }
 
-function drawAvatar(ctx, rankIdx, weaponId, poseName, frame, qi, aura) {
-  const look = RANKS[rankIdx];
+// gear: { weapon, acc, pet } item ids
+function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
+  const look = TITLES[titleIdx];
   const p = POSES[poseName];
   const cx = AV_CX;
   const gy = AV_GY - p.j;
   const b = p.b;
   const f = frame % 2;
   const ht = gy - 27 + b;
+  const weaponId = gear.weapon || '';
 
-  drawAura(ctx, aura || 0, cx, gy, frame);
+  if (gear.pet) drawPet(ctx, gear.pet, 2, AV_GY, frame);
+  drawAura(ctx, titleIdx, cx, gy, frame);
 
-  // cape behind the body
-  if (look.cape) {
-    pxRect(ctx, cx - 6, gy - 18 + b, 2, 11 + f, look.cape);
-    pxRect(ctx, cx - 7, gy - 11 + b + f, 1, 4, look.cape);
+  // cape behind the body; the 披風 accessory brings one to titles that have none
+  let cape = look.cape;
+  if (gear.acc === 'cloak') cape = '#2F5D7C';
+  if (cape) {
+    pxRect(ctx, cx - 6, gy - 18 + b, 2, 11 + f, cape);
+    pxRect(ctx, cx - 7, gy - 11 + b + f, 1, 4, cape);
   }
 
   // back arm (and the second sword of 干將莫邪)
@@ -245,6 +369,7 @@ function drawAvatar(ctx, rankIdx, weaponId, poseName, frame, qi, aura) {
   pxRect(ctx, cx - 4, gy - 12 + b, 8, 1, look.belt);
   pxRect(ctx, cx - 1, gy - 18 + b, 1, 2, PX.collar);
   pxRect(ctx, cx, gy - 17 + b, 1, 1, PX.collar);
+  drawAcc(ctx, gear.acc, cx, gy - 12 + b);
 
   // head: face, hair, bun
   pxRect(ctx, cx - 4, ht + 1, 8, 8, PX.skin);
@@ -280,15 +405,35 @@ function drawAvatar(ctx, rankIdx, weaponId, poseName, frame, qi, aura) {
   }
 }
 
-function drawWeaponCard(canvas, id) {
+// picture for a shop card, on a 32x20 canvas
+function drawItemCard(canvas, item) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (id === 'ganjiang') {
+  const id = item.id;
+  if (item.slot === 'pet') {
+    ctx.save();
+    ctx.translate(16, 19);
+    ctx.scale(1.5, 1.5);
+    drawPet(ctx, id, -4, 0, 0);
+    ctx.restore();
+  } else if (item.slot === 'acc') {
+    if (id === 'cloak') {
+      pxRect(ctx, 13, 4, 6, 12, '#2F5D7C');
+      pxRect(ctx, 12, 14, 8, 2, '#2F5D7C');
+      pxRect(ctx, 13, 4, 6, 1, '#E0B957');
+    } else {
+      ctx.save();
+      ctx.translate(16, 8);
+      ctx.scale(2, 2);
+      drawAcc(ctx, id, 0, -2);
+      ctx.restore();
+    }
+  } else if (id === 'ganjiang') {
     drawWeapon(ctx, 'gan', 6, 15, -40);
     drawWeapon(ctx, 'mo', 24, 15, -140);
-  } else if (id === 'staff' || id === 'spear' || id === 'guandao') {
+  } else if (id === 'staff' || id === 'spear' || id === 'guandao' || id === 'whip') {
     drawWeapon(ctx, id, 10, 13, -28);
   } else {
-    drawWeapon(ctx, id, 8, 14, -35);
+    drawWeapon(ctx, id, 9, 14, -35);
   }
 }

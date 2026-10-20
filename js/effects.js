@@ -246,23 +246,33 @@ function sfxTick(pitch) {
 }
 
 // ---------- speech ----------
-function pickVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  let best = null;
-  for (const v of voices) {
-    const lang = v.lang.replace('_', '-');
-    if (lang === 'zh-TW') return v;
-    if (!best && /^zh/i.test(lang)) best = v;
+// Chinese voices on this device, Taiwan first
+function chineseVoices() {
+  const out = [];
+  for (const v of window.speechSynthesis.getVoices()) {
+    if (/^zh/i.test(v.lang) || /^cmn/i.test(v.lang)) out.push(v);
   }
-  return best;
+  out.sort(function (a, b) {
+    const ta = /TW/i.test(a.lang) ? 0 : 1;
+    const tb = /TW/i.test(b.lang) ? 0 : 1;
+    return ta - tb;
+  });
+  return out;
+}
+function pickVoice() {
+  const voices = chineseVoices();
+  for (const v of voices) {
+    if (v.voiceURI === state.voice) return v;
+  }
+  return voices[0] || null;
 }
 function say(text) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-TW';
-  u.rate = 0.75;
   const v = pickVoice();
+  u.lang = v ? v.lang : 'zh-TW';
+  u.rate = 0.75;
   if (v) u.voice = v;
   window.speechSynthesis.speak(u);
 }
@@ -496,18 +506,19 @@ function flyCoins(kind, amount) {
   }
 }
 
-// ---------- whole-word celebration: night sky, gold fireworks, red lanterns, firecracker paper ----------
+// ---------- celebrations: night sky, gold fireworks, red lanterns, firecracker paper ----------
 const sky = { canvas: null, ctx: null, w: 0, h: 0, parts: [], lanterns: [], paper: [], bursts: [], start: 0, running: false, last: 0 };
 const BURST_COLORS = ['#FFD36A', '#FFB33B', '#FF6B4A', '#FFF1D6', '#E8392B'];
 const PAPER_COLORS = ['#D62828', '#B5171C', '#E84A3A', '#F2B705'];
 let bannerTimer = 0;
 
-// glyphs: SVG elements of the word, drawn from the stroke data
-function celebrate(glyphs) {
+// nodes: what to show large (the word's glyph SVGs, or the 俠客 canvas); sub: the line under it
+function celebrate(nodes, sub) {
   const bannerEl = document.getElementById('banner');
   const nameEl = document.getElementById('bannerName');
   nameEl.innerHTML = '';
-  for (const g of glyphs) nameEl.append(g);
+  for (const g of nodes) nameEl.append(g);
+  document.getElementById('bannerSub').textContent = sub;
   bannerEl.hidden = false;
   bannerEl.style.animation = 'none';
   void bannerEl.offsetWidth;

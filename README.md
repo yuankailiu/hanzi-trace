@@ -1,22 +1,36 @@
 # 筆順描字本
 
-給小朋友練習中文字的筆順網頁：看筆順 → 用手指描字 → 自己寫；生活常用詞庫依江湖名號由淺到深，也可以自己出題（例如名字）。
+給小朋友（包括在國外學中文的孩子）練習中文字的筆順網頁：看筆順 → 用手指描字 → 自己寫。
+字形、筆順、注音照台灣教育部標準；題目來自教育部國小學童常用字詞，依字頻由淺到深，跟著俠客等級慢慢變難。
 
 - 網站：https://yuankailiu.github.io/hanzi-trace/ （iPad / iPhone 用 Safari「分享 → 加入主畫面」即可全螢幕使用）
+
+## 資料來源
+
+| 內容 | 來源 | 授權 |
+|---|---|---|
+| 字形與筆順（約 4,800 常用字） | [教育部國字標準字體筆順學習網](https://stroke-order.learningweb.moe.edu.tw/)，經 [g0v/zh-stroke-data](https://github.com/g0v/zh-stroke-data) | g0v 專案標示 CC0 |
+| 其他罕用字的字形與筆順、部首 | [Make Me a Hanzi](https://github.com/skishore/makemeahanzi) / [hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) | Arphic Public License（`data/ARPHICPL.TXT`） |
+| 注音（台灣讀音） | 教育部《重編國語辭典修訂本》，經 [g0v/moedict-data](https://github.com/g0v/moedict-data) | CC BY-ND 3.0 TW |
+| 詞語與單字、分級 | 教育部[《國小學童常用字詞調查報告書》](https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/PRIMARY/SHINDEX.HTM)字頻總表、詞頻總表 | 教育部 |
+
+分級：以每個詞最少見的那個字在兒童字頻表的排名切成 7 級（300 / 600 / 1,000 / 1,400 / 1,800 / 2,300 / 2,700 字），對應 108 課綱低、中、高年級識字量。
 
 ## 檔案
 
 - `app.html`：頁面結構（也是 Claude artifact 的來源）。改完執行 `python3 build.py` 產生 GitHub Pages 用的 `index.html`。
-- `style.css`、`js/app.js`（練習流程、詞庫、帳號）、`js/effects.js`（音效、劍氣、煙火、錢幣）、`js/pixel.js`（像素俠客、兵器、名號與武功境界）。
+- `style.css`（Catppuccin Latte / Mocha 配色）、`js/app.js`（練習流程、題庫、等級、帳號）、`js/effects.js`（音效、語音、劍氣、煙火、錢幣）、`js/pixel.js`（像素俠客、16 個頭銜、商店物品）。
 - `js/config.js`：雲端同步設定（Supabase）。留空時進度只存在該裝置。
-- `data/cNNN.json`：筆順、部首、注音資料；`data/words.json`：詞庫。
+- `data/cNNN.json`：筆順、部首、注音；`data/words.json`：題庫。
 - `manifest.webmanifest`、`icons/`：加入主畫面用的 App 設定與圖示。
 
 ## 重新產生資料
 
-- 筆順資料：`python3 tools/make_data.py <hanzi-writer-data 套件資料夾> <makemeahanzi dictionary.txt> data`
-- 詞庫：編輯 `tools/words.tsv`（詞、意思），再執行 `python3 tools/make_words.py`，會依筆畫數自動分 7 級。
-- 圖示：`python3 tools/make_icon.py` 產生 `icons/icon.svg`，再轉成 PNG。
+```
+python3 tools/make_data.py <hanzi-writer-data 資料夾> <makemeahanzi dictionary.txt> <zh-stroke-data/json 資料夾> data <moedict dict-revised.json>
+python3 tools/make_words.py <SHREST1.DBF> <shrest2.dbf>      # 來自報告書的 download/result.zip
+python3 tools/make_icon.py                                   # icons/icon.svg，再轉成各尺寸 PNG
+```
 
 ## 跨裝置同步（俠客帳號）
 
@@ -24,5 +38,3 @@
 2. Dashboard → SQL Editor，貼上 `supabase/schema.sql` 執行。
 3. Project Settings → API，把 Project URL 與 anon public key 填進 `js/config.js`。
 4. push 到 `gh-pages`。之後在任何裝置用同一個「江湖名字 + 4 位數密碼」登入，就會同步進度。
-
-資料來源：[Make Me a Hanzi](https://github.com/skishore/makemeahanzi) / [hanzi-writer-data](https://github.com/chanind/hanzi-writer-data)，Arphic Public License（見 `data/ARPHICPL.TXT`）。
