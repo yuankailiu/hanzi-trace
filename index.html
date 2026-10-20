@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="描字本">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<title>筆順描字本</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen practice notebook — name chips on top, a red 田字格 writing box in the middle, controls underneath (side panel on wide screens) */
+:root {
+  --bg: #EDF2F0;
+  --paper: #FFFFFF;
+  --ink: #1E2622;
+  --muted: #5B6863;
+  --line: #D3DCD8;
+  --frame: #C8463F;
+  --grid: #E7A29B;
+  --outline: #DCE3E0;
+  --accent: #1B7F5F;
+  --accent-soft: #D7EEE5;
+  --accent-ink: #FFFFFF;
+  --hint: #F0A202;
+  --star: #F2B705;
+  --star-off: #D3DCD8;
+  --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "STKaiti", "DFKai-SB", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --muted: #9AA7A2; --line: #2F3A37;
+    --frame: #B4483F; --grid: #6A3330; --outline: #2C3734; --accent: #3FBF8F; --accent-soft: #1D3A30;
+    --accent-ink: #0B1411; --hint: #F5B83D; --star: #F5C542; --star-off: #3A4643;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --muted: #9AA7A2; --line: #2F3A37;
+  --frame: #B4483F; --grid: #6A3330; --outline: #2C3734; --accent: #3FBF8F; --accent-soft: #1D3A30;
+  --accent-ink: #0B1411; --hint: #F5B83D; --star: #F5C542; --star-off: #3A4643;
+  color-scheme: dark;
+}
+
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 24px;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+/* Header */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-wrap: balance;
+}
+h1 small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+form.name {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+form.name label {
+  position: absolute;
+  width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
+}
+#nameInput {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  padding: 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+#nameInput:focus { outline: none; border-color: var(--accent); }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 2px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 500;
+  touch-action: manipulation;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible, .chip:focus-visible, .seg button:focus-visible { outline: 3px solid var(--hint); outline-offset: 2px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Name chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chip {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 76px;
+  padding: 8px 12px 6px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--paper);
+}
+.chip .glyph {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  line-height: 1.1;
+}
+.chip .meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  min-height: 1.2em;
+}
+.chip[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.chip.missing .glyph { color: var(--muted); text-decoration: line-through; }
+
+/* Main */
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  main { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+.stage {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+}
+.box {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  max-width: 100%;
+  background: var(--paper);
+  border-radius: 6px;
+  box-shadow: 0 1px 0 var(--line), 0 10px 30px -18px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.box svg.grid, #writer { position: absolute; inset: 0; }
+.box svg.grid { width: 100%; height: 100%; }
+.grid .frame { fill: none; stroke: var(--frame); stroke-width: 3; }
+.grid .guide { stroke: var(--grid); stroke-width: 1.5; stroke-dasharray: 6 6; }
+.grid .diag { display: none; }
+.box.mi .grid .diag { display: inline; }
+.box .missing-msg {
+  position: absolute; inset: 0;
+  display: grid; place-content: center; text-align: center;
+  padding: 24px; color: var(--muted);
+}
+.box.shake { animation: shake 0.32s ease; }
+@keyframes shake {
+  25% { transform: translateX(-7px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .box.shake { animation: none; }
+}
+
+/* Side panel */
+.panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 4px;
+}
+.seg button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 6px;
+  display: grid;
+  gap: 0;
+  line-height: 1.3;
+}
+.seg button span { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button[aria-pressed="true"] span { color: var(--accent-ink); opacity: 0.85; }
+
+.status {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  min-height: 2.2em;
+  text-align: center;
+  text-wrap: balance;
+}
+.status .count { font-variant-numeric: tabular-nums; }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.result {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+  padding: 14px;
+  background: var(--accent-soft);
+  border-radius: 14px;
+}
+.result .big { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; }
+.stars { font-size: 2rem; letter-spacing: 0.08em; line-height: 1; }
+.stars .on { color: var(--star); }
+.stars .off { color: var(--star-off); }
+.result .actions { width: 100%; }
+
+details.settings {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+details.settings summary { cursor: pointer; }
+.opt-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.opt-row .label { min-width: 4.5em; letter-spacing: 0.04em; }
+.opt-row button { padding: 6px 12px; font-size: 0.9rem; }
+.opt-row button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+
+footer {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  max-width: 70ch;
+}
+footer a { color: inherit; }
+</style>
+
+<div class="app">
+  <header>
+    <h1>筆順描字本<small>看筆順 → 描字 → 自己寫</small></h1>
+    <form class="name" id="nameForm" autocomplete="off">
+      <label for="nameInput">要練習的字</label>
+      <input id="nameInput" name="name" maxlength="12" placeholder="輸入名字" value="劉岱恬">
+      <button class="primary" type="submit">開始練習</button>
+    </form>
+  </header>
+
+  <nav class="chips" id="chips" aria-label="名字裡的字"></nav>
+
+  <main>
+    <div class="stage" id="stage">
+      <div class="box" id="box">
+        <svg class="grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line class="guide" x1="50" y1="0" x2="50" y2="100" vector-effect="non-scaling-stroke"></line>
+          <line class="guide" x1="0" y1="50" x2="100" y2="50" vector-effect="non-scaling-stroke"></line>
+          <line class="guide diag" x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke"></line>
+          <line class="guide diag" x1="100" y1="0" x2="0" y2="100" vector-effect="non-scaling-stroke"></line>
+          <rect class="frame" x="0" y="0" width="100" height="100" vector-effect="non-scaling-stroke"></rect>
+        </svg>
+        <div id="writer"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="seg" id="modes" role="group" aria-label="練習方式">
+        <button type="button" data-mode="watch" aria-pressed="true">看筆順<span>一筆一筆看</span></button>
+        <button type="button" data-mode="trace" aria-pressed="false">描字<span>照灰色描</span></button>
+        <button type="button" data-mode="write" aria-pressed="false">自己寫<span>不看字</span></button>
+      </div>
+
+      <div class="status" id="status" aria-live="polite">&nbsp;</div>
+
+      <div class="actions" id="watchActions">
+        <button type="button" class="primary" id="playBtn">▶ 播放筆順</button>
+        <button type="button" id="stepBtn">下一筆</button>
+      </div>
+      <div class="actions" id="quizActions" hidden>
+        <button type="button" id="restartBtn">↺ 重寫</button>
+        <button type="button" id="demoBtn">看示範</button>
+      </div>
+
+      <div class="result" id="result" hidden>
+        <div class="big" id="resultTitle">好棒！</div>
+        <div class="stars" id="resultStars"></div>
+        <div id="resultMsg"></div>
+        <div class="actions">
+          <button type="button" id="againBtn">再寫一次</button>
+          <button type="button" class="primary" id="nextBtn">下一個字 →</button>
+        </div>
+      </div>
+
+      <details class="settings">
+        <summary>設定</summary>
+        <div class="opt-row" data-opt="grid">
+          <span class="label">格子</span>
+          <button type="button" data-val="tian">田字格</button>
+          <button type="button" data-val="mi">米字格</button>
+        </div>
+        <div class="opt-row" data-opt="lenient">
+          <span class="label">判定</span>
+          <button type="button" data-val="1">寬鬆（小朋友）</button>
+          <button type="button" data-val="0">標準</button>
+        </div>
+        <div class="opt-row" data-opt="slow">
+          <span class="label">播放速度</span>
+          <button type="button" data-val="1">慢</button>
+          <button type="button" data-val="0">正常</button>
+        </div>
+      </details>
+    </div>
+  </main>
+
+  <footer>
+    用手指或觸控筆在格子裡照順序寫。寫錯筆畫會提示，錯兩次以上會亮出該寫的那一筆。
+    筆順資料來自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener">Make Me a Hanzi</a>（Arphic Public License），以
+    <a href="https://hanziwriter.org" target="_blank" rel="noopener">Hanzi Writer</a> 呈現；少數字的筆順可能和台灣教育部標準不同。
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.2/dist/hanzi-writer.min.js"></script>
+<script>
+const N_CHUNKS = 128;
+const STORE_KEY = 'bishun-trace.v1';
+
+const box = document.getElementById('box');
+const stage = document.getElementById('stage');
+const writerEl = document.getElementById('writer');
+const chipsEl = document.getElementById('chips');
+const statusEl = document.getElementById('status');
+const watchActions = document.getElementById('watchActions');
+const quizActions = document.getElementById('quizActions');
+const resultEl = document.getElementById('result');
+const nameInput = document.getElementById('nameInput');
+
+const state = {
+  name: '劉岱恬',
+  chars: [],
+  idx: 0,
+  mode: 'watch',
+  grid: 'tian',
+  lenient: true,
+  slow: true,
+  stars: {},
+};
+const strokeCount = {};
+
+let writer = null;
+let builtSize = 0;
+let buildToken = 0;
+let stepNum = 0;
+
+// ---------- storage (per-viewer convenience) ----------
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (saved.name) state.name = saved.name;
+    if (saved.grid) state.grid = saved.grid;
+    if (typeof saved.lenient === 'boolean') state.lenient = saved.lenient;
+    if (typeof saved.slow === 'boolean') state.slow = saved.slow;
+    if (saved.stars) state.stars = saved.stars;
+  } catch (e) {}
+}
+function save() {
+  try {
+    const out = { name: state.name, grid: state.grid, lenient: state.lenient, slow: state.slow, stars: state.stars };
+    localStorage.setItem(STORE_KEY, JSON.stringify(out));
+  } catch (e) {}
+}
+
+// ---------- stroke data (bundled in 128 chunk files) ----------
+const chunkCache = new Map();
+function loadChunk(i) {
+  if (!chunkCache.has(i)) {
+    const url = 'data/c' + String(i).padStart(3, '0') + '.json';
+    const p = fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+    p.catch(function () { chunkCache.delete(i); });
+    chunkCache.set(i, p);
+  }
+  return chunkCache.get(i);
+}
+function getCharData(ch) {
+  const i = ch.codePointAt(0) % N_CHUNKS;
+  return loadChunk(i).then(function (chunk) { return chunk[ch] || null; });
+}
+
+// ---------- helpers ----------
+function token(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+function writerColors() {
+  return {
+    strokeColor: token('--ink'),
+    outlineColor: token('--outline'),
+    drawingColor: token('--accent'),
+    highlightColor: token('--hint'),
+  };
+}
+function parseName(text) {
+  const out = [];
+  for (const c of Array.from(text)) {
+    if (/\p{Script=Han}/u.test(c)) out.push(c);
+  }
+  return out.slice(0, 12);
+}
+function boxSize() {
+  const w = stage.clientWidth;
+  const h = window.innerHeight * 0.62;
+  return Math.round(Math.max(220, Math.min(w, h, 600)));
+}
+function starsFor(mistakes) {
+  if (mistakes <= 1) return 3;
+  if (mistakes <= 4) return 2;
+  return 1;
+}
+function starHtml(n) {
+  let s = '';
+  for (let i = 0; i < 3; i++) {
+    s += i < n ? '<span class="on">★</span>' : '<span class="off">★</span>';
+  }
+  return s;
+}
+function setStatus(html) {
+  statusEl.innerHTML = html;
+}
+function currentChar() {
+  return state.chars[state.idx];
+}
+
+// ---------- chips ----------
+function renderChips() {
+  chipsEl.innerHTML = '';
+  state.chars.forEach(function (ch, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    if (strokeCount[ch] === 0) b.classList.add('missing');
+    b.setAttribute('aria-current', i === state.idx ? 'true' : 'false');
+
+    const g = document.createElement('span');
+    g.className = 'glyph';
+    g.textContent = ch;
+
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    if (state.mode === 'watch') {
+      const n = strokeCount[ch];
+      if (n === 0) meta.textContent = '沒有資料';
+      else if (n) meta.textContent = n + ' 筆';
+    } else {
+      const best = (state.stars[ch] && state.stars[ch][state.mode]) || 0;
+      meta.innerHTML = '<span class="stars" style="font-size:0.9rem">' + starHtml(best) + '</span>';
+    }
+
+    b.append(g, meta);
+    b.addEventListener('click', function () {
+      state.idx = i;
+      renderChips();
+      build();
+    });
+    chipsEl.append(b);
+  });
+}
+
+// ---------- writer ----------
+async function build() {
+  const myToken = ++buildToken;
+  const ch = currentChar();
+  resultEl.hidden = true;
+  if (!ch) return;
+
+  let data = null;
+  try {
+    data = await getCharData(ch);
+  } catch (e) {
+    if (myToken !== buildToken) return;
+    showMissing('筆順資料載入失敗，請檢查網路後重新整理。');
+    return;
+  }
+  if (myToken !== buildToken) return;
+
+  if (writer) writer.cancelQuiz();
+  writer = null;
+  writerEl.innerHTML = '';
+
+  const size = boxSize();
+  builtSize = size;
+  box.style.width = size + 'px';
+  box.style.height = size + 'px';
+
+  if (!data) {
+    strokeCount[ch] = 0;
+    renderChips();
+    showMissing('「' + ch + '」目前沒有筆順資料，換一個字試試看。');
+    return;
+  }
+  strokeCount[ch] = data.strokes.length;
+
+  const colors = writerColors();
+  writer = HanziWriter.create(writerEl, ch, {
+    width: size,
+    height: size,
+    padding: Math.round(size * 0.06),
+    showCharacter: false,
+    showOutline: state.mode !== 'write',
+    strokeColor: colors.strokeColor,
+    outlineColor: colors.outlineColor,
+    drawingColor: colors.drawingColor,
+    highlightColor: colors.highlightColor,
+    drawingWidth: Math.max(6, Math.round(size / 36)),
+    strokeAnimationSpeed: state.slow ? 0.6 : 1.2,
+    delayBetweenStrokes: state.slow ? 600 : 250,
+    charDataLoader: function (c, onLoad, onError) {
+      getCharData(c).then(function (d) { d ? onLoad(d) : onError(new Error('missing')); }, onError);
+    },
+  });
+  startMode();
+}
+
+function showMissing(msg) {
+  watchActions.hidden = true;
+  quizActions.hidden = true;
+  setStatus('&nbsp;');
+  const div = document.createElement('div');
+  div.className = 'missing-msg';
+  div.textContent = msg;
+  writerEl.append(div);
+}
+
+function startMode() {
+  const ch = currentChar();
+  const total = strokeCount[ch];
+  stepNum = 0;
+  resultEl.hidden = true;
+  watchActions.hidden = state.mode !== 'watch';
+  quizActions.hidden = state.mode === 'watch';
+
+  if (state.mode === 'watch') {
+    setStatus('「' + ch + '」共 <span class="count">' + total + '</span> 筆');
+    writer.animateCharacter({
+      onComplete: function () {
+        setStatus('看完了！換「描字」試試看');
+      },
+    });
+    return;
+  }
+
+  const hintAfter = state.mode === 'trace' ? 2 : 3;
+  if (state.mode === 'write') writer.hideOutline();
+  else writer.showOutline();
+  setStatus('從第 <span class="count">1</span> 筆開始寫（共 ' + total + ' 筆）');
+
+  writer.quiz({
+    leniency: state.lenient ? 1.5 : 1.0,
+    showHintAfterMisses: hintAfter,
+    highlightOnComplete: true,
+    onCorrectStroke: function (d) {
+      if (d.strokesRemaining > 0) {
+        setStatus('第 <span class="count">' + (d.strokeNum + 1) + '</span> 筆 ✓　還有 ' + d.strokesRemaining + ' 筆');
+      }
+    },
+    onMistake: function (d) {
+      box.classList.remove('shake');
+      void box.offsetWidth;
+      box.classList.add('shake');
+      if (d.mistakesOnStroke >= hintAfter) setStatus('照著發亮的那一筆寫');
+      else setStatus('不是這一筆喔，再試一次');
+    },
+    onComplete: function (d) {
+      finish(d.totalMistakes);
+    },
+  });
+}
+
+function finish(mistakes) {
+  const ch = currentChar();
+  const n = starsFor(mistakes);
+  if (!state.stars[ch]) state.stars[ch] = {};
+  const prev = state.stars[ch][state.mode] || 0;
+  if (n > prev) state.stars[ch][state.mode] = n;
+  save();
+  renderChips();
+
+  setStatus('&nbsp;');
+  quizActions.hidden = true;
+  document.getElementById('resultTitle').textContent = mistakes === 0 ? '太厲害了！' : '好棒！寫完了';
+  document.getElementById('resultStars').innerHTML = starHtml(n);
+  document.getElementById('resultMsg').textContent = mistakes === 0 ? '一次都沒寫錯' : '這次錯了 ' + mistakes + ' 次';
+
+  const nextBtn = document.getElementById('nextBtn');
+  if (state.idx < state.chars.length - 1) {
+    nextBtn.textContent = '下一個字 →';
+    nextBtn.dataset.action = 'next';
+  } else if (state.mode === 'trace') {
+    nextBtn.textContent = '名字描完了！換自己寫 →';
+    nextBtn.dataset.action = 'to-write';
+  } else {
+    nextBtn.textContent = '名字寫完了！從頭再來';
+    nextBtn.dataset.action = 'restart';
+  }
+  resultEl.hidden = false;
+}
+
+// ---------- controls ----------
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('#modes button').forEach(function (b) {
+    b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false');
+  });
+  renderChips();
+  build();
+}
+document.querySelectorAll('#modes button').forEach(function (b) {
+  b.addEventListener('click', function () { setMode(b.dataset.mode); });
+});
+
+document.getElementById('playBtn').addEventListener('click', function () {
+  if (!writer) return;
+  stepNum = 0;
+  startMode();
+});
+document.getElementById('stepBtn').addEventListener('click', function () {
+  if (!writer) return;
+  const total = strokeCount[currentChar()];
+  if (stepNum === 0 || stepNum >= total) {
+    writer.hideCharacter();
+    stepNum = 0;
+  }
+  writer.animateStroke(stepNum);
+  stepNum += 1;
+  setStatus('第 <span class="count">' + stepNum + ' / ' + total + '</span> 筆');
+});
+document.getElementById('restartBtn').addEventListener('click', function () { build(); });
+document.getElementById('demoBtn').addEventListener('click', function () { setMode('watch'); });
+document.getElementById('againBtn').addEventListener('click', function () { build(); });
+document.getElementById('nextBtn').addEventListener('click', function (e) {
+  const action = e.currentTarget.dataset.action;
+  if (action === 'next') {
+    state.idx += 1;
+    renderChips();
+    build();
+  } else if (action === 'to-write') {
+    state.idx = 0;
+    setMode('write');
+  } else {
+    state.idx = 0;
+    renderChips();
+    build();
+  }
+});
+
+document.getElementById('nameForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  setName(nameInput.value);
+});
+
+function setName(text) {
+  const chars = parseName(text);
+  if (chars.length === 0) {
+    setStatus('請輸入中文字');
+    return;
+  }
+  state.name = chars.join('');
+  state.chars = chars;
+  state.idx = 0;
+  nameInput.value = state.name;
+  save();
+  renderChips();
+  build();
+  chars.forEach(function (ch) {
+    getCharData(ch).then(function (d) {
+      strokeCount[ch] = d ? d.strokes.length : 0;
+      renderChips();
+    }, function () {});
+  });
+}
+
+// settings
+function renderOptions() {
+  box.classList.toggle('mi', state.grid === 'mi');
+  document.querySelectorAll('.opt-row').forEach(function (row) {
+    const opt = row.dataset.opt;
+    let current;
+    if (opt === 'grid') current = state.grid;
+    else current = state[opt] ? '1' : '0';
+    row.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
+    });
+  });
+}
+document.querySelectorAll('.opt-row').forEach(function (row) {
+  row.addEventListener('click', function (e) {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const opt = row.dataset.opt;
+    if (opt === 'grid') {
+      state.grid = b.dataset.val;
+      renderOptions();
+      save();
+      return;
+    }
+    state[opt] = b.dataset.val === '1';
+    renderOptions();
+    save();
+    build();
+  });
+});
+
+// rebuild only on a real width change, so a phone's toolbar showing/hiding does not reset the writing
+new ResizeObserver(function () {
+  if (!state.chars.length) return;
+  if (Math.abs(boxSize() - builtSize) > 24) build();
+}).observe(stage);
+
+// follow theme changes without resetting progress
+function recolor() {
+  if (!writer) return;
+  const colors = writerColors();
+  for (const key in colors) writer.updateColor(key, colors[key]);
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
+new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+loadSaved();
+renderOptions();
+setName(state.name);
+</script>
+
+</body>
+</html>
