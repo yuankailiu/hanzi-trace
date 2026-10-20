@@ -40,6 +40,9 @@ const state = {
   mode: 'watch',
   // settings
   content: 'mix',
+  music: 'xiangqi',
+  gender: 'boy',
+  heroStyle: 'q',
   theme: 'light',
   voice: '',
   grid: 'tian',
@@ -60,10 +63,12 @@ const purse = {
   ingots: 0,
   xp: 0,
   owned: [],
-  gear: { weapon: '', acc: '', pet: '' },
+  gear: { weapon: '', head: '', waist: '', back: '', pet: '' },
   lastDay: '',
   streak: 0,
 };
+// words shown lately (practiced or not), so the dice does not repeat itself
+const seen = [];
 const account = { alias: '', pass: '', sync: 'local' };
 const strokeCount = {};
 const glyphData = {};
@@ -222,7 +227,7 @@ function serializeProfile() {
     v: 3,
     savedAt: Date.now(),
     settings: {
-      content: state.content, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, gender: state.gender, heroStyle: state.heroStyle, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -239,14 +244,14 @@ function resetProgress() {
   state.recent = [];
   state.list = [];
   state.text = '';
-  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', acc: '', pet: '' }, lastDay: '', streak: 0 });
+  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, lastDay: '', streak: 0 });
 }
 function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
   const p = JSON.parse(JSON.stringify(source));
   resetProgress();
   if (p.settings) {
-    for (const key of ['content', 'theme', 'voice', 'grid']) {
+    for (const key of ['content', 'music', 'gender', 'heroStyle', 'theme', 'voice', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
@@ -267,6 +272,12 @@ function applyProfile(source) {
     purse.owned = old.owned || [];
     if (old.gear) Object.assign(purse.gear, old.gear);
     else if (old.equipped) purse.gear.weapon = old.equipped;
+    // earlier versions had one accessory slot
+    if (purse.gear.acc) {
+      if (purse.gear.acc === 'cloak') purse.gear.back = 'cloak';
+      else purse.gear.waist = purse.gear.acc;
+    }
+    delete purse.gear.acc;
     purse.lastDay = old.lastDay || '';
     purse.streak = old.streak || 0;
   }
@@ -496,13 +507,13 @@ function wordTier() {
 function pickFromList() {
   const fresh = [];
   for (const t of state.list) {
-    if (state.recent.indexOf(t) < 0) fresh.push(t);
+    if (seen.indexOf(t) < 0) fresh.push(t);
   }
   if (fresh.length) return { w: fresh[Math.floor(Math.random() * fresh.length)] };
   // every item practiced lately: take the one practiced longest ago, so the list goes round
   let oldest = state.list[0];
   for (const t of state.list) {
-    if (state.recent.indexOf(t) > state.recent.indexOf(oldest)) oldest = t;
+    if (seen.indexOf(t) > seen.indexOf(oldest)) oldest = t;
   }
   return { w: oldest };
 }
@@ -517,7 +528,7 @@ function pickWord() {
   for (const w of words) {
     if (w.t > tier) continue;
     if ((w.w.length === 1) !== single) continue;
-    if (state.recent.indexOf(w.w) >= 0) continue;
+    if (seen.indexOf(w.w) >= 0 || state.recent.indexOf(w.w) >= 0) continue;
     let weight = 1;
     if (w.t === tier) weight = 4;
     else if (w.t === tier - 1) weight = 2;
@@ -550,10 +561,10 @@ function loadText(text, speak) {
   state.mode = 'watch';
   sessionDone.clear();
 
-  const at = state.recent.indexOf(state.text);
-  if (at >= 0) state.recent.splice(at, 1);
-  state.recent.unshift(state.text);
-  state.recent = state.recent.slice(0, RECENT_MAX);
+  const at = seen.indexOf(state.text);
+  if (at >= 0) seen.splice(at, 1);
+  seen.unshift(state.text);
+  seen.length = Math.min(seen.length, 40);
 
   save();
   renderModes();
@@ -624,13 +635,45 @@ function queueCelebration(delay, fn) {
   celebrationFreeAt = at + 5200;
   setTimeout(fn, at - now);
 }
+// the hero in the chosen style; size: [css width, css height] for canvases not laid out yet
+const PIXEL_POSE = { cheer: 'jump', attack: 'thrust', hurt: 'hurt' };
+function heroCtx(canvas, size) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cssW = size ? size[0] : canvas.clientWidth;
+  const cssH = size ? size[1] : canvas.clientHeight;
+  const w = Math.max(1, Math.round(cssW * dpr));
+  const h = Math.max(1, Math.round(cssH * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(w / HERO_W, 0, 0, h / HERO_H, 0, 0);
+  ctx.clearRect(0, 0, HERO_W, HERO_H);
+  return ctx;
+}
+function drawHeroOn(canvas, o) {
+  if (state.heroStyle === 'pixel') {
+    canvas.classList.add('pixel');
+    if (canvas.width !== AV_W || canvas.height !== AV_H) {
+      canvas.width = AV_W;
+      canvas.height = AV_H;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, AV_W, AV_H);
+    if (o.floor !== false) drawFloor(ctx);
+    drawAvatar(ctx, o.title, o.gear, o.pixelPose || PIXEL_POSE[o.action] || 'stand', o.frame || 0, o.qi);
+    return;
+  }
+  canvas.classList.remove('pixel');
+  const ctx = heroCtx(canvas, o.size);
+  if (o.floor !== false) drawFloorVec(ctx);
+  drawHeroVec(ctx, { title: o.title, gear: o.gear, gender: state.gender, action: o.action, elapsed: o.elapsed, t: o.t, qi: o.qi });
+}
 function titleCanvas(idx) {
   const c = document.createElement('canvas');
-  c.width = AV_W;
-  c.height = AV_H;
-  const ctx = c.getContext('2d');
-  drawFloor(ctx);
-  drawAvatar(ctx, idx, purse.gear, 'jump', 0, qiColor());
+  drawHeroOn(c, { title: idx, gear: purse.gear, action: 'cheer', elapsed: 250, t: 1000, qi: qiColor(), size: [320, 240] });
   return c;
 }
 function showLevelUp(level) {
@@ -702,6 +745,13 @@ function renderPurse() {
 }
 
 // ---------- 我的俠客: avatar, titles so far, shop ----------
+// an item stays a shadow named ？？？ until the title is high enough and its price is within reach
+function itemKnown(it, owned, tIdx) {
+  if (owned) return true;
+  if (tIdx < it.minTitle) return false;
+  if (it.ingots) return it.ingots <= purse.ingots * 2 + 1;
+  return it.taels <= purse.taels * 2 + 20;
+}
 function renderHero() {
   const info = levelInfo(purse.xp);
   const tIdx = titleIndexFor(info.level);
@@ -713,11 +763,7 @@ function renderHero() {
     : '再 ' + (info.need - info.into) + ' 經驗升到 Lv ' + (info.level + 1);
   document.getElementById('heroTaels').textContent = purse.taels;
   document.getElementById('heroIngots').textContent = purse.ingots;
-
-  const hc = document.getElementById('heroAvatar').getContext('2d');
-  hc.clearRect(0, 0, AV_W, AV_H);
-  drawFloor(hc);
-  drawAvatar(hc, tIdx, purse.gear, 'stand', 0, null);
+  drawHeroOn(document.getElementById('heroAvatar'), { title: tIdx, gear: purse.gear, t: 1000, qi: qiColor(), size: [192, 144] });
 
   // titles reached so far, the current one framed, the next one as a black silhouette
   const ladder = document.getElementById('ladder');
@@ -726,20 +772,14 @@ function renderHero() {
     const item = document.createElement('div');
     item.className = 'ladder-item';
     const c = document.createElement('canvas');
-    c.width = AV_W;
-    c.height = AV_H;
-    const ctx = c.getContext('2d');
-    drawAvatar(ctx, i, {}, 'stand', 0, null);
+    drawHeroOn(c, { title: i, gear: {}, t: 1000, size: [72, 54] });
     const label = document.createElement('span');
     if (i === tIdx) {
       item.classList.add('now');
       label.textContent = TITLES[i].name;
     } else if (i > tIdx) {
       item.classList.add('next');
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = '#11111b';
-      ctx.fillRect(0, 0, AV_W, AV_H);
-      ctx.globalCompositeOperation = 'source-over';
+      silhouette(c, '#1e1a26');
       label.textContent = '？？？';
     } else {
       label.textContent = TITLES[i].name;
@@ -767,37 +807,42 @@ function renderHero() {
   grid.innerHTML = '';
   for (const it of ITEMS) {
     if (it.slot !== shopSlot) continue;
+    const place = placeOf(it);
     const owned = purse.owned.indexOf(it.id) >= 0;
-    const wearing = purse.gear[it.slot] === it.id;
+    const wearing = purse.gear[place] === it.id;
+    const known = itemKnown(it, owned, tIdx);
     const card = document.createElement('div');
     card.className = 'item';
     if (!owned) card.classList.add('locked');
     if (wearing) card.classList.add('equipped');
+    if (!known) card.classList.add('mystery');
 
     const c = document.createElement('canvas');
-    c.width = 32;
-    c.height = 20;
-    drawItemCard(c, it);
-
     const name = document.createElement('div');
     name.className = 'item-name';
-    name.textContent = it.name;
+    name.textContent = known ? it.name : '？？？';
+    card.append(c, name);
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
     if (owned) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
       btn.textContent = wearing ? '✓ 使用中' : '換上';
-      btn.addEventListener('click', function () { equip(it.slot, wearing ? '' : it.id); });
-    } else {
+      btn.addEventListener('click', function () { equip(place, wearing ? '' : it.id); });
+      card.append(btn);
+    } else if (known) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
       const canBuy = it.ingots ? purse.ingots >= it.ingots : purse.taels >= it.taels;
       btn.innerHTML = it.ingots ? syceeHtml('gold') + it.ingots : syceeHtml('silver') + it.taels;
       btn.setAttribute('aria-label', '買' + it.name);
       btn.disabled = !canBuy;
       btn.addEventListener('click', function () { buy(it); });
+      card.append(btn);
     }
-
-    card.append(c, name, btn);
     grid.append(card);
+    // drawn once the card is laid out, so the picture matches its box
+    drawItemIcon(c, it);
+    if (!known) silhouette(c, '#2b2233');
   }
 }
 
@@ -810,7 +855,7 @@ function buy(it) {
     purse.taels -= it.taels;
   }
   purse.owned.push(it.id);
-  purse.gear[it.slot] = it.id;
+  purse.gear[placeOf(it)] = it.id;
   shown.taels = purse.taels;
   shown.ingots = purse.ingots;
   save();
@@ -820,29 +865,23 @@ function buy(it) {
   avatarPlay('attack');
   toast('得到「' + it.name + '」');
 }
-function equip(slot, id) {
-  purse.gear[slot] = id;
+function equip(place, id) {
+  purse.gear[place] = id;
   save();
   renderHero();
   avatarPlay('attack');
 }
 
-// ---------- pixel 俠客 loop ----------
-const avatar = { ctx: null, queue: [], idle: 0, frame: 0, last: 0 };
+// ---------- the 俠客 on the main screen ----------
+const avatar = { canvas: null, queue: [], idle: 0, frame: 0, last: 0, action: '', start: 0 };
 function avatarPlay(name) {
   avatar.queue = ACTIONS[name].slice();
-  if (reducedMotion()) avatarDraw(avatar.queue[0]);
+  avatar.action = name;
+  avatar.start = performance.now();
+  if (reducedMotion()) avatarRender(performance.now());
 }
-function avatarDraw(poseName) {
-  const ctx = avatar.ctx;
-  ctx.clearRect(0, 0, AV_W, AV_H);
-  drawFloor(ctx);
-  drawAvatar(ctx, titleIndex(), purse.gear, poseName, avatar.frame, qiColor());
-}
-function avatarTick(now) {
-  const wait = avatar.queue.length ? 95 : 170;
-  if (now - avatar.last >= wait) {
-    avatar.last = now;
+function avatarRender(now) {
+  if (state.heroStyle === 'pixel') {
     let pose;
     if (avatar.queue.length) {
       pose = avatar.queue.shift();
@@ -851,14 +890,31 @@ function avatarTick(now) {
       avatar.idle += 1;
     }
     avatar.frame += 1;
-    avatarDraw(pose);
+    drawHeroOn(avatar.canvas, { title: titleIndex(), gear: purse.gear, pixelPose: pose, frame: avatar.frame, qi: qiColor() });
+    return;
+  }
+  let action = avatar.action;
+  const elapsed = now - avatar.start;
+  if (action && elapsed > HERO_ACTION_MS[action]) {
+    avatar.action = '';
+    action = '';
+  }
+  drawHeroOn(avatar.canvas, { title: titleIndex(), gear: purse.gear, action: action, elapsed: elapsed, t: now, qi: qiColor() });
+}
+// Q版 redraws smoothly at ~30 fps; the pixel style steps like a sprite
+function avatarTick(now) {
+  let wait = 33;
+  if (state.heroStyle === 'pixel') wait = avatar.queue.length ? 95 : 170;
+  if (now - avatar.last >= wait) {
+    avatar.last = now;
+    avatarRender(now);
   }
   requestAnimationFrame(avatarTick);
 }
 function startAvatar() {
-  avatar.ctx = document.getElementById('avatar').getContext('2d');
+  avatar.canvas = document.getElementById('avatar');
   if (reducedMotion()) {
-    avatarDraw('stand');
+    avatarRender(1000);
     return;
   }
   requestAnimationFrame(avatarTick);
@@ -1130,6 +1186,12 @@ function finish(mistakes) {
   if (grade > prev) state.stars[ch][state.mode] = grade;
 
   const reward = award(grade, mistakes);
+  // a character traced or written counts the word as practiced
+  const at = state.recent.indexOf(state.text);
+  if (at >= 0) state.recent.splice(at, 1);
+  state.recent.unshift(state.text);
+  state.recent = state.recent.slice(0, RECENT_MAX);
+  save();
   renderChips();
   avatarPlay('cheer');
 
@@ -1412,7 +1474,7 @@ function renderOptions() {
   document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
-    if (opt === 'grid' || opt === 'theme' || opt === 'content') current = state[opt];
+    if (['grid', 'theme', 'content', 'music', 'gender', 'heroStyle'].indexOf(opt) >= 0) current = state[opt];
     else current = state[opt] ? '1' : '0';
     row.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
@@ -1433,6 +1495,22 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
       renderOptions();
       save();
       nextWord(true);
+      return;
+    }
+    if (opt === 'music') {
+      state.music = b.dataset.val;
+      renderOptions();
+      save();
+      playMusic(state.music);
+      return;
+    }
+    if (opt === 'gender' || opt === 'heroStyle') {
+      state[opt] = b.dataset.val;
+      renderOptions();
+      save();
+      renderHero();
+      avatar.last = 0;
+      if (reducedMotion()) avatarRender(1000);
       return;
     }
     if (opt === 'grid' || opt === 'theme') {

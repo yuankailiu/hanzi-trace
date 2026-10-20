@@ -81,8 +81,13 @@ function sealMask() {
 // ---------- sound (synthesized with Web Audio, no files) ----------
 let audioCtx = null;
 let noiseBuf = null;
+// play through the iPhone/iPad silent switch, like a game would (Safari 16.4+)
+if (navigator.audioSession) navigator.audioSession.type = 'playback';
 function getAudio() {
   if (!state.sound) return null;
+  return audioContext();
+}
+function audioContext() {
   if (!audioCtx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
@@ -245,6 +250,87 @@ function sfxTick(pitch) {
   o.stop(t + 0.22);
 }
 
+// ---------- background music: loops one track, fading out at the end and back in at the start ----------
+const TRACKS = {
+  xiangqi: 'audio/xiangqi.m4a',
+  arisan: 'audio/arisan.mp3',
+  scions: 'audio/scions-village.mp3',
+  eren: 'audio/eren-valley.mp3',
+  chungum: 'audio/chungumgwan.mp3',
+};
+const MUSIC_VOLUME = 0.3;
+const MUSIC_DUCKED = 0.08;
+const MUSIC_FADE = 1.6;
+const music = { el: null, gain: null, track: '', fadingOut: false, started: false };
+
+function musicGraph() {
+  if (music.el) return true;
+  const ac = audioContext();
+  if (!ac) return false;
+  music.el = new Audio();
+  music.el.preload = 'auto';
+  music.el.playsInline = true;
+  music.gain = ac.createGain();
+  music.gain.gain.value = 0;
+  ac.createMediaElementSource(music.el).connect(music.gain).connect(ac.destination);
+  music.el.addEventListener('timeupdate', function () {
+    const el = music.el;
+    if (!music.fadingOut && el.duration && el.duration - el.currentTime < MUSIC_FADE) {
+      music.fadingOut = true;
+      musicFade(0, MUSIC_FADE);
+    }
+  });
+  music.el.addEventListener('ended', function () {
+    music.el.currentTime = 0;
+    music.fadingOut = false;
+    music.el.play().then(function () { musicFade(MUSIC_VOLUME, MUSIC_FADE); }, function () {});
+  });
+  return true;
+}
+function musicFade(to, seconds) {
+  if (!music.gain) return;
+  const t = audioCtx.currentTime;
+  const g = music.gain.gain;
+  g.cancelScheduledValues(t);
+  g.setValueAtTime(g.value, t);
+  g.linearRampToValueAtTime(to, t + seconds);
+}
+// called from a tap (browsers start sound only after the user touches the page)
+function playMusic(id) {
+  if (!id || id === 'off' || !TRACKS[id]) {
+    stopMusic();
+    return;
+  }
+  if (!musicGraph()) return;
+  if (music.track !== id) {
+    music.track = id;
+    music.el.src = TRACKS[id];
+    music.el.currentTime = 0;
+  }
+  music.fadingOut = false;
+  music.started = true;
+  music.el.play().then(function () { musicFade(MUSIC_VOLUME, MUSIC_FADE); }, function () {});
+}
+function stopMusic() {
+  if (!music.el) return;
+  musicFade(0, 0.8);
+  const el = music.el;
+  setTimeout(function () { if (music.gain && music.gain.gain.value < 0.01) el.pause(); }, 900);
+}
+function duckMusic(on) {
+  if (!music.el || music.el.paused) return;
+  musicFade(on ? MUSIC_DUCKED : MUSIC_VOLUME, 0.35);
+}
+// start on the first touch, pause while the app is in the background
+document.addEventListener('pointerdown', function () {
+  if (!music.started && state.music !== 'off') playMusic(state.music);
+}, { capture: true });
+document.addEventListener('visibilitychange', function () {
+  if (!music.el || state.music === 'off') return;
+  if (document.hidden) music.el.pause();
+  else playMusic(state.music);
+});
+
 // ---------- speech ----------
 // Apple's novelty voices (Eloquence) read Chinese oddly; they never become the default or show in the picker
 const NOVELTY_VOICES = /Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
@@ -285,6 +371,9 @@ function say(text) {
   u.lang = v ? v.lang : 'zh-TW';
   u.rate = 0.75;
   if (v) u.voice = v;
+  duckMusic(true);
+  u.onend = function () { duckMusic(false); };
+  u.onerror = function () { duckMusic(false); };
   window.speechSynthesis.speak(u);
 }
 if ('speechSynthesis' in window) window.speechSynthesis.getVoices();

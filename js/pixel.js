@@ -1,54 +1,6 @@
 // Pixel 俠客: drawn on a 48x36 canvas and shown scaled up with image-rendering: pixelated.
 
-// 頭銜: one title spans LEVELS_PER_TITLE levels; the outfit changes only when the title changes
-const LEVELS_PER_TITLE = 5;
-const TITLES = [
-  { name: '新手', robe: '#9A948A', belt: '#5A4632', gear: 'none' },
-  { name: '學徒', robe: '#B9A27A', belt: '#5A4632', gear: 'band' },
-  { name: '入門弟子', robe: '#3F6FB0', belt: '#2A3F66', gear: 'band' },
-  { name: '練家子', robe: '#2E8B7A', belt: '#1D5A4F', gear: 'bandTails' },
-  { name: '武師', robe: '#7A4A2A', belt: '#2B2522', gear: 'bandTails' },
-  { name: '俠客', robe: '#3A3A44', belt: '#B23A2E', gear: 'hat' },
-  { name: '江湖好手', robe: '#4C6A3A', belt: '#C9A03A', gear: 'hat', cape: '#6E4A2E' },
-  { name: '成名高手', robe: '#2F4A6E', belt: '#C5CCD2', gear: 'hat', cape: '#A8322A' },
-  { name: '大俠', robe: '#E9E4D8', belt: '#2F5D7C', gear: 'hat', cape: '#B8322A' },
-  { name: '一方豪傑', robe: '#8E2F2A', belt: '#E0B957', gear: 'topknot', cape: '#3A3A44' },
-  { name: '武林名宿', robe: '#5E5A7A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
-  { name: '宗師', robe: '#6B4C9A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
-  { name: '大宗師', robe: '#F2EEE4', belt: '#C9A03A', gear: 'goldBand', cape: '#C9A03A' },
-  { name: '武林泰斗', robe: '#1F3A5A', belt: '#E0B957', gear: 'jadeCrown', cape: '#B8322A' },
-  { name: '盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
-  { name: '天下第一', robe: '#E0B957', belt: '#B8322A', gear: 'crown', cape: '#B8322A' },
-];
-
-// shop: weapons (held), accessories (worn), companions (stand beside); price in taels or ingots
-const ITEMS = [
-  { id: 'wood', slot: 'weapon', name: '木劍', taels: 20, qi: '#A9834F' },
-  { id: 'staff', slot: 'weapon', name: '竹棍', taels: 35, qi: '#7E9A4E' },
-  { id: 'fan', slot: 'weapon', name: '鐵扇', taels: 60, qi: '#7F8C99' },
-  { id: 'brush', slot: 'weapon', name: '判官筆', taels: 80, qi: '#3B3B3B' },
-  { id: 'whip', slot: 'weapon', name: '長鞭', taels: 100, qi: '#8E5A34' },
-  { id: 'spear', slot: 'weapon', name: '紅纓槍', taels: 130, qi: '#C2453C' },
-  { id: 'emei', slot: 'weapon', name: '峨嵋刺', taels: 160, qi: '#9AA4AE' },
-  { id: 'ring', slot: 'weapon', name: '九環刀', taels: 200, qi: '#C9A03A' },
-  { id: 'hammer', slot: 'weapon', name: '流星錘', taels: 240, qi: '#5F6B76' },
-  { id: 'guandao', slot: 'weapon', name: '青龍偃月刀', taels: 300, qi: '#3E8E7E' },
-  { id: 'zhanlu', slot: 'weapon', name: '湛盧劍', ingots: 3, qi: '#5B7FB5' },
-  { id: 'ganjiang', slot: 'weapon', name: '干將莫邪', ingots: 5, qi: '#8E6FB8' },
-  { id: 'bell', slot: 'acc', name: '鈴鐺', taels: 30 },
-  { id: 'gourd', slot: 'acc', name: '葫蘆', taels: 50 },
-  { id: 'jade', slot: 'acc', name: '玉佩', taels: 80 },
-  { id: 'cloak', slot: 'acc', name: '披風', taels: 120 },
-  { id: 'bunny', slot: 'pet', name: '小白兔', taels: 60 },
-  { id: 'dog', slot: 'pet', name: '小黃狗', taels: 90 },
-  { id: 'panda', slot: 'pet', name: '熊貓寶寶', ingots: 2 },
-  { id: 'crane', slot: 'pet', name: '仙鶴', ingots: 4 },
-];
-const SLOTS = [
-  { id: 'weapon', name: '兵器' },
-  { id: 'acc', name: '飾品' },
-  { id: 'pet', name: '夥伴' },
-];
+// Titles, items and slots are defined in hero.js; this file only draws the pixel style.
 
 const AV_W = 48;
 const AV_H = 36;
@@ -328,7 +280,7 @@ function drawAura(ctx, titleIdx, cx, gy, frame) {
   }
 }
 
-// gear: { weapon, acc, pet } item ids
+// gear: { weapon, head, waist, back, pet } item ids (pixel style draws the ones it has sprites for)
 function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
   const look = TITLES[titleIdx];
   const p = POSES[poseName];
@@ -344,7 +296,8 @@ function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
 
   // cape behind the body; the 披風 accessory brings one to titles that have none
   let cape = look.cape;
-  if (gear.acc === 'cloak') cape = '#2F5D7C';
+  if (gear.back === 'cloak') cape = '#2F5D7C';
+  if (gear.back === 'goldcloak') cape = '#E0B957';
   if (cape) {
     pxRect(ctx, cx - 6, gy - 18 + b, 2, 11 + f, cape);
     pxRect(ctx, cx - 7, gy - 11 + b + f, 1, 4, cape);
@@ -369,7 +322,7 @@ function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
   pxRect(ctx, cx - 4, gy - 12 + b, 8, 1, look.belt);
   pxRect(ctx, cx - 1, gy - 18 + b, 1, 2, PX.collar);
   pxRect(ctx, cx, gy - 17 + b, 1, 1, PX.collar);
-  drawAcc(ctx, gear.acc, cx, gy - 12 + b);
+  drawAcc(ctx, gear.waist, cx, gy - 12 + b);
 
   // head: face, hair, bun
   pxRect(ctx, cx - 4, ht + 1, 8, 8, PX.skin);
