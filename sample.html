@@ -27,9 +27,8 @@ img { max-width: 100%; }
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&display=swap">
 <style>
-/* Layout: a style sample for review — a scene card with the hero (boy and girl), three weapon icons in inventory slots,
-   and a backpack panel (tabs, item detail, slot grid). One outline/shade/highlight rule shared by every drawing:
-   outer outline 3.2 (ink), inner detail 1.4, flat base color + one shade + a white highlight. */
+/* Layout: a style sample for review — animated pixel scene tiles (boy, girl, night), the sixteen titles for both,
+   three pixel weapon icons in inventory slots, and the approved backpack panel (tabs, item detail, slot grid). */
 :root {
   --bg: #efe4cf;
   --paper: #f8f2e3;
@@ -99,7 +98,11 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
   padding: 0;
   cursor: pointer;
 }
-.slot canvas { width: 100%; height: 100%; display: block; }
+.slot canvas { width: 78px; height: 78px; display: block; margin: auto; image-rendering: pixelated; }
+.ptile { width: 216px; height: 162px; display: block; border: 3px solid var(--ink); border-radius: 10px; box-shadow: 0 4px 0 rgba(29, 21, 23, 0.35); image-rendering: pixelated; }
+.stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.stage-item { display: grid; justify-items: center; gap: 2px; font-family: var(--font-display); font-size: 0.85rem; cursor: pointer; }
+.stage-item canvas { width: 84px; height: 104px; background: #fbf6ea; border: 2px solid #b9ab8c; border-radius: 8px; image-rendering: pixelated; }
 .slot::after {
   content: "";
   position: absolute;
@@ -171,7 +174,7 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
 }
-#bigItem { width: 260px; height: 195px; max-width: 100%; display: block; background: #e2d8c4; border-radius: 10px; border: 2.5px solid #b9ab8c; }
+#bigItem { width: 200px; height: 200px; max-width: 100%; display: block; background: #e2d8c4; border-radius: 10px; border: 2.5px solid #b9ab8c; image-rendering: pixelated; }
 .plate {
   justify-self: stretch;
   background: var(--plate);
@@ -213,29 +216,29 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
 @media (max-width: 680px) { .grid { grid-template-columns: repeat(auto-fill, 80px); } .grid .slot { width: 80px; height: 80px; } }
 .rules { margin: 0; padding-left: 1.2em; font-size: 0.9rem; color: var(--muted); display: grid; gap: 4px; }
 </style>
-
 <div class="wrap">
-  <h1>俠客畫風樣本<small>人物參考《萌三國》：約 2 頭身、3/4 側臉、動漫大眼、尖束髮絲與光澤、層次服裝與金邊；物品與背包沿用已確認的風格</small></h1>
+  <h1>俠客畫風樣本<small>像素風，參考《逸劍風雲決》：清楚的像素方格、每種材質四階明暗（亮、底、暗、描邊）、光從左上來、地上有影子</small></h1>
 
   <section class="frame">
     <h2>角色</h2>
     <div class="row">
-      <div><canvas class="char" id="charBoy"></canvas><div class="caption">少俠：高馬尾、銀髮冠、白頭巾、青色武袍配護肩，手持青鋼劍</div></div>
-      <div><canvas class="char" id="charGirl"></canvas><div class="caption">女俠：雙丫髻配金飾與小紅花、珠串緞帶、紅色交領長裙，手持摺扇</div></div>
+      <div><canvas class="ptile" id="tileBoy"></canvas><div class="caption">少俠・練家子：紅頭巾飄帶、髮髻、青色武袍，手持青鋼劍</div></div>
+      <div><canvas class="ptile" id="tileGirl"></canvas><div class="caption">女俠・一方豪傑：雙丫髻配花與金簪、長髮、紅色長裙金邊，手持鐵扇</div></div>
+      <div><canvas class="ptile" id="tileNight"></canvas><div class="caption">夜晚場景・大宗師：高馬尾、銀護肩、金邊白袍，手持紅纓槍</div></div>
     </div>
-    <h2 style="margin-top:16px">縮小到遊戲裡的大小</h2>
-    <div class="row">
-      <canvas class="tile" id="tileBoy"></canvas>
-      <canvas class="tile" id="tileGirl"></canvas>
-    </div>
+  </section>
+
+  <section class="frame">
+    <h2>十六個頭銜（男、女）</h2>
+    <div class="stages" id="stages"></div>
   </section>
 
   <section class="frame">
     <h2>武器圖示</h2>
     <div class="row">
-      <div><button class="slot" type="button"><canvas id="iconJian"></canvas></button><div class="slot-label">青鋼劍</div></div>
-      <div><button class="slot" type="button"><canvas id="iconSpear"></canvas></button><div class="slot-label">紅纓槍</div></div>
-      <div><button class="slot" type="button"><canvas id="iconFan"></canvas></button><div class="slot-label">鐵扇</div></div>
+      <div><button class="slot" type="button" data-name="青鋼劍"><canvas data-item="jian"></canvas></button><div class="slot-label">青鋼劍</div></div>
+      <div><button class="slot" type="button" data-name="紅纓槍"><canvas data-item="spear"></canvas></button><div class="slot-label">紅纓槍</div></div>
+      <div><button class="slot" type="button" data-name="鐵扇"><canvas data-item="fan"></canvas></button><div class="slot-label">鐵扇</div></div>
     </div>
   </section>
 
@@ -264,653 +267,89 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
   <section class="frame">
     <h2>共用規則</h2>
     <ul class="rules">
-      <li>人物：約 2 頭身、3/4 側臉，細一點的深色外框（2.4），每種顏色只有「底色＋一層陰影＋白色高光」。</li>
-      <li>臉：動漫大眼（粗上眼線、彩色虹膜漸層、兩個亮點），眉眼帶表情；鼻子一小筆、嘴巴一條線；男生臉頰三道紅線。</li>
-      <li>頭髮：一撮一撮尖尖的髮束，頭頂一道光澤；男生高馬尾配髮冠、頭巾，女生雙丫髻配金飾、緞帶與珠串。</li>
-      <li>服裝：交領層次、金邊、護肩、護腕、腰帶扣或蝴蝶結；物品與背包沿用已確認的粗黑描邊風格。</li>
+      <li>人物、兵器、飾品、夥伴、場景都用同一套像素規則：每種材質四階顏色（亮、底、暗、描邊），光從左上來，外框用材質自己最深的顏色。</li>
+      <li>人物約 2.5 頭身、面向右，3/4 側臉；眼睛、眉毛、嘴巴和腮紅一格一格手點。</li>
+      <li>頭銜越高，裝扮越多：頭巾 → 飄帶 → 斗笠 → 披風 → 銀護肩 → 高馬尾 → 金邊 → 金冠；女生另有花飾、金簪。</li>
+      <li>兵器、飾品是 24×24 格，放到物品欄時放大 4 倍；按鈕、分頁、物品格點下去都會念出名稱。</li>
     </ul>
   </section>
 </div>
 
+<script src="js/hero.js"></script>
+<script src="js/pixart.js"></script>
+<script src="js/pixhero.js"></script>
 <script>
-const INK = '#1d1517';
-const OUT = 3.2;
-const IN = 1.4;
-
-function setup(canvas, lw, lh) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = Math.round(canvas.clientWidth * dpr);
-  const h = Math.round(canvas.clientHeight * dpr);
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(w / lw, 0, 0, h / lh, 0, 0);
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  return ctx;
-}
-function fs(ctx, fill, lw) {
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-  if (lw !== 0) { ctx.lineWidth = lw || OUT; ctx.strokeStyle = INK; ctx.stroke(); }
-}
-function circle(ctx, x, y, r, fill, lw) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); fs(ctx, fill, lw); }
-function oval(ctx, x, y, rx, ry, rot, fill, lw) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); fs(ctx, fill, lw); }
-function highlight(ctx, draw, width, alpha) {
-  ctx.save();
-  ctx.beginPath();
-  draw();
-  ctx.strokeStyle = 'rgba(255,255,255,' + (alpha || 0.7) + ')';
-  ctx.lineWidth = width;
-  ctx.stroke();
-  ctx.restore();
+function say(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW';
+  u.rate = 0.8;
+  speechSynthesis.speak(u);
 }
 
-// ---------- weapons, drawn along +x from the grip end; length ~100 ----------
-function drawJian(ctx) {
-  // blade
-  ctx.beginPath();
-  ctx.moveTo(30, -9); ctx.lineTo(84, -9); ctx.lineTo(104, 0); ctx.lineTo(84, 9); ctx.lineTo(30, 9); ctx.closePath();
-  const g = ctx.createLinearGradient(0, -9, 0, 9);
-  g.addColorStop(0, '#e9f4fb'); g.addColorStop(0.5, '#b9d4e4'); g.addColorStop(1, '#7fa3bb');
-  fs(ctx, g);
-  ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(96, 0); ctx.strokeStyle = '#5f8299'; ctx.lineWidth = IN; ctx.stroke();
-  highlight(ctx, function () { ctx.moveTo(34, -4.6); ctx.lineTo(82, -4.6); }, 2.6, 0.9);
-  // guard, grip, pommel, tassel
-  ctx.beginPath();
-  ctx.moveTo(22, -14); ctx.quadraticCurveTo(30, -8, 32, 0); ctx.quadraticCurveTo(30, 8, 22, 14); ctx.quadraticCurveTo(26, 0, 22, -14);
-  fs(ctx, '#f2c14b');
-  ctx.beginPath(); ctx.roundRect(4, -5, 19, 10, 3); fs(ctx, '#c0392b');
-  for (let x = 8; x < 22; x += 5) { ctx.beginPath(); ctx.moveTo(x, -5); ctx.lineTo(x + 3, 5); ctx.strokeStyle = '#7d1f17'; ctx.lineWidth = IN; ctx.stroke(); }
-  circle(ctx, 2, 0, 6, '#f2c14b');
-  highlight(ctx, function () { ctx.arc(1, -1.5, 3, Math.PI * 1.1, Math.PI * 1.7); }, 1.8, 0.9);
-  ctx.beginPath(); ctx.moveTo(-2, 4); ctx.quadraticCurveTo(-10, 14, -4, 24); ctx.strokeStyle = INK; ctx.lineWidth = 5.4; ctx.stroke();
-  ctx.strokeStyle = '#e84a3a'; ctx.lineWidth = 3; ctx.stroke();
-}
-function drawSpear(ctx) {
-  // shaft
-  ctx.beginPath(); ctx.roundRect(-6, -4, 78, 8, 4);
-  const g = ctx.createLinearGradient(0, -4, 0, 4);
-  g.addColorStop(0, '#d39a5c'); g.addColorStop(1, '#8e5a2e');
-  fs(ctx, g);
-  highlight(ctx, function () { ctx.moveTo(0, -1.6); ctx.lineTo(60, -1.6); }, 1.8, 0.6);
-  // bushy red tassel
-  const puffs = [[64, -9, 8], [58, 2, 9], [66, 9, 8], [56, -6, 7], [52, 8, 7]];
-  for (const p of puffs) circle(ctx, p[0], p[1], p[2] + 1.6, INK, 0);
-  for (const p of puffs) circle(ctx, p[0], p[1], p[2], '#e84a3a', 0);
-  for (const p of puffs) highlight(ctx, function () { ctx.arc(p[0] - 1.5, p[1] - 2, p[2] * 0.55, Math.PI * 1.1, Math.PI * 1.6); }, 1.6, 0.55);
-  // collar and leaf blade
-  ctx.beginPath(); ctx.roundRect(70, -6, 7, 12, 2); fs(ctx, '#f2c14b');
-  ctx.beginPath();
-  ctx.moveTo(76, -3); ctx.quadraticCurveTo(88, -15, 106, 0); ctx.quadraticCurveTo(88, 15, 76, 3); ctx.closePath();
-  const b = ctx.createLinearGradient(0, -12, 0, 12);
-  b.addColorStop(0, '#f2f6f9'); b.addColorStop(1, '#9fb0bc');
-  fs(ctx, b);
-  ctx.beginPath(); ctx.moveTo(79, 0); ctx.lineTo(102, 0); ctx.strokeStyle = '#6f8392'; ctx.lineWidth = IN; ctx.stroke();
-  highlight(ctx, function () { ctx.moveTo(82, -4.5); ctx.quadraticCurveTo(90, -8, 98, -3); }, 1.8, 0.95);
-}
-function drawFan(ctx) {
-  const spread = 0.82;
-  const r = 78;
-  // leaf
-  ctx.beginPath(); ctx.moveTo(4, 0); ctx.arc(4, 0, r, -spread, spread); ctx.closePath();
-  fs(ctx, '#eef1f4');
-  ctx.beginPath(); ctx.arc(4, 0, r, -spread, spread); ctx.arc(4, 0, r - 14, spread, -spread, true); ctx.closePath();
-  fs(ctx, '#3a3f4a', IN);
-  // painted sun and a brush wave
-  circle(ctx, 50, -14, 11, '#e84a3a', IN);
-  ctx.beginPath(); ctx.moveTo(22, 14); ctx.quadraticCurveTo(40, 2, 54, 16); ctx.quadraticCurveTo(64, 26, 70, 18);
-  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
-  // ribs
-  for (let i = -4; i <= 4; i++) {
-    const a = i / 4 * spread;
-    ctx.beginPath(); ctx.moveTo(4, 0); ctx.lineTo(4 + Math.cos(a) * (r - 14), Math.sin(a) * (r - 14));
-    ctx.strokeStyle = 'rgba(29,21,23,0.35)'; ctx.lineWidth = IN; ctx.stroke();
-  }
-  ctx.beginPath(); ctx.moveTo(4, 0); ctx.arc(4, 0, r, -spread, spread); ctx.closePath();
-  fs(ctx, null, OUT);
-  highlight(ctx, function () { ctx.arc(4, 0, r - 5, -spread + 0.12, -spread + 0.6); }, 2.2, 0.8);
-  circle(ctx, 4, 0, 6, '#f2c14b');
-}
-const WEAPONS = { jian: drawJian, spear: drawSpear, fan: drawFan };
-
-// an icon on the diagonal, head up-right, as in the reference inventory
-function drawIcon(canvas, id, burst) {
-  const ctx = setup(canvas, 100, 100);
-  ctx.clearRect(0, 0, 100, 100);
-  if (burst) {
-    ctx.beginPath();
-    for (let i = 0; i < 24; i++) {
-      const a = i / 24 * Math.PI * 2;
-      const rr = i % 2 ? 26 : 42;
-      ctx.lineTo(56 + Math.cos(a) * rr, 44 + Math.sin(a) * rr * 0.8);
+// animated tiles: a gentle breath and a blink now and then
+const TILES = [
+  { id: 'tileBoy', stage: 3, gender: 'boy', weapon: 'jian', night: false, phase: 0 },
+  { id: 'tileGirl', stage: 9, gender: 'girl', weapon: 'fan', night: false, phase: 700 },
+  { id: 'tileNight', stage: 12, gender: 'boy', weapon: 'spear', night: true, phase: 1300 },
+];
+let lastFrame = -1;
+function tick(now) {
+  const frame = Math.floor(now / 450);
+  if (frame !== lastFrame) {
+    lastFrame = frame;
+    for (const tl of TILES) {
+      const t = now + tl.phase;
+      const pose = { bob: Math.floor(t / 450) % 2, blink: (t % 3600) < 200 };
+      pixTile(TITLES[tl.stage], tl.gender, tl.weapon, pose, tl.night, tl.stage).paint(document.getElementById(tl.id), 3);
     }
-    ctx.closePath();
-    fs(ctx, '#f59ac2', 2);
   }
-  ctx.save();
-  ctx.translate(id === 'fan' ? 24 : 16, id === 'fan' ? 76 : 84);
-  ctx.rotate(-Math.PI / 4);
-  const k = id === 'fan' ? 0.72 : (id === 'jian' ? 0.78 : 0.74);
-  ctx.scale(k, k);
-  WEAPONS[id](ctx);
-  ctx.restore();
+  requestAnimationFrame(tick);
 }
+requestAnimationFrame(tick);
 
-// ---------- scene: oblique grass ground, maple border, jars, hay, stone lantern ----------
-function drawJar(ctx, x, y, s) {
-  oval(ctx, x, y + 14 * s, 14 * s, 4 * s, 0, 'rgba(29,21,23,0.25)', 0);
-  ctx.beginPath();
-  ctx.moveTo(x - 8 * s, y - 10 * s);
-  ctx.quadraticCurveTo(x - 17 * s, y, x - 11 * s, y + 13 * s);
-  ctx.lineTo(x + 11 * s, y + 13 * s);
-  ctx.quadraticCurveTo(x + 17 * s, y, x + 8 * s, y - 10 * s);
-  ctx.closePath();
-  fs(ctx, '#3f6fbf');
-  oval(ctx, x, y - 10 * s, 9 * s, 3.6 * s, 0, '#e9f0f7', 2.2);
-  highlight(ctx, function () { ctx.moveTo(x - 9 * s, y - 4 * s); ctx.quadraticCurveTo(x - 11 * s, y + 3 * s, x - 8 * s, y + 9 * s); }, 2.4, 0.6);
-  ctx.beginPath(); ctx.moveTo(x - 12 * s, y); ctx.quadraticCurveTo(x, y + 3 * s, x + 12 * s, y); ctx.strokeStyle = '#e9f0f7'; ctx.lineWidth = 1.6; ctx.stroke();
-}
-function drawHay(ctx, x, y, s) {
-  oval(ctx, x, y + 12 * s, 15 * s, 4 * s, 0, 'rgba(29,21,23,0.25)', 0);
-  ctx.beginPath(); ctx.roundRect(x - 13 * s, y - 8 * s, 26 * s, 20 * s, 5 * s); fs(ctx, '#e3bf4f');
-  for (const k of [-6, 0, 6]) { ctx.beginPath(); ctx.moveTo(x + k * s, y - 7 * s); ctx.lineTo(x + k * s, y + 11 * s); ctx.strokeStyle = '#b48d2a'; ctx.lineWidth = IN; ctx.stroke(); }
-  ctx.beginPath(); ctx.moveTo(x - 13 * s, y + 2 * s); ctx.lineTo(x + 13 * s, y + 2 * s); ctx.strokeStyle = '#8c5a2b'; ctx.lineWidth = 2.6; ctx.stroke();
-  oval(ctx, x, y - 8 * s, 13 * s, 4 * s, 0, '#f2d36f', 2);
-}
-function drawLantern(ctx, x, y, s) {
-  oval(ctx, x, y + 16 * s, 12 * s, 3.5 * s, 0, 'rgba(29,21,23,0.25)', 0);
-  ctx.beginPath(); ctx.roundRect(x - 4 * s, y - 2 * s, 8 * s, 18 * s, 2 * s); fs(ctx, '#8f8c95');
-  ctx.beginPath(); ctx.roundRect(x - 7 * s, y - 10 * s, 14 * s, 10 * s, 2 * s); fs(ctx, '#a7a3ad');
-  ctx.beginPath(); ctx.roundRect(x - 3.5 * s, y - 8 * s, 7 * s, 5 * s, 1 * s); fs(ctx, '#ffd36a', IN);
-  ctx.beginPath(); ctx.moveTo(x - 12 * s, y - 9 * s); ctx.lineTo(x, y - 19 * s); ctx.lineTo(x + 12 * s, y - 9 * s); ctx.closePath(); fs(ctx, '#5f5c66');
-}
-function drawMaple(ctx, x, y, s) {
-  const leaves = [[0, 0, 9], [-9, 4, 7], [9, 4, 7], [-4, -7, 7], [5, -7, 7]];
-  ctx.beginPath(); ctx.moveTo(x, y + 6 * s); ctx.lineTo(x, y + 16 * s); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke(); ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = 2.2; ctx.stroke();
-  for (const l of leaves) circle(ctx, x + l[0] * s, y + l[1] * s, l[2] * s + 1.4, INK, 0);
-  for (const l of leaves) circle(ctx, x + l[0] * s, y + l[1] * s, l[2] * s, '#c8392f', 0);
-  for (const l of leaves) highlight(ctx, function () { ctx.arc(x + l[0] * s - 1, y + l[1] * s - 1.5, l[2] * s * 0.5, Math.PI * 1.1, Math.PI * 1.6); }, 1.4, 0.45);
-}
-function drawGrassTuft(ctx, x, y) {
-  ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 2, y - 7); ctx.lineTo(x, y - 1); ctx.lineTo(x + 2, y - 8); ctx.lineTo(x + 4, y);
-  ctx.strokeStyle = '#4d6b2c'; ctx.lineWidth = 1.6; ctx.stroke();
-}
-// ---------- 武俠 heroes in the 萌三國 manner: ~2 heads tall, 3/4 view facing left, anime eyes,
-// pointed hair locks with a glossy band, layered costume with gold trim; cel shading = base + one shade + highlight.
-// Both live in a 240 x 240 frame, feet near y 230.
-const LINE = '#2a1d1d';
-const LW = 2.4;
-const FINE = 1.2;
-
-function edge(ctx, lw) {
-  ctx.lineWidth = lw || LW;
-  ctx.strokeStyle = LINE;
-  ctx.stroke();
-}
-// fill a path, lay its shade inside it (clipped), then outline it
-function cel(ctx, path, base, shade) {
-  ctx.beginPath();
-  path();
-  ctx.fillStyle = base;
-  ctx.fill();
-  if (shade) {
-    ctx.save();
-    ctx.clip();
-    ctx.beginPath();
-    shade();
-    ctx.fillStyle = 'rgba(40, 20, 30, 0.22)';
-    ctx.fill();
-    ctx.restore();
-    ctx.beginPath();
-    path();
-  }
-  edge(ctx);
-}
-function band(ctx, path, width, color) {
-  ctx.beginPath();
-  path();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = LINE;
-  ctx.lineWidth = width + 2 * LW;
-  ctx.stroke();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.stroke();
-}
-function shine(ctx, path, width, alpha) {
-  ctx.save();
-  ctx.beginPath();
-  path();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(255, 255, 255, ' + alpha + ')';
-  ctx.lineWidth = width;
-  ctx.stroke();
-  ctx.restore();
-}
-
-// anime eye: white, colored iris with a gradient, pupil, two catch-lights, a heavy upper lid
-function animeEye(ctx, cx, cy, w, h, iris, girl, closed, far) {
-  if (closed) {
-    ctx.beginPath();
-    ctx.moveTo(cx - w, cy);
-    ctx.quadraticCurveTo(cx, cy + h * 0.45, cx + w, cy - h * 0.1);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = LINE;
-    ctx.stroke();
-    return;
-  }
-  const lidY = cy - h * 0.55;
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(cx - w, cy - h * 0.15);
-  ctx.quadraticCurveTo(cx - w * 0.2, lidY - h * 0.45, cx + w, lidY + h * 0.05);
-  ctx.quadraticCurveTo(cx + w * 0.9, cy + h * 0.75, cx, cy + h * 0.8);
-  ctx.quadraticCurveTo(cx - w * 0.8, cy + h * 0.6, cx - w, cy - h * 0.15);
-  ctx.closePath();
-  ctx.fillStyle = '#ffffff';
-  ctx.fill();
-  ctx.clip();
-  const g = ctx.createLinearGradient(0, cy - h * 0.8, 0, cy + h * 0.8);
-  g.addColorStop(0, iris[0]);
-  g.addColorStop(1, iris[1]);
-  ctx.beginPath();
-  ctx.ellipse(cx + (far ? -1 : 1), cy + h * 0.12, w * 0.58, h * 0.78, 0, 0, Math.PI * 2);
-  ctx.fillStyle = g;
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(cx + (far ? -1 : 1), cy + h * 0.2, w * 0.28, h * 0.42, 0, 0, Math.PI * 2);
-  ctx.fillStyle = '#1a1014';
-  ctx.fill();
-  ctx.restore();
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(cx - w * 0.2, cy - h * 0.18, w * 0.24, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx + w * 0.22, cy + h * 0.42, w * 0.11, 0, Math.PI * 2);
-  ctx.fill();
-  // heavy upper lid, flicked at the outer corner
-  ctx.beginPath();
-  ctx.moveTo(cx - w * 1.05, cy - h * 0.1);
-  ctx.quadraticCurveTo(cx - w * 0.2, lidY - h * 0.5, cx + w * 1.05, lidY + h * 0.05);
-  if (girl) ctx.lineTo(cx + w * 1.35, lidY - h * 0.2);
-  ctx.lineCap = 'round';
-  ctx.lineWidth = girl ? 3.6 : 3.4;
-  ctx.strokeStyle = LINE;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(cx - w * 0.5, cy + h * 0.78);
-  ctx.lineTo(cx + w * 0.45, cy + h * 0.74);
-  ctx.lineWidth = FINE;
-  ctx.stroke();
-}
-
-function drawWuxiaBoy(ctx, t) {
-  const breathe = Math.sin(t / 650) * 1.2;
-  const sway = Math.sin(t / 700) * 4;
-  const blink = (t % 3700) < 130;
-  const y = breathe;
-  const C = {
-    skin: '#ffe2cc', hair: '#252737', robe: '#3c8f9c', robe2: '#56a9b4', inner: '#f6f4ee',
-    gold: '#e8b648', silver: '#d9dfe6', leather: '#4a3a35', pants: '#eef0f3', boots: '#2e3446',
-  };
-
-  ctx.fillStyle = 'rgba(40, 30, 30, 0.22)';
-  ctx.beginPath(); ctx.ellipse(124, 231, 48, 8, 0, 0, Math.PI * 2); ctx.fill();
-
-  // high ponytail sweeping back, behind everything
-  cel(ctx, function () {
-    ctx.moveTo(140, 44 + y);
-    ctx.bezierCurveTo(166, 6 + y, 218, 20 + y, 212, 70 + y);
-    ctx.bezierCurveTo(209, 102 + y, 224, 130, 204 + sway, 176);
-    ctx.bezierCurveTo(200, 150, 188, 122 + y, 192, 96 + y);
-    ctx.bezierCurveTo(194, 74 + y, 178, 60 + y, 158, 64 + y);
-    ctx.closePath();
-  }, C.hair, function () { ctx.rect(150, 60 + y, 50, 140); });
-  shine(ctx, function () { ctx.moveTo(176, 22 + y); ctx.bezierCurveTo(200, 26 + y, 206, 50 + y, 204, 74 + y); }, 3, 0.35);
-  // headband tails flowing back
-  for (const k of [0, 1]) {
-    cel(ctx, function () {
-      ctx.moveTo(170, 70 + y + k * 6);
-      ctx.quadraticCurveTo(196, 74 + y + k * 8, 216 + k * 4, 104 + k * 10 + sway * 0.6);
-      ctx.lineTo(206 + k * 4, 110 + k * 10 + sway * 0.6);
-      ctx.quadraticCurveTo(190, 86 + y + k * 8, 166, 82 + y + k * 6);
-      ctx.closePath();
-    }, '#f4f4f0');
-  }
-
-  // back arm, hand resting at the hip
-  band(ctx, function () { ctx.moveTo(156, 150 + y); ctx.lineTo(168, 180 + y); }, 15, C.robe);
-  ctx.beginPath(); ctx.arc(166, 188 + y, 8.5, 0, Math.PI * 2); ctx.fillStyle = C.skin; ctx.fill(); edge(ctx);
-
-  // legs and boots with gold cuffs
-  cel(ctx, function () { ctx.roundRect(98, 194, 16, 26, 5); }, C.pants);
-  cel(ctx, function () { ctx.roundRect(130, 194, 16, 24, 5); }, C.pants, function () { ctx.rect(138, 190, 10, 30); });
-  for (const b of [[94, 116, 86], [126, 150, 124]]) {
-    cel(ctx, function () {
-      ctx.moveTo(b[0], 212);
-      ctx.lineTo(b[1], 212);
-      ctx.lineTo(b[1] + 1, 230);
-      ctx.quadraticCurveTo(b[2], 233, b[2] - 2, 226);
-      ctx.quadraticCurveTo(b[0] - 4, 220, b[0], 212);
-      ctx.closePath();
-    }, C.boots);
-    band(ctx, function () { ctx.moveTo(b[0] + 1, 214); ctx.lineTo(b[1] - 1, 214); }, 3, C.gold);
-  }
-
-  // robe skirt panels split at the front, white lining in the split
-  cel(ctx, function () { ctx.moveTo(118, 184 + y); ctx.lineTo(130, 184 + y); ctx.lineTo(132, 214); ctx.lineTo(116, 214); ctx.closePath(); }, C.inner);
-  cel(ctx, function () { ctx.moveTo(98, 184 + y); ctx.lineTo(122, 184 + y); ctx.lineTo(120, 220); ctx.lineTo(84, 216); ctx.closePath(); }, C.robe);
-  cel(ctx, function () { ctx.moveTo(126, 184 + y); ctx.lineTo(154, 184 + y); ctx.lineTo(164, 214); ctx.lineTo(128, 220); ctx.closePath(); }, C.robe, function () { ctx.rect(140, 180, 30, 50); });
-  band(ctx, function () { ctx.moveTo(86, 214); ctx.lineTo(119, 218); ctx.moveTo(129, 218); ctx.lineTo(162, 212); }, 2, C.gold);
-
-  // torso, crossed collar with gold trim
-  cel(ctx, function () {
-    ctx.moveTo(100, 140 + y); ctx.lineTo(156, 140 + y);
-    ctx.quadraticCurveTo(162, 164 + y, 158, 188 + y);
-    ctx.lineTo(96, 188 + y);
-    ctx.quadraticCurveTo(92, 164 + y, 100, 140 + y);
-    ctx.closePath();
-  }, C.robe, function () { ctx.rect(140, 136 + y, 30, 60); });
-  cel(ctx, function () { ctx.moveTo(114, 140 + y); ctx.lineTo(128, 166 + y); ctx.lineTo(142, 140 + y); ctx.closePath(); }, C.inner);
-  band(ctx, function () { ctx.moveTo(110, 140 + y); ctx.lineTo(132, 176 + y); }, 6, C.robe2);
-  band(ctx, function () { ctx.moveTo(146, 140 + y); ctx.lineTo(127, 168 + y); }, 6, C.robe2);
-  shine(ctx, function () { ctx.moveTo(111, 141 + y); ctx.lineTo(130, 172 + y); }, 1.4, 0.8);
-
-  // belt with a gold buckle and a jade pendant
-  cel(ctx, function () { ctx.roundRect(94, 178 + y, 66, 12, 3); }, C.leather);
-  cel(ctx, function () { ctx.roundRect(120, 175 + y, 17, 17, 4); }, C.gold);
-  ctx.beginPath(); ctx.roundRect(124, 179 + y, 9, 9, 2); edge(ctx, FINE);
-  band(ctx, function () { ctx.moveTo(104, 190 + y); ctx.lineTo(104, 202 + y); }, 1.6, '#d0473f');
-  ctx.beginPath(); ctx.arc(104, 206 + y, 4.5, 0, Math.PI * 2); ctx.fillStyle = '#6fbf8e'; ctx.fill(); edge(ctx, 1.8);
-
-  // shoulder guards
-  cel(ctx, function () { ctx.moveTo(154, 144 + y); ctx.quadraticCurveTo(166, 134 + y, 174, 148 + y); ctx.quadraticCurveTo(170, 160 + y, 158, 162 + y); ctx.closePath(); }, C.silver);
-  cel(ctx, function () {
-    ctx.moveTo(84, 148 + y);
-    ctx.quadraticCurveTo(96, 128 + y, 118, 138 + y);
-    ctx.quadraticCurveTo(120, 158 + y, 104, 168 + y);
-    ctx.quadraticCurveTo(86, 166 + y, 84, 148 + y);
-    ctx.closePath();
-  }, C.silver, function () { ctx.rect(84, 154 + y, 40, 20); });
-  ctx.beginPath(); ctx.moveTo(90, 150 + y); ctx.quadraticCurveTo(100, 142 + y, 114, 146 + y); edge(ctx, FINE);
-  ctx.beginPath(); ctx.arc(104, 141 + y, 3, 0, Math.PI * 2); ctx.fillStyle = C.gold; ctx.fill(); edge(ctx, 1.4);
-  shine(ctx, function () { ctx.moveTo(92, 141 + y); ctx.quadraticCurveTo(100, 134 + y, 110, 136 + y); }, 2, 0.8);
-
-  // sword raised beside the face, front arm with a leather bracer
-  ctx.save();
-  ctx.translate(66, 186 + y);
-  ctx.rotate(-1.92 + Math.sin(t / 900) * 0.03);
-  ctx.scale(1.02, 1.02);
-  drawJian(ctx);
-  ctx.restore();
-  band(ctx, function () { ctx.moveTo(98, 152 + y); ctx.lineTo(80, 174 + y); }, 16, C.robe);
-  band(ctx, function () { ctx.moveTo(81, 174 + y); ctx.lineTo(68, 184 + y); }, 13, C.leather);
-  band(ctx, function () { ctx.moveTo(84, 170 + y); ctx.lineTo(78, 177 + y); }, 3, C.gold);
-  ctx.beginPath(); ctx.arc(64, 186 + y, 9.5, 0, Math.PI * 2); ctx.fillStyle = C.skin; ctx.fill(); edge(ctx);
-  ctx.beginPath(); ctx.moveTo(58, 182 + y); ctx.lineTo(68, 182 + y); ctx.moveTo(57, 187 + y); ctx.lineTo(67, 188 + y); edge(ctx, FINE);
-
-  // neck and face, shaded under the jaw and below the fringe
-  cel(ctx, function () { ctx.rect(116, 122 + y, 22, 22); }, C.skin, function () { ctx.rect(116, 122 + y, 22, 12); });
-  cel(ctx, function () {
-    ctx.moveTo(78, 78 + y);
-    ctx.bezierCurveTo(72, 106 + y, 92, 132 + y, 118, 141 + y);
-    ctx.bezierCurveTo(142, 139 + y, 162, 122 + y, 168, 96 + y);
-    ctx.bezierCurveTo(170, 84 + y, 168, 76 + y, 166, 70 + y);
-    ctx.closePath();
-  }, C.skin, function () {
-    ctx.moveTo(150, 132 + y); ctx.quadraticCurveTo(166, 116 + y, 170, 90 + y); ctx.lineTo(180, 90 + y); ctx.lineTo(180, 140 + y); ctx.closePath();
-    ctx.rect(70, 76 + y, 110, 12);
+// all sixteen titles for the boy and the girl
+const stages = document.getElementById('stages');
+for (const g of ['boy', 'girl']) {
+  TITLES.forEach(function (t, i) {
+    const box = document.createElement('div');
+    box.className = 'stage-item';
+    const c = document.createElement('canvas');
+    pixHeroBody(t, g, { bob: 0 }, i).paint(c, 2);
+    const label = document.createElement('span');
+    label.textContent = t.name;
+    box.append(c, label);
+    box.addEventListener('click', function () { say(t.name); });
+    stages.append(box);
   });
-  cel(ctx, function () { ctx.ellipse(168, 102 + y, 7, 10, 0.1, 0, Math.PI * 2); }, C.skin);
-  ctx.beginPath(); ctx.arc(167, 102 + y, 4, Math.PI * 0.6, Math.PI * 1.5); edge(ctx, FINE);
-
-  // hair: a crown with pointed bangs and a long lock down the near cheek
-  cel(ctx, function () {
-    ctx.moveTo(66, 92 + y);
-    ctx.bezierCurveTo(58, 44 + y, 110, 8 + y, 152, 22 + y);
-    ctx.bezierCurveTo(180, 32 + y, 186, 62 + y, 176, 88 + y);
-    ctx.quadraticCurveTo(172, 100 + y, 166, 110 + y);
-    ctx.quadraticCurveTo(164, 92 + y, 158, 82 + y);
-    ctx.quadraticCurveTo(154, 90 + y, 146, 98 + y);
-    ctx.quadraticCurveTo(144, 86 + y, 134, 78 + y);
-    ctx.quadraticCurveTo(130, 92 + y, 120, 98 + y);
-    ctx.quadraticCurveTo(118, 84 + y, 108, 78 + y);
-    ctx.quadraticCurveTo(102, 90 + y, 92, 96 + y);
-    ctx.quadraticCurveTo(90, 86 + y, 84, 82 + y);
-    ctx.quadraticCurveTo(78, 106 + y, 72, 130 + y);
-    ctx.quadraticCurveTo(70, 110 + y, 66, 92 + y);
-    ctx.closePath();
-  }, C.hair, function () { ctx.rect(60, 60 + y, 130, 60); });
-  // glossy band across the crown
-  ctx.beginPath();
-  const gloss = [[80, 56], [92, 44], [100, 52], [112, 40], [122, 48], [134, 38], [146, 46], [150, 54], [136, 50], [126, 58], [114, 50], [104, 60], [94, 54], [84, 62]];
-  gloss.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1] + y); else ctx.moveTo(p[0], p[1] + y); });
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(150, 165, 205, 0.45)';
-  ctx.fill();
-  // white headband over the forehead, silver hair crown and pin on top
-  band(ctx, function () { ctx.moveTo(68, 76 + y); ctx.quadraticCurveTo(120, 52 + y, 176, 70 + y); }, 9, '#f4f4f0');
-  ctx.beginPath(); ctx.moveTo(72, 80 + y); ctx.quadraticCurveTo(120, 58 + y, 172, 74 + y); ctx.strokeStyle = 'rgba(40, 20, 30, 0.2)'; ctx.lineWidth = 2; ctx.stroke();
-  band(ctx, function () { ctx.moveTo(98, 22 + y); ctx.lineTo(146, 12 + y); }, 3, C.gold);
-  cel(ctx, function () { ctx.moveTo(108, 26 + y); ctx.lineTo(112, 10 + y); ctx.lineTo(121, 0 + y); ctx.lineTo(130, 9 + y); ctx.lineTo(134, 24 + y); ctx.closePath(); }, C.silver, function () { ctx.rect(122, 0 + y, 14, 30); });
-  ctx.beginPath(); ctx.arc(121, 15 + y, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#6fbf8e'; ctx.fill(); edge(ctx, 1.4);
-
-  // eyes and brows carry a determined look; small nose and mouth; red cheek marks
-  animeEye(ctx, 102, 106 + y, 10.5, 12, ['#3a2418', '#a8683a'], false, blink, true);
-  animeEye(ctx, 141, 106 + y, 11.5, 12.5, ['#3a2418', '#a8683a'], false, blink, false);
-  band(ctx, function () { ctx.moveTo(88, 88 + y); ctx.quadraticCurveTo(100, 89 + y, 113, 95 + y); }, 3.4, LINE);
-  band(ctx, function () { ctx.moveTo(130, 95 + y); ctx.quadraticCurveTo(142, 88 + y, 157, 87 + y); }, 3.4, LINE);
-  ctx.beginPath(); ctx.moveTo(124, 117 + y); ctx.quadraticCurveTo(121, 121 + y, 123, 123 + y); edge(ctx, 1.6);
-  ctx.beginPath(); ctx.moveTo(114, 131 + y); ctx.quadraticCurveTo(120, 129 + y, 128, 131 + y); edge(ctx, 1.8);
-  ctx.strokeStyle = '#e0565c';
-  ctx.lineWidth = 2;
-  for (const c of [[92, 122], [150, 121]]) {
-    for (let k = 0; k < 3; k++) {
-      ctx.beginPath(); ctx.moveTo(c[0] + k * 5, c[1] + y + 3); ctx.lineTo(c[0] + k * 5 + 3, c[1] + y - 2); ctx.stroke();
-    }
-  }
 }
 
-function drawWuxiaGirl(ctx, t) {
-  const breathe = Math.sin(t / 650) * 1.2;
-  const sway = Math.sin(t / 700) * 4;
-  const blink = (t % 3900) < 130;
-  const y = breathe;
-  const C = {
-    skin: '#ffe4d2', hair: '#3a2630', robe: '#d9464f', robe2: '#f08a8f', inner: '#fff6ef', skirt: '#f6c1c9',
-    gold: '#e8b648', sash: '#f2c14b', shoe: '#b5343e',
-  };
+// item pictures: a 24 x 24 sprite at an integer scale, centered in its slot
+function paintItem(canvas, id, scale) {
+  pixItem(id).paint(canvas, scale);
+}
+document.querySelectorAll('canvas[data-item]').forEach(function (c) { paintItem(c, c.dataset.item, 3); });
 
-  ctx.fillStyle = 'rgba(40, 30, 30, 0.22)';
-  ctx.beginPath(); ctx.ellipse(122, 231, 50, 8, 0, 0, Math.PI * 2); ctx.fill();
-
-  // long hair behind the shoulders
-  cel(ctx, function () {
-    ctx.moveTo(74, 92 + y);
-    ctx.bezierCurveTo(60, 130 + y, 66, 168, 82 + sway * 0.4, 182);
-    ctx.lineTo(98, 160 + y);
-    ctx.lineTo(160, 160 + y);
-    ctx.lineTo(176 + sway * 0.4, 184);
-    ctx.bezierCurveTo(188, 160, 184, 124 + y, 172, 92 + y);
-    ctx.closePath();
-  }, C.hair, function () { ctx.rect(140, 90 + y, 60, 100); });
-
-  // ribbons with pearls hanging from the buns
-  for (const r of [[70, 44, -1], [174, 40, 1]]) {
-    band(ctx, function () { ctx.moveTo(r[0], r[1] + y); ctx.quadraticCurveTo(r[0] + r[2] * 10, r[1] + 26 + y, r[0] + r[2] * 6 + sway * 0.5, r[1] + 52 + y); }, 3.4, '#ef6b73');
-    for (const k of [0, 1]) {
-      ctx.beginPath(); ctx.arc(r[0] + r[2] * 6 + sway * 0.5, r[1] + 58 + k * 8 + y, 3.2, 0, Math.PI * 2); ctx.fillStyle = '#fff6ef'; ctx.fill(); edge(ctx, 1.4);
-    }
+// the selected item in the backpack, over a pink pixel starburst
+function burstRaster() {
+  const px = new Pix(38, 38);
+  const pts = [];
+  for (let i = 0; i < 24; i++) {
+    const a = i / 24 * Math.PI * 2;
+    const r = i % 2 ? 10 : 17.5;
+    pts.push([19 + Math.cos(a) * r, 19 + Math.sin(a) * r]);
   }
-
-  // small shoes under a long two-layer skirt
-  for (const s of [[96, 120], [128, 152]]) {
-    cel(ctx, function () { ctx.moveTo(s[0], 222); ctx.lineTo(s[1], 222); ctx.quadraticCurveTo(s[1], 232, s[0] + 4, 231); ctx.quadraticCurveTo(s[0] - 6, 230, s[0], 222); ctx.closePath(); }, C.shoe);
-  }
-  cel(ctx, function () {
-    ctx.moveTo(98, 182 + y); ctx.lineTo(150, 182 + y);
-    ctx.quadraticCurveTo(170, 204, 172, 224);
-    ctx.quadraticCurveTo(124, 230, 78, 224);
-    ctx.quadraticCurveTo(80, 204, 98, 182 + y);
-    ctx.closePath();
-  }, C.skirt, function () { ctx.rect(140, 180, 40, 50); });
-  cel(ctx, function () {
-    ctx.moveTo(100, 182 + y); ctx.lineTo(148, 182 + y);
-    ctx.quadraticCurveTo(162, 198, 160, 214);
-    ctx.quadraticCurveTo(124, 220, 88, 214);
-    ctx.quadraticCurveTo(88, 198, 100, 182 + y);
-    ctx.closePath();
-  }, C.robe, function () { ctx.rect(136, 180, 30, 40); });
-  band(ctx, function () { ctx.moveTo(90, 213); ctx.quadraticCurveTo(124, 219, 158, 213); }, 2, C.gold);
-
-  // back sleeve, wide and hanging
-  cel(ctx, function () { ctx.moveTo(150, 146 + y); ctx.quadraticCurveTo(176, 160 + y, 176, 192 + y); ctx.quadraticCurveTo(162, 198 + y, 152, 186 + y); ctx.closePath(); }, C.robe, function () { ctx.rect(160, 140, 30, 60); });
-
-  // bodice with layered crossed collar
-  cel(ctx, function () {
-    ctx.moveTo(102, 140 + y); ctx.lineTo(152, 140 + y);
-    ctx.quadraticCurveTo(158, 162 + y, 152, 184 + y);
-    ctx.lineTo(100, 184 + y);
-    ctx.quadraticCurveTo(94, 162 + y, 102, 140 + y);
-    ctx.closePath();
-  }, C.robe, function () { ctx.rect(138, 136 + y, 30, 60); });
-  cel(ctx, function () { ctx.moveTo(114, 140 + y); ctx.lineTo(127, 164 + y); ctx.lineTo(140, 140 + y); ctx.closePath(); }, C.inner);
-  band(ctx, function () { ctx.moveTo(110, 140 + y); ctx.lineTo(130, 172 + y); }, 5, C.robe2);
-  band(ctx, function () { ctx.moveTo(144, 140 + y); ctx.lineTo(126, 166 + y); }, 5, C.robe2);
-  band(ctx, function () { ctx.moveTo(107, 141 + y); ctx.lineTo(128, 175 + y); }, 1.4, C.gold);
-
-  // sash with a bow and two tails
-  cel(ctx, function () { ctx.roundRect(98, 176 + y, 56, 11, 4); }, C.sash);
-  cel(ctx, function () { ctx.moveTo(126, 181 + y); ctx.quadraticCurveTo(112, 168 + y, 108, 182 + y); ctx.quadraticCurveTo(112, 194 + y, 126, 181 + y); ctx.closePath(); }, C.sash);
-  cel(ctx, function () { ctx.moveTo(126, 181 + y); ctx.quadraticCurveTo(140, 168 + y, 144, 182 + y); ctx.quadraticCurveTo(140, 194 + y, 126, 181 + y); ctx.closePath(); }, C.sash);
-  band(ctx, function () { ctx.moveTo(122, 186 + y); ctx.quadraticCurveTo(118, 200 + y, 120 + sway * 0.3, 212 + y); }, 4, C.sash);
-  band(ctx, function () { ctx.moveTo(130, 186 + y); ctx.quadraticCurveTo(134, 200 + y, 134 + sway * 0.3, 210 + y); }, 4, C.sash);
-  ctx.beginPath(); ctx.arc(126, 181 + y, 4, 0, Math.PI * 2); ctx.fillStyle = '#ef6b73'; ctx.fill(); edge(ctx, 1.6);
-
-  // the fan, open in front, then the front sleeve and hand holding it
-  ctx.save();
-  ctx.translate(74, 176 + y);
-  ctx.rotate(-2.35 + Math.sin(t / 800) * 0.05);
-  ctx.scale(0.58, 0.58);
-  drawFan(ctx);
-  ctx.restore();
-  cel(ctx, function () {
-    ctx.moveTo(104, 146 + y);
-    ctx.quadraticCurveTo(84, 154 + y, 74, 180 + y);
-    ctx.quadraticCurveTo(84, 196 + y, 100, 188 + y);
-    ctx.quadraticCurveTo(100, 170 + y, 112, 160 + y);
-    ctx.closePath();
-  }, C.robe, function () { ctx.rect(70, 182 + y, 40, 20); });
-  band(ctx, function () { ctx.moveTo(76, 184 + y); ctx.quadraticCurveTo(86, 194 + y, 100, 189 + y); }, 1.6, C.gold);
-  ctx.beginPath(); ctx.arc(78, 172 + y, 8, 0, Math.PI * 2); ctx.fillStyle = C.skin; ctx.fill(); edge(ctx);
-
-  // neck and face
-  cel(ctx, function () { ctx.rect(116, 122 + y, 20, 22); }, C.skin, function () { ctx.rect(116, 122 + y, 20, 12); });
-  cel(ctx, function () {
-    ctx.moveTo(78, 80 + y);
-    ctx.bezierCurveTo(72, 108 + y, 94, 134 + y, 118, 140 + y);
-    ctx.bezierCurveTo(140, 138 + y, 162, 122 + y, 168, 96 + y);
-    ctx.bezierCurveTo(170, 84 + y, 168, 76 + y, 166, 70 + y);
-    ctx.closePath();
-  }, C.skin, function () {
-    ctx.moveTo(150, 132 + y); ctx.quadraticCurveTo(166, 116 + y, 170, 90 + y); ctx.lineTo(180, 90 + y); ctx.lineTo(180, 140 + y); ctx.closePath();
-    ctx.rect(70, 78 + y, 110, 10);
-  });
-
-  // 雙丫髻 with gold crescents, a flower on the far bun
-  for (const b of [[82, 32], [160, 28]]) {
-    cel(ctx, function () { ctx.arc(b[0], b[1] + y, 19, 0, Math.PI * 2); }, C.hair, function () { ctx.rect(b[0], b[1] - 20 + y, 22, 40); });
-    shine(ctx, function () { ctx.arc(b[0] - 3, b[1] - 3 + y, 12, Math.PI * 1.1, Math.PI * 1.55); }, 3, 0.35);
-    cel(ctx, function () {
-      ctx.arc(b[0], b[1] + y, 22, Math.PI * 0.15, Math.PI * 0.85);
-      ctx.arc(b[0], b[1] + y, 16, Math.PI * 0.85, Math.PI * 0.15, true);
-      ctx.closePath();
-    }, C.gold);
-  }
-  for (let i = 0; i < 5; i++) {
-    const a = i / 5 * Math.PI * 2;
-    ctx.beginPath(); ctx.arc(70 + Math.cos(a) * 6, 22 + y + Math.sin(a) * 6, 5.4, 0, Math.PI * 2); ctx.fillStyle = '#ef6b73'; ctx.fill(); edge(ctx, 1.6);
-  }
-  ctx.beginPath(); ctx.arc(70, 22 + y, 3.6, 0, Math.PI * 2); ctx.fillStyle = '#f9e2af'; ctx.fill(); edge(ctx, 1.4);
-
-  // hair: crown, soft pointed bangs, long side locks
-  cel(ctx, function () {
-    ctx.moveTo(68, 96 + y);
-    ctx.bezierCurveTo(60, 48 + y, 108, 16 + y, 150, 26 + y);
-    ctx.bezierCurveTo(178, 36 + y, 184, 64 + y, 178, 90 + y);
-    ctx.quadraticCurveTo(178, 120 + y, 172, 144 + y);
-    ctx.quadraticCurveTo(166, 118 + y, 160, 88 + y);
-    ctx.quadraticCurveTo(152, 90 + y, 146, 94 + y);
-    ctx.quadraticCurveTo(144, 84 + y, 136, 80 + y);
-    ctx.quadraticCurveTo(128, 90 + y, 118, 94 + y);
-    ctx.quadraticCurveTo(116, 84 + y, 108, 80 + y);
-    ctx.quadraticCurveTo(100, 89 + y, 90, 93 + y);
-    ctx.quadraticCurveTo(88, 86 + y, 84, 84 + y);
-    ctx.quadraticCurveTo(80, 118 + y, 76, 148 + y);
-    ctx.quadraticCurveTo(68, 122 + y, 68, 96 + y);
-    ctx.closePath();
-  }, C.hair, function () { ctx.rect(60, 60 + y, 130, 60); });
-  ctx.beginPath();
-  const gloss = [[82, 58], [94, 46], [102, 54], [114, 42], [124, 50], [136, 40], [148, 48], [152, 56], [138, 52], [128, 60], [116, 52], [106, 62], [96, 56], [86, 64]];
-  gloss.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1] + y); else ctx.moveTo(p[0], p[1] + y); });
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(210, 160, 175, 0.4)';
-  ctx.fill();
-  band(ctx, function () { ctx.moveTo(150, 28 + y); ctx.lineTo(178, 14 + y); }, 3, C.gold);
-  ctx.beginPath(); ctx.arc(180, 13 + y, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#6fbf8e'; ctx.fill(); edge(ctx, 1.4);
-
-  // big bright eyes with lashes, arched brows, a small smile, soft blush
-  animeEye(ctx, 102, 108 + y, 11.5, 14.5, ['#4a2438', '#b76a7e'], true, blink, true);
-  animeEye(ctx, 141, 108 + y, 12.5, 15, ['#4a2438', '#b76a7e'], true, blink, false);
-  band(ctx, function () { ctx.moveTo(91, 90 + y); ctx.quadraticCurveTo(102, 85 + y, 112, 89 + y); }, 2, LINE);
-  band(ctx, function () { ctx.moveTo(131, 89 + y); ctx.quadraticCurveTo(142, 84 + y, 154, 88 + y); }, 2, LINE);
-  ctx.beginPath(); ctx.moveTo(124, 120 + y); ctx.quadraticCurveTo(122, 123 + y, 124, 124 + y); edge(ctx, 1.4);
-  ctx.beginPath(); ctx.moveTo(115, 130 + y); ctx.quadraticCurveTo(121, 135 + y, 128, 130 + y); edge(ctx, 1.8);
-  ctx.fillStyle = 'rgba(239, 107, 115, 0.4)';
-  for (const c of [[96, 124], [152, 122]]) {
-    ctx.beginPath(); ctx.ellipse(c[0], c[1] + y, 8, 4.5, 0, 0, Math.PI * 2); ctx.fill();
-  }
+  px.poly(pts, 'burst');
+  return px.render({ burst: tones('#f59ac2') });
+}
+function bigItem(id) {
+  const out = new Raster(40, 40);
+  out.blit(burstRaster(), 0, 0, 0, false);
+  out.blit(pixItem(id), 7, 7, 0, false);
+  out.paint(document.getElementById('bigItem'), 5);
 }
 
-// a character card: the hero on a patch of grass under maples
-function drawCharCard(canvas, gender, t) {
-  const ctx = setup(canvas, 240, 240);
-  const sky = ctx.createLinearGradient(0, 0, 0, 240);
-  sky.addColorStop(0, '#fbf3e2');
-  sky.addColorStop(1, '#efe0c4');
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, 240, 240);
-  ctx.fillStyle = '#9dbb5f';
-  ctx.beginPath(); ctx.ellipse(120, 232, 112, 26, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.lineWidth = LW; ctx.strokeStyle = 'rgba(42, 29, 29, 0.35)'; ctx.stroke();
-  for (const p of [[40, 228], [204, 230], [176, 222]]) drawGrassTuft(ctx, p[0], p[1]);
-  ctx.save();
-  ctx.translate(16, 22);
-  ctx.scale(0.88, 0.88);
-  if (gender === 'girl') drawWuxiaGirl(ctx, t);
-  else drawWuxiaBoy(ctx, t);
-  ctx.restore();
-}
-// the same hero at the size the game's 俠客 card uses, on the grass scene
-function drawTile(canvas, gender, t) {
-  const ctx = setup(canvas, 160, 120);
-  const g = ctx.createLinearGradient(0, 0, 0, 120);
-  g.addColorStop(0, '#9dbb5f'); g.addColorStop(1, '#6f9445');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, 160, 120);
-  for (let x = 4; x < 170; x += 22) drawMaple(ctx, x, 2 + (x % 3) * 2, 0.75);
-  drawLantern(ctx, 20, 74, 0.9);
-  drawJar(ctx, 140, 84, 0.8);
-  ctx.save();
-  ctx.translate(30, 4);
-  ctx.scale(0.5, 0.5);
-  if (gender === 'girl') drawWuxiaGirl(ctx, t);
-  else drawWuxiaBoy(ctx, t);
-  ctx.restore();
-}
-
-// ---------- backpack ----------
 const GRID = [
   { id: 'jian', name: '青鋼劍', zy: ['ㄑㄧㄥ', 'ㄍㄤ', 'ㄐㄧㄢˋ'] },
   { id: 'spear', name: '紅纓槍', zy: ['ㄏㄨㄥˊ', 'ㄧㄥ', 'ㄑㄧㄤ'] },
@@ -928,7 +367,7 @@ function zhuyinHtml(zy) {
 }
 function renderPack() {
   const it = GRID[selected];
-  drawIcon(document.getElementById('bigItem'), it.id, true);
+  bigItem(it.id);
   let html = '';
   Array.from(it.name).forEach(function (ch, i) {
     html += '<span class="name-zy"><b>' + ch + '</b>' + zhuyinHtml(it.zy[i]) + '</span>';
@@ -944,27 +383,21 @@ function renderPack() {
     if (g && g.id) {
       const c = document.createElement('canvas');
       b.append(c);
-      grid.append(b);
-      drawIcon(c, g.id, false);
+      paintItem(c, g.id, 3);
       b.addEventListener('click', function () { selected = i; renderPack(); say(g.name); });
-    } else {
-      if (g && g.mystery) {
-        b.innerHTML = '<span class="mystery">？？？</span>';
-        b.addEventListener('click', function () { say('還沒解鎖'); });
-      }
-      grid.append(b);
+    } else if (g && g.mystery) {
+      const c = document.createElement('canvas');
+      b.append(c);
+      const shadow = new Raster(26, 26);
+      shadow.blit(pixItem('spear'), 0, 0, 0, true);
+      shadow.silhouette('#4a4752').paint(c, 3);
+      b.addEventListener('click', function () { say('還沒解鎖'); });
     }
+    grid.append(b);
   });
 }
+renderPack();
 
-function say(text) {
-  if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-TW';
-  u.rate = 0.8;
-  speechSynthesis.speak(u);
-}
 document.querySelectorAll('.tab, .btn').forEach(function (b) {
   b.addEventListener('click', function () {
     say(b.textContent.trim());
@@ -974,20 +407,8 @@ document.querySelectorAll('.tab, .btn').forEach(function (b) {
   });
 });
 document.querySelectorAll('.row .slot').forEach(function (b) {
-  b.addEventListener('click', function () { say(b.parentElement.querySelector('.slot-label').textContent); });
+  b.addEventListener('click', function () { say(b.dataset.name); });
 });
-drawIcon(document.getElementById('iconJian'), 'jian', false);
-drawIcon(document.getElementById('iconSpear'), 'spear', false);
-drawIcon(document.getElementById('iconFan'), 'fan', false);
-renderPack();
-function tick(now) {
-  drawCharCard(document.getElementById('charBoy'), 'boy', now);
-  drawCharCard(document.getElementById('charGirl'), 'girl', now + 900);
-  drawTile(document.getElementById('tileBoy'), 'boy', now);
-  drawTile(document.getElementById('tileGirl'), 'girl', now + 900);
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
 </script>
 
 </body>
