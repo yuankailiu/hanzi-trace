@@ -2,50 +2,54 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;600;700&display=swap">
 <style>
-/* Layout: one-screen practice notebook — name chips on top, a red 田字格 on rice paper in the middle, controls underneath (side panel on wide screens) */
+/* Layout: a practice-hall page on 宣紙 — header + 江湖 standing strip, name tags, a lacquered-wood 擂台 frame around the 田字格, controls in a side column */
 :root {
-  --bg: #EDF2F0;
-  --paper: #FFFFFF;
-  --ink: #1E2622;
-  --ink-wet: #4A5752;
-  --ink-halo: rgba(30, 38, 34, 0.32);
-  --muted: #5B6863;
-  --line: #D3DCD8;
-  --frame: #C8463F;
-  --grid: #E7A29B;
-  --outline: #DCE3E0;
-  --accent: #1B7F5F;
-  --accent-soft: #D7EEE5;
-  --accent-ink: #FFFFFF;
-  --hint: #F0A202;
-  --qi: #E3A21A;
-  --radical: #2B5C9E;
-  --seal: #B8322A;
+  --bg: #ECE5D6;
+  --paper: #FBF8F1;
+  --ink: #221C16;
+  --ink-wet: #574D43;
+  --ink-halo: rgba(34, 28, 22, 0.3);
+  --muted: #6B6155;
+  --line: #D6CBB6;
+  --line-soft: #E6DDCB;
+  --frame: #B23A2E;
+  --grid: #DDA79C;
+  --outline: #E3DACB;
+  --accent: #A8322A;
+  --accent-soft: #F1E0D6;
+  --accent-ink: #FBF3E6;
+  --hint: #C99A2E;
+  --qi: #C9A03A;
+  --radical: #2F5D7C;
+  --seal: #B23A2E;
   --seal-ink: #FFF4EC;
   --seal-blend: multiply;
-  --star: #F2B705;
-  --star-off: #D3DCD8;
+  --gold: #B8892A;
+  --silver: #8E979F;
+  --wood-1: #5A3A26;
+  --wood-2: #33200F;
+  --gold-line: rgba(201, 154, 46, 0.75);
   --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "STKaiti", "DFKai-SB", serif;
-  --font-body: "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-body: "Noto Serif TC", "Songti TC", "PMingLiU", "MingLiU", serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --ink-wet: #B9C4C0; --ink-halo: rgba(236, 242, 239, 0.22);
-    --muted: #9AA7A2; --line: #2F3A37; --frame: #B4483F; --grid: #6A3330; --outline: #2C3734;
-    --accent: #3FBF8F; --accent-soft: #1D3A30; --accent-ink: #0B1411; --hint: #F5B83D; --qi: #FFD36A;
-    --radical: #82AEEA; --seal: #C9443A; --seal-ink: #FFF4EC; --seal-blend: normal;
-    --star: #F5C542; --star-off: #3A4643;
+    --bg: #15120F; --paper: #1F1B17; --ink: #EFE8DA; --ink-wet: #C7BEB0; --ink-halo: rgba(239, 232, 218, 0.2);
+    --muted: #A89F92; --line: #3A332B; --line-soft: #2C2621; --frame: #9E3D33; --grid: #5E2E28; --outline: #2E2924;
+    --accent: #D2564A; --accent-soft: #3A1F1B; --accent-ink: #1A0E0B; --hint: #D9B25A; --qi: #D9B25A;
+    --radical: #8FB4D6; --seal: #C9443A; --seal-ink: #FFF4EC; --seal-blend: normal;
+    --gold: #E0B957; --silver: #C5CCD2; --wood-1: #3A2617; --wood-2: #1A100A; --gold-line: rgba(217, 178, 90, 0.6);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --ink-wet: #B9C4C0; --ink-halo: rgba(236, 242, 239, 0.22);
-  --muted: #9AA7A2; --line: #2F3A37; --frame: #B4483F; --grid: #6A3330; --outline: #2C3734;
-  --accent: #3FBF8F; --accent-soft: #1D3A30; --accent-ink: #0B1411; --hint: #F5B83D; --qi: #FFD36A;
-  --radical: #82AEEA; --seal: #C9443A; --seal-ink: #FFF4EC; --seal-blend: normal;
-  --star: #F5C542; --star-off: #3A4643;
+  --bg: #15120F; --paper: #1F1B17; --ink: #EFE8DA; --ink-wet: #C7BEB0; --ink-halo: rgba(239, 232, 218, 0.2);
+  --muted: #A89F92; --line: #3A332B; --line-soft: #2C2621; --frame: #9E3D33; --grid: #5E2E28; --outline: #2E2924;
+  --accent: #D2564A; --accent-soft: #3A1F1B; --accent-ink: #1A0E0B; --hint: #D9B25A; --qi: #D9B25A;
+  --radical: #8FB4D6; --seal: #C9443A; --seal-ink: #FFF4EC; --seal-blend: normal;
+  --gold: #E0B957; --silver: #C5CCD2; --wood-1: #3A2617; --wood-2: #1A100A; --gold-line: rgba(217, 178, 90, 0.6);
   color-scheme: dark;
 }
 
@@ -55,7 +59,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 16px 24px;
@@ -65,7 +69,13 @@ body {
   max-width: 1040px;
   margin: 0 auto;
   display: grid;
-  gap: 16px;
+  gap: 14px;
+}
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--line-soft);
 }
 
 /* Header */
@@ -76,21 +86,36 @@ header {
   justify-content: space-between;
   gap: 12px 20px;
 }
+.title { display: flex; align-items: center; gap: 12px; }
+.title-seal {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: var(--seal);
+  color: var(--seal-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 2px var(--seal), inset 0 0 0 3px var(--seal-ink);
+  transform: rotate(-4deg);
+}
 h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-wrap: balance;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
 }
 h1 small {
   display: block;
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 400;
   color: var(--muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
 }
 form.name {
   display: flex;
@@ -107,9 +132,10 @@ form.name label {
   min-width: 0;
   font-family: var(--font-display);
   font-size: 1.35rem;
-  padding: 8px 14px;
-  border: 2px solid var(--line);
-  border-radius: 12px;
+  letter-spacing: 0.1em;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
   background: var(--paper);
   color: var(--ink);
 }
@@ -118,19 +144,47 @@ form.name label {
 button {
   font: inherit;
   cursor: pointer;
-  border: 2px solid var(--line);
+  border: 1px solid var(--line);
   background: var(--paper);
   color: var(--ink);
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-weight: 500;
+  border-radius: 3px;
+  padding: 9px 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   touch-action: manipulation;
 }
 button:hover { border-color: var(--accent); }
-button:focus-visible, .chip:focus-visible, .seg button:focus-visible { outline: 3px solid var(--hint); outline-offset: 2px; }
+button:focus-visible, .chip:focus-visible { outline: 2px solid var(--hint); outline-offset: 2px; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button[aria-pressed="true"].toggle { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
-/* Name chips */
+/* 江湖 standing strip */
+.jianghu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+.rank-tag {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+.purse { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.purse b { font-weight: 700; }
+.sycee { width: 22px; height: 15px; flex: none; }
+.sycee.silver { color: var(--silver); }
+.sycee.gold { color: var(--gold); }
+.jianghu .quiet { color: var(--muted); }
+.jianghu button { margin-left: auto; padding: 5px 12px; font-size: 0.88rem; }
+
+/* Name tags */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -140,32 +194,36 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
   display: grid;
   justify-items: center;
   gap: 2px;
-  min-width: 76px;
+  min-width: 72px;
   padding: 8px 12px 6px;
-  border-radius: 14px;
-  border: 2px solid var(--line);
+  border-radius: 2px;
+  border: 1px solid var(--line);
   background: var(--paper);
+  font-weight: 400;
 }
 .chip .glyph {
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: 2.3rem;
   line-height: 1.1;
 }
 .chip .meta {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   min-height: 1.2em;
 }
-.chip[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.chip[aria-current="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .chip.missing .glyph { color: var(--muted); text-decoration: line-through; }
+.marks { letter-spacing: 0.15em; }
+.marks .on { color: var(--accent); }
+.marks .off { color: var(--line); }
 
 /* Main */
 main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  gap: 18px;
   align-items: start;
 }
 @media (min-width: 900px) {
@@ -176,6 +234,32 @@ main {
   display: grid;
   justify-items: center;
 }
+
+/* 擂台: lacquered wood frame with a hanging round plaque */
+.arena {
+  position: relative;
+  margin-top: 14px;
+  padding: 12px;
+  max-width: 100%;
+  background: linear-gradient(160deg, var(--wood-1), var(--wood-2));
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--gold-line), 0 14px 28px -20px rgba(0, 0, 0, 0.6);
+}
+.plaque {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 2px 10px 2px 16px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid var(--gold-line);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.3em;
+  white-space: nowrap;
+}
 .box {
   position: relative;
   width: 300px;
@@ -183,17 +267,16 @@ main {
   max-width: 100%;
   background-color: var(--paper);
   background-size: 256px 256px;
-  border-radius: 6px;
-  box-shadow: 0 1px 0 var(--line), 0 10px 30px -18px rgba(0, 0, 0, 0.35);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
-.box svg.grid, #writer, #fx { position: absolute; inset: 0; }
+.box svg.grid, #writer, #mine, #fx { position: absolute; inset: 0; }
 .box svg.grid { width: 100%; height: 100%; }
-#fx { pointer-events: none; }
-.grid .frame { fill: none; stroke: var(--frame); stroke-width: 3; }
-.grid .guide { stroke: var(--grid); stroke-width: 1.5; stroke-dasharray: 6 6; }
+#mine, #fx { pointer-events: none; }
+#mine polyline { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; }
+.grid .frame { fill: none; stroke: var(--frame); stroke-width: 2.5; }
+.grid .guide { stroke: var(--grid); stroke-width: 1.2; stroke-dasharray: 6 6; }
 .grid .diag { display: none; }
 .box.mi .grid .diag { display: inline; }
 .box .missing-msg {
@@ -201,23 +284,23 @@ main {
   display: grid; place-content: center; text-align: center;
   padding: 24px; color: var(--muted);
 }
-.box.shake { animation: shake 0.32s ease; }
+.arena.shake { animation: shake 0.32s ease; }
 @keyframes shake {
-  25% { transform: translateX(-7px); }
-  50% { transform: translateX(6px); }
-  75% { transform: translateX(-3px); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-2px); }
 }
-.box.thump { animation: thump 0.22s ease-out; }
+.arena.thump { animation: thump 0.22s ease-out; }
 @keyframes thump {
-  40% { transform: translateY(3px) scale(0.992); }
+  40% { transform: translateY(3px) scale(0.995); }
 }
 
 /* Ink drying: wet halo spreads into the paper, then settles */
-#writer.ink { animation: inkbleed 1.6s ease-out forwards; }
+#writer.ink, #mine.ink { animation: inkbleed 1.6s ease-out forwards; }
 @keyframes inkbleed {
   0% { filter: drop-shadow(0 0 0 var(--ink-halo)); }
-  35% { filter: drop-shadow(0 0 7px var(--ink-halo)) blur(0.6px); }
-  100% { filter: drop-shadow(0 0 1.5px var(--ink-halo)); }
+  35% { filter: drop-shadow(0 0 6px var(--ink-halo)) blur(0.5px); }
+  100% { filter: drop-shadow(0 0 1.2px var(--ink-halo)); }
 }
 
 /* Cinnabar seal */
@@ -225,19 +308,19 @@ main {
   position: absolute;
   right: 3%;
   bottom: 3%;
-  width: 23%;
+  width: 22%;
   aspect-ratio: 1;
   display: grid;
   place-items: center;
   background: var(--seal);
   color: var(--seal-ink);
-  border-radius: 9%;
+  border-radius: 6%;
   box-shadow: inset 0 0 0 4px var(--seal), inset 0 0 0 6px var(--seal-ink);
   font-family: var(--font-display);
   font-weight: 700;
   line-height: 1;
   mix-blend-mode: var(--seal-blend);
-  opacity: 0.93;
+  opacity: 0.92;
   transform: rotate(-8deg);
   pointer-events: none;
   -webkit-mask-size: 100% 100%;
@@ -248,11 +331,11 @@ main {
 @keyframes stamp {
   0% { transform: scale(2.4) rotate(-18deg); opacity: 0; }
   60% { transform: scale(0.92) rotate(-7deg); opacity: 0.95; }
-  100% { transform: scale(1) rotate(-8deg); opacity: 0.93; }
+  100% { transform: scale(1) rotate(-8deg); opacity: 0.92; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .box.shake, .box.thump, .seal.stamp, #writer.ink { animation: none; }
+  .arena.shake, .arena.thump, .seal.stamp, #writer.ink, #mine.ink { animation: none; }
 }
 
 /* Side panel */
@@ -265,19 +348,16 @@ main {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 12px;
-  background: var(--paper);
-  border: 2px solid var(--line);
-  border-radius: 14px;
+  padding: 12px 14px;
 }
-.mini { width: 64px; height: 64px; flex: none; }
-.mini .o { fill: var(--muted); opacity: 0.3; }
+.mini { width: 60px; height: 60px; flex: none; }
+.mini .o { fill: var(--muted); opacity: 0.28; }
 .mini .r { fill: var(--radical); }
 .info-text { display: grid; gap: 4px; min-width: 0; }
 .zy-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .zy {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   letter-spacing: 0.08em;
   line-height: 1.2;
 }
@@ -285,38 +365,36 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 3px 10px;
   font-size: 0.85rem;
   border-radius: 999px;
 }
-.say svg { width: 18px; height: 18px; fill: currentColor; }
-.rad-line { font-size: 0.9rem; color: var(--muted); }
+.say svg { width: 16px; height: 16px; fill: currentColor; }
+.rad-line { font-size: 0.88rem; color: var(--muted); }
 .rad-line b { font-family: var(--font-display); font-size: 1.15rem; color: var(--radical); font-weight: 700; }
 
 .seg {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: var(--paper);
-  border: 2px solid var(--line);
-  border-radius: 14px;
-  padding: 4px;
+  padding: 6px;
   gap: 4px;
 }
 .seg button {
   border: none;
-  border-radius: 10px;
-  padding: 10px 6px;
+  border-radius: 2px;
+  padding: 8px 4px;
   display: grid;
   gap: 0;
   line-height: 1.3;
+  background: transparent;
 }
-.seg button span { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+.seg button span { font-family: var(--font-display); font-size: 0.78rem; color: var(--muted); font-weight: 400; letter-spacing: 0.2em; }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .seg button[aria-pressed="true"] span { color: var(--accent-ink); opacity: 0.85; }
 
 .status {
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   min-height: 2.2em;
   text-align: center;
   text-wrap: balance;
@@ -330,17 +408,15 @@ main {
 }
 .result {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   justify-items: center;
   text-align: center;
   padding: 14px;
-  background: var(--accent-soft);
-  border-radius: 14px;
 }
-.result .big { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; }
-.stars { font-size: 2rem; letter-spacing: 0.08em; line-height: 1; }
-.stars .on { color: var(--star); }
-.stars .off { color: var(--star-off); }
+.result .big { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; letter-spacing: 0.1em; }
+.result .marks { font-size: 1.6rem; line-height: 1; }
+.reward { font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.reward b { color: var(--accent); }
 .result .actions { width: 100%; }
 
 details.settings {
@@ -358,16 +434,116 @@ details.settings summary { cursor: pointer; }
   margin-top: 10px;
 }
 .opt-row .label { min-width: 4.5em; letter-spacing: 0.04em; }
-.opt-row button { padding: 6px 12px; font-size: 0.9rem; }
+.opt-row button { padding: 5px 12px; font-size: 0.88rem; font-weight: 400; }
 .opt-row button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
 
 footer {
   color: var(--muted);
   font-size: 0.78rem;
-  line-height: 1.6;
+  line-height: 1.7;
   max-width: 70ch;
 }
 footer a { color: inherit; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  max-width: calc(100% - 32px);
+  padding: 8px 18px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--accent);
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--accent-soft), 0 10px 24px -14px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  animation: toast-in 0.3s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 兵器譜 */
+.armory {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding-block: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(20, 14, 8, 0.5);
+}
+.armory-panel {
+  width: min(660px, 100%);
+  max-height: 86vh;
+  overflow: auto;
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 18px;
+}
+.armory-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.armory h2, .armory h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.15em;
+}
+.armory h2 { font-size: 1.5rem; }
+.armory h3 { font-size: 1.05rem; color: var(--muted); font-weight: 400; margin-bottom: 8px; }
+.rank-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.rank-row .rank-tag { font-size: 1.4rem; }
+.bar { height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.ladder { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 0.82rem; color: var(--muted); }
+.ladder .reached { color: var(--ink); }
+.weapons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.weapon {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  justify-items: center;
+  text-align: center;
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.weapon.equipped { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.w-glyph {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.weapon.locked .w-glyph { opacity: 0.45; }
+.w-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; letter-spacing: 0.08em; }
+.w-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
+.weapon button { padding: 4px 10px; font-size: 0.82rem; }
+.weapon button:disabled { cursor: default; opacity: 0.5; border-color: var(--line); }
+.scrolls { display: flex; flex-wrap: wrap; gap: 8px; }
+.scroll-item {
+  padding: 4px 10px;
+  border: 1px solid var(--seal);
+  color: var(--seal);
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+}
+.rules { margin: 0; padding-left: 1.2em; font-size: 0.86rem; color: var(--muted); display: grid; gap: 2px; }
 
 /* Whole-name celebration: a night-sky veil with the name, fireworks canvas on top.
    Deliberately fixed colors (night sky, gold, lantern red) in both themes. */
@@ -392,7 +568,7 @@ footer a { color: inherit; }
   font-weight: 700;
   letter-spacing: 0.18em;
   line-height: 1.1;
-  text-shadow: 0 0 18px rgba(255, 170, 40, 0.6), 0 4px 0 #8E1A12;
+  text-shadow: 0 0 18px rgba(255, 170, 40, 0.5), 0 4px 0 #8E1A12;
   animation: rise 0.8s cubic-bezier(0.2, 1.3, 0.5, 1) both;
 }
 .banner-sub {
@@ -420,40 +596,63 @@ footer a { color: inherit; }
   pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  .banner, .banner-name, .banner-sub { animation: none; }
+  .banner, .banner-name, .banner-sub, .toast { animation: none; }
 }
 </style>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="sycee" viewBox="0 0 24 16">
+    <path fill="currentColor" d="M1 7.5c2 1.2 4.2 1.3 6.3.4C8 4.6 9.8 2.6 12 2.6s4 2 4.7 5.3c2.1.9 4.3.8 6.3-.4-.6 4.6-5 7-11 7S1.6 12.1 1 7.5z"></path>
+    <path fill="currentColor" opacity="0.55" d="M3.5 10.2c2.4 1.6 5.3 2.3 8.5 2.3s6.1-.7 8.5-2.3c-1.6 2.4-4.7 3.5-8.5 3.5s-6.9-1.1-8.5-3.5z"></path>
+  </symbol>
+</svg>
+
 <div class="app">
   <header>
-    <h1>筆順描字本<small>看筆順 → 描字 → 自己寫</small></h1>
+    <div class="title">
+      <div class="title-seal" aria-hidden="true">武</div>
+      <h1>筆順描字本<small>練字擂台　看筆順 → 描字 → 自己寫</small></h1>
+    </div>
     <form class="name" id="nameForm" autocomplete="off">
       <label for="nameInput">要練習的字</label>
       <input id="nameInput" name="name" maxlength="12" placeholder="輸入名字" value="劉岱恬">
-      <button class="primary" type="submit">開始練習</button>
+      <button class="primary" type="submit">上擂台</button>
     </form>
   </header>
+
+  <div class="jianghu" id="jianghu">
+    <span class="rank-tag" id="rankTag">初入江湖</span>
+    <span class="purse"><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg><b id="taels">0</b> 兩</span>
+    <span class="purse"><svg class="sycee gold" aria-hidden="true"><use href="#sycee"></use></svg><b id="ingots">0</b> 元寶</span>
+    <span class="quiet" id="streak"></span>
+    <span class="quiet" id="equipName"></span>
+    <button type="button" id="armoryBtn">兵器譜</button>
+  </div>
 
   <nav class="chips" id="chips" aria-label="名字裡的字"></nav>
 
   <main>
     <div class="stage" id="stage">
-      <div class="box" id="box">
-        <svg class="grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line class="guide" x1="50" y1="0" x2="50" y2="100" vector-effect="non-scaling-stroke"></line>
-          <line class="guide" x1="0" y1="50" x2="100" y2="50" vector-effect="non-scaling-stroke"></line>
-          <line class="guide diag" x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke"></line>
-          <line class="guide diag" x1="100" y1="0" x2="0" y2="100" vector-effect="non-scaling-stroke"></line>
-          <rect class="frame" x="0" y="0" width="100" height="100" vector-effect="non-scaling-stroke"></rect>
-        </svg>
-        <div id="writer"></div>
-        <div class="seal" id="seal" hidden><span id="sealText">甲上</span></div>
-        <canvas id="fx"></canvas>
+      <div class="arena" id="arena">
+        <div class="plaque" id="plaque">第一回合</div>
+        <div class="box" id="box">
+          <svg class="grid" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line class="guide" x1="50" y1="0" x2="50" y2="100" vector-effect="non-scaling-stroke"></line>
+            <line class="guide" x1="0" y1="50" x2="100" y2="50" vector-effect="non-scaling-stroke"></line>
+            <line class="guide diag" x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke"></line>
+            <line class="guide diag" x1="100" y1="0" x2="0" y2="100" vector-effect="non-scaling-stroke"></line>
+            <rect class="frame" x="0" y="0" width="100" height="100" vector-effect="non-scaling-stroke"></rect>
+          </svg>
+          <div id="writer"></div>
+          <svg id="mine" aria-hidden="true"></svg>
+          <div class="seal" id="seal" hidden><span id="sealText">甲上</span></div>
+          <canvas id="fx"></canvas>
+        </div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="info" id="info">
+      <div class="info card" id="info">
         <svg class="mini" id="mini" viewBox="0 0 1024 1024" aria-hidden="true"></svg>
         <div class="info-text">
           <div class="zy-row">
@@ -466,10 +665,10 @@ footer a { color: inherit; }
         </div>
       </div>
 
-      <div class="seg" id="modes" role="group" aria-label="練習方式">
-        <button type="button" data-mode="watch" aria-pressed="true">看筆順<span>一筆一筆看</span></button>
-        <button type="button" data-mode="trace" aria-pressed="false">描字<span>照灰色描</span></button>
-        <button type="button" data-mode="write" aria-pressed="false">自己寫<span>不看字</span></button>
+      <div class="seg card" id="modes" role="group" aria-label="練習方式">
+        <button type="button" data-mode="watch" aria-pressed="true">看筆順<span>觀招</span></button>
+        <button type="button" data-mode="trace" aria-pressed="false">描字<span>練招</span></button>
+        <button type="button" data-mode="write" aria-pressed="false">自己寫<span>過招</span></button>
       </div>
 
       <div class="status" id="status" aria-live="polite">&nbsp;</div>
@@ -481,13 +680,16 @@ footer a { color: inherit; }
       <div class="actions" id="quizActions" hidden>
         <button type="button" id="restartBtn">↺ 重寫</button>
         <button type="button" id="demoBtn">看示範</button>
+        <button type="button" class="toggle" id="keepBtn" aria-pressed="false">保留我的筆跡</button>
       </div>
 
-      <div class="result" id="result" hidden>
-        <div class="big" id="resultTitle">好棒！</div>
-        <div class="stars" id="resultStars"></div>
+      <div class="result card" id="result" hidden>
+        <div class="big" id="resultTitle">過關！</div>
+        <div class="marks" id="resultMarks"></div>
         <div id="resultMsg"></div>
+        <div class="reward" id="resultReward"></div>
         <div class="actions">
+          <button type="button" class="toggle" id="compareBtn" aria-pressed="false" hidden>對照標準字</button>
           <button type="button" id="againBtn">再寫一次</button>
           <button type="button" class="primary" id="nextBtn">下一個字 →</button>
         </div>
@@ -495,6 +697,11 @@ footer a { color: inherit; }
 
       <details class="settings">
         <summary>設定</summary>
+        <div class="opt-row" data-opt="keep">
+          <span class="label">筆跡</span>
+          <button type="button" data-val="0">換成標準字</button>
+          <button type="button" data-val="1">保留我寫的</button>
+        </div>
         <div class="opt-row" data-opt="sound">
           <span class="label">聲音</span>
           <button type="button" data-val="1">開</button>
@@ -531,6 +738,45 @@ footer a { color: inherit; }
   </footer>
 </div>
 
+<div class="armory" id="armory" hidden role="dialog" aria-modal="true" aria-labelledby="armoryTitle">
+  <div class="armory-panel card">
+    <div class="armory-head">
+      <h2 id="armoryTitle">兵器譜</h2>
+      <button type="button" id="armoryClose">關閉</button>
+    </div>
+    <section>
+      <h3>江湖名號</h3>
+      <div class="rank-row">
+        <span class="rank-tag" id="armoryRank"></span>
+        <span class="quiet" id="armoryNext"></span>
+      </div>
+      <div class="bar"><i id="rankBar" style="width:0%"></i></div>
+      <div class="ladder" id="ladder"></div>
+    </section>
+    <section>
+      <h3>兵器</h3>
+      <div class="weapons" id="weapons"></div>
+    </section>
+    <section>
+      <h3>武功字訣</h3>
+      <div class="scrolls" id="scrolls"></div>
+    </section>
+    <section>
+      <h3>怎麼得到銀兩</h3>
+      <ul class="rules">
+        <li>描字寫完一個字：三個圈 10 兩、兩個圈 6 兩、一個圈 3 兩</li>
+        <li>自己寫：銀兩加倍；一筆都沒寫錯再得 1 個元寶</li>
+        <li>自己寫拿到三個圈：習得這個字的「字訣」</li>
+        <li>整個名字都自己寫完：再得 1 個元寶</li>
+        <li>每天第一次練功另外加碼，連續天數越多加越多</li>
+        <li>修為（累積賺到的銀兩）越高，江湖名號越高；買兵器不會減修為</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
 <div class="banner" id="banner" hidden>
   <div class="banner-name" id="bannerName"></div>
   <div class="banner-sub">練成了！</div>
@@ -541,10 +787,15 @@ footer a { color: inherit; }
 <script>
 const N_CHUNKS = 128;
 const STORE_KEY = 'bishun-trace.v1';
+const PURSE_KEY = 'bishun-trace.purse.v1';
+const TRANSPARENT = 'rgba(0,0,0,0)';
+const COMPARE_RED = 'rgba(178,58,46,0.38)';
 
 const box = document.getElementById('box');
+const arena = document.getElementById('arena');
 const stage = document.getElementById('stage');
 const writerEl = document.getElementById('writer');
+const mineEl = document.getElementById('mine');
 const chipsEl = document.getElementById('chips');
 const statusEl = document.getElementById('status');
 const watchActions = document.getElementById('watchActions');
@@ -555,6 +806,13 @@ const sealEl = document.getElementById('seal');
 const fxCanvas = document.getElementById('fx');
 const skyCanvas = document.getElementById('sky');
 const bannerEl = document.getElementById('banner');
+const toastEl = document.getElementById('toast');
+const armoryEl = document.getElementById('armory');
+const keepBtn = document.getElementById('keepBtn');
+const compareBtn = document.getElementById('compareBtn');
+
+const ARENA_PAD = 12;
+const NUMERALS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 
 const RADICAL_NAMES = {
   '氵': '三點水', '冫': '兩點水', '口': '口字旁', '艹': '草字頭', '艸': '草字頭', '木': '木字旁',
@@ -585,6 +843,30 @@ const RADICAL_NAMES = {
 };
 
 const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
+const TAELS_FOR_GRADE = { 3: 10, 2: 6, 1: 3 };
+
+// 江湖名號 by 修為 (all taels ever earned)
+const RANKS = [
+  { at: 0, name: '初入江湖' },
+  { at: 30, name: '武館學徒' },
+  { at: 100, name: '少俠' },
+  { at: 250, name: '俠客' },
+  { at: 500, name: '大俠' },
+  { at: 900, name: '一代宗師' },
+  { at: 1500, name: '武林盟主' },
+];
+
+// 兵器譜: price in taels or ingots; the equipped weapon tints the 劍氣
+const WEAPONS = [
+  { id: 'wood', name: '木劍', glyph: '劍', taels: 20, qi: '#A9834F', desc: '練武的第一把劍，木頭做的，不會傷人。' },
+  { id: 'staff', name: '竹棍', glyph: '棍', taels: 35, qi: '#7E9A4E', desc: '竹子做的長棍，又輕又韌。' },
+  { id: 'fan', name: '鐵扇', glyph: '扇', taels: 60, qi: '#7F8C99', desc: '扇骨是鐵打的，打開能擋暗器。' },
+  { id: 'spear', name: '紅纓槍', glyph: '槍', taels: 100, qi: '#C2453C', desc: '槍頭綁紅穗，人稱「百兵之王」。' },
+  { id: 'ring', name: '九環刀', glyph: '刀', taels: 160, qi: '#C9A03A', desc: '刀背掛著九個鐵環，揮起來叮噹響。' },
+  { id: 'guandao', name: '青龍偃月刀', glyph: '刀', taels: 260, qi: '#3E8E7E', desc: '《三國演義》裡關羽的大刀，重八十二斤。' },
+  { id: 'zhanlu', name: '湛盧劍', glyph: '湛', ingots: 3, qi: '#5B7FB5', desc: '春秋鑄劍大師歐冶子所鑄，傳說是仁者之劍。' },
+  { id: 'ganjiang', name: '干將莫邪', glyph: '干', ingots: 5, qi: '#8E6FB8', desc: '鑄劍師夫妻干將、莫邪，鑄成一雌一雄兩把名劍。' },
+];
 
 const state = {
   name: '劉岱恬',
@@ -596,7 +878,18 @@ const state = {
   slow: true,
   sound: true,
   radical: true,
+  keep: false,
   stars: {},
+};
+const purse = {
+  taels: 0,
+  ingots: 0,
+  earned: 0,
+  owned: [],
+  equipped: '',
+  scrolls: [],
+  lastDay: '',
+  streak: 0,
 };
 const strokeCount = {};
 const sessionDone = new Set();
@@ -611,23 +904,31 @@ let stepNum = 0;
 function loadSaved() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return;
-    const saved = JSON.parse(raw);
-    if (saved.name) state.name = saved.name;
-    if (saved.grid) state.grid = saved.grid;
-    for (const key of ['lenient', 'slow', 'sound', 'radical']) {
-      if (typeof saved[key] === 'boolean') state[key] = saved[key];
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved.name) state.name = saved.name;
+      if (saved.grid) state.grid = saved.grid;
+      for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
+        if (typeof saved[key] === 'boolean') state[key] = saved[key];
+      }
+      if (saved.stars) state.stars = saved.stars;
     }
-    if (saved.stars) state.stars = saved.stars;
+    const rawPurse = localStorage.getItem(PURSE_KEY);
+    if (rawPurse) Object.assign(purse, JSON.parse(rawPurse));
   } catch (e) {}
 }
 function save() {
   try {
     const out = {
       name: state.name, grid: state.grid, lenient: state.lenient, slow: state.slow,
-      sound: state.sound, radical: state.radical, stars: state.stars,
+      sound: state.sound, radical: state.radical, keep: state.keep, stars: state.stars,
     };
     localStorage.setItem(STORE_KEY, JSON.stringify(out));
+  } catch (e) {}
+}
+function savePurse() {
+  try {
+    localStorage.setItem(PURSE_KEY, JSON.stringify(purse));
   } catch (e) {}
 }
 
@@ -657,7 +958,19 @@ function token(name) {
 function reducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
+function keepMode() {
+  return state.keep && state.mode !== 'watch';
+}
 function writerColors() {
+  if (keepMode()) {
+    return {
+      strokeColor: TRANSPARENT,
+      outlineColor: token('--outline'),
+      drawingColor: token('--ink'),
+      highlightColor: token('--hint'),
+      radicalColor: TRANSPARENT,
+    };
+  }
   return {
     strokeColor: token(state.mode === 'watch' ? '--ink' : '--ink-wet'),
     outlineColor: token('--outline'),
@@ -674,24 +987,30 @@ function parseName(text) {
   return out.slice(0, 12);
 }
 function boxSize() {
-  const w = stage.clientWidth;
-  const h = window.innerHeight * 0.62;
-  return Math.round(Math.max(220, Math.min(w, h, 600)));
+  const w = stage.clientWidth - 2 * ARENA_PAD;
+  const h = window.innerHeight * 0.6;
+  return Math.round(Math.max(220, Math.min(w, h, 580)));
 }
 function boxPadding(size) {
   return Math.round(size * 0.06);
 }
-function starsFor(mistakes) {
+function drawingWidth(size) {
+  return Math.max(6, Math.round(size / 36));
+}
+function gradeFor(mistakes) {
   if (mistakes <= 1) return 3;
   if (mistakes <= 4) return 2;
   return 1;
 }
-function starHtml(n) {
+function marksHtml(n) {
   let s = '';
   for (let i = 0; i < 3; i++) {
-    s += i < n ? '<span class="on">★</span>' : '<span class="off">★</span>';
+    s += i < n ? '<span class="on">●</span>' : '<span class="off">○</span>';
   }
   return s;
+}
+function syceeHtml(kind) {
+  return '<svg class="sycee ' + kind + '" aria-hidden="true"><use href="#sycee"></use></svg>';
 }
 function setStatus(html) {
   statusEl.innerHTML = html;
@@ -701,6 +1020,9 @@ function currentChar() {
 }
 function rand(a, b) {
   return a + Math.random() * (b - a);
+}
+function localDay(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function setupCanvas(canvas, w, h) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -712,14 +1034,20 @@ function setupCanvas(canvas, w, h) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return ctx;
 }
+function restartAnimation(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
 
 // Hanzi Writer's coordinate frame: x in [0, 1024], y in [-124, 900] pointing up.
-function toScreen(pt, size) {
+function toScreen(x, y, size) {
   const pad = boxPadding(size);
   const scale = (size - 2 * pad) / 1024;
-  const x = pad + pt[0] * scale;
-  const y = size - pad - 124 * scale - pt[1] * scale;
-  return { x: x, y: y };
+  return {
+    x: pad + x * scale,
+    y: size - pad - 124 * scale - y * scale,
+  };
 }
 
 // ---------- textures (rice paper fibers, worn seal edge) ----------
@@ -728,7 +1056,7 @@ function paperTexture() {
   c.width = 256;
   c.height = 256;
   const ctx = c.getContext('2d');
-  ctx.strokeStyle = 'rgba(128, 120, 100, 0.07)';
+  ctx.strokeStyle = 'rgba(128, 110, 80, 0.07)';
   ctx.lineWidth = 0.8;
   for (let i = 0; i < 700; i++) {
     const x = Math.random() * 256;
@@ -820,7 +1148,7 @@ function sfxSwish() {
   bp.Q.value = 1.4;
   bp.frequency.setValueAtTime(4200, t);
   bp.frequency.exponentialRampToValueAtTime(700, t + 0.2);
-  const g = envelope(ac, t, 0.45, 0.03, 0.2);
+  const g = envelope(ac, t, 0.35, 0.03, 0.2);
   src.connect(bp).connect(g).connect(ac.destination);
   src.start(t, Math.random() * 0.5);
   src.stop(t + 0.26);
@@ -829,7 +1157,7 @@ function sfxSwish() {
     const o = ac.createOscillator();
     o.type = 'sine';
     o.frequency.value = f;
-    const og = envelope(ac, t + 0.05, 0.035, 0.01, 0.35);
+    const og = envelope(ac, t + 0.05, 0.025, 0.01, 0.35);
     o.connect(og).connect(ac.destination);
     o.start(t + 0.05);
     o.stop(t + 0.45);
@@ -877,12 +1205,12 @@ function sfxWood() {
 }
 
 // 銅鑼: inharmonic partials with a slight pitch drop after the strike
-function sfxGong() {
+function sfxGong(level) {
   const ac = getAudio();
   if (!ac) return;
   const t = ac.currentTime;
   const master = ac.createGain();
-  master.gain.value = 0.8;
+  master.gain.value = 0.8 * (level || 1);
   master.connect(ac.destination);
 
   const base = 92;
@@ -928,6 +1256,24 @@ function sfxCrackle() {
   }
 }
 
+// 叮: coins dropping into the purse
+function sfxCoins() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const notes = [1568, 2093, 2637];
+  for (let i = 0; i < notes.length; i++) {
+    const at = t + i * 0.07;
+    const o = ac.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = notes[i];
+    const g = envelope(ac, at, 0.08, 0.004, 0.25);
+    o.connect(g).connect(ac.destination);
+    o.start(at);
+    o.stop(at + 0.3);
+  }
+}
+
 // ---------- speech ----------
 function pickVoice() {
   const voices = window.speechSynthesis.getVoices();
@@ -951,6 +1297,29 @@ function say(text) {
 }
 if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
 
+// ---------- toast ----------
+const toastQueue = [];
+let toastBusy = false;
+function toast(text) {
+  toastQueue.push(text);
+  if (!toastBusy) nextToast();
+}
+function nextToast() {
+  const text = toastQueue.shift();
+  if (!text) {
+    toastBusy = false;
+    return;
+  }
+  toastBusy = true;
+  toastEl.textContent = text;
+  toastEl.hidden = false;
+  restartAnimation(toastEl, 'toast');
+  setTimeout(function () {
+    toastEl.hidden = true;
+    setTimeout(nextToast, 200);
+  }, 2400);
+}
+
 // ---------- box effects: 劍氣 along each correct stroke ----------
 const fx = { ctx: null, size: 0, slashes: [], sparks: [], rings: [], running: false, last: 0 };
 
@@ -962,33 +1331,39 @@ function setupFx(size) {
   fx.rings = [];
 }
 
-function swordQi(strokeNum) {
-  if (reducedMotion() || !charData) return;
-  const median = charData.medians[strokeNum];
-  if (!median || median.length < 2) return;
+function qiColor() {
+  for (const w of WEAPONS) {
+    if (w.id === purse.equipped) return w.qi;
+  }
+  return token('--qi');
+}
 
-  const pts = [];
-  for (const p of median) pts.push(toScreen(p, fx.size));
+// pts: points in Hanzi Writer's character frame, as {x, y}
+function swordQi(pts) {
+  if (reducedMotion() || !pts || pts.length < 2) return;
 
-  // resample the median every ~5 px so the glow travels smoothly
-  const samples = [{ x: pts[0].x, y: pts[0].y, d: 0 }];
+  const screen = [];
+  for (const p of pts) screen.push(toScreen(p.x, p.y, fx.size));
+
+  // resample every ~5 px so the glow travels smoothly
+  const samples = [{ x: screen[0].x, y: screen[0].y, d: 0 }];
   let total = 0;
-  for (let i = 1; i < pts.length; i++) {
-    const dx = pts[i].x - pts[i - 1].x;
-    const dy = pts[i].y - pts[i - 1].y;
+  for (let i = 1; i < screen.length; i++) {
+    const dx = screen[i].x - screen[i - 1].x;
+    const dy = screen[i].y - screen[i - 1].y;
     const seg = Math.hypot(dx, dy);
     const n = Math.max(1, Math.ceil(seg / 5));
     for (let k = 1; k <= n; k++) {
       samples.push({
-        x: pts[i - 1].x + dx * k / n,
-        y: pts[i - 1].y + dy * k / n,
+        x: screen[i - 1].x + dx * k / n,
+        y: screen[i - 1].y + dy * k / n,
         d: total + seg * k / n,
       });
     }
     total += seg;
   }
   const dur = Math.min(320, 140 + total * 0.6);
-  fx.slashes.push({ samples: samples, length: total, start: performance.now(), dur: dur, ended: false });
+  fx.slashes.push({ samples: samples, length: total, start: performance.now(), dur: dur, ended: false, color: qiColor() });
   startFx();
 }
 
@@ -1004,29 +1379,28 @@ function fxFrame(now) {
   fx.last = now;
   const ctx = fx.ctx;
   const size = fx.size;
-  const qi = token('--qi');
   ctx.clearRect(0, 0, size, size);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  const width = size / 26;
+  const width = size / 44;
   const keep = [];
   for (const s of fx.slashes) {
     const p = Math.min(1, Math.max(0, (now - s.start) / s.dur));
     let fade = 1;
-    if (p >= 1) fade = Math.max(0, 1 - (now - s.start - s.dur) / 380);
+    if (p >= 1) fade = Math.max(0, 1 - (now - s.start - s.dur) / 320);
     const head = s.length * p;
     const samples = s.samples;
 
     let headPt = samples[0];
-    ctx.shadowColor = qi;
-    ctx.shadowBlur = 14;
-    ctx.strokeStyle = qi;
+    ctx.shadowColor = s.color;
+    ctx.shadowBlur = 5;
+    ctx.strokeStyle = s.color;
     for (let i = 1; i < samples.length; i++) {
       if (samples[i].d > head) break;
       const ratio = head > 0 ? samples[i].d / head : 1;
-      ctx.globalAlpha = fade * (0.12 + 0.88 * ratio * ratio);
-      ctx.lineWidth = width * (0.45 + 0.55 * ratio);
+      ctx.globalAlpha = fade * 0.55 * (0.1 + 0.9 * ratio * ratio);
+      ctx.lineWidth = width * (0.4 + 0.6 * ratio);
       ctx.beginPath();
       ctx.moveTo(samples[i - 1].x, samples[i - 1].y);
       ctx.lineTo(samples[i].x, samples[i].y);
@@ -1035,34 +1409,33 @@ function fxFrame(now) {
     }
     ctx.shadowBlur = 0;
 
-    // bright core at the leading edge
-    ctx.globalAlpha = fade;
+    // small bright tip at the leading edge
+    ctx.globalAlpha = fade * 0.6;
     ctx.fillStyle = '#FFF8E1';
     ctx.beginPath();
-    ctx.arc(headPt.x, headPt.y, width * 0.45, 0, Math.PI * 2);
+    ctx.arc(headPt.x, headPt.y, width * 0.35, 0, Math.PI * 2);
     ctx.fill();
 
     if (p < 1) {
-      for (let k = 0; k < 2; k++) {
+      if (Math.random() < 0.5) {
         const a = Math.random() * Math.PI * 2;
-        const v = rand(0.6, 2.2) * size / 400;
-        fx.sparks.push({ x: headPt.x, y: headPt.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rand(250, 480) });
+        const v = rand(0.5, 1.6) * size / 400;
+        fx.sparks.push({ x: headPt.x, y: headPt.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rand(220, 400), color: s.color });
       }
     } else if (!s.ended) {
       s.ended = true;
-      for (let k = 0; k < 12; k++) {
-        const a = k / 12 * Math.PI * 2;
-        const v = rand(1.5, 3.2) * size / 400;
-        fx.sparks.push({ x: headPt.x, y: headPt.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rand(300, 520) });
+      for (let k = 0; k < 6; k++) {
+        const a = k / 6 * Math.PI * 2 + rand(-0.3, 0.3);
+        const v = rand(1, 2.2) * size / 400;
+        fx.sparks.push({ x: headPt.x, y: headPt.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rand(260, 420), color: s.color });
       }
-      fx.rings.push({ x: headPt.x, y: headPt.y, age: 0, life: 420 });
+      fx.rings.push({ x: headPt.x, y: headPt.y, age: 0, life: 360, color: s.color });
     }
     if (fade > 0) keep.push(s);
   }
   fx.slashes = keep;
 
   const liveSparks = [];
-  ctx.fillStyle = qi;
   for (const sp of fx.sparks) {
     sp.age += dt * 16.7;
     if (sp.age >= sp.life) continue;
@@ -1070,24 +1443,25 @@ function fxFrame(now) {
     sp.y += sp.vy * dt;
     sp.vx *= 0.94;
     sp.vy = sp.vy * 0.94 + 0.04 * dt;
-    ctx.globalAlpha = 1 - sp.age / sp.life;
+    ctx.globalAlpha = 0.7 * (1 - sp.age / sp.life);
+    ctx.fillStyle = sp.color;
     ctx.beginPath();
-    ctx.arc(sp.x, sp.y, width * 0.18, 0, Math.PI * 2);
+    ctx.arc(sp.x, sp.y, width * 0.16, 0, Math.PI * 2);
     ctx.fill();
     liveSparks.push(sp);
   }
   fx.sparks = liveSparks;
 
   const liveRings = [];
-  ctx.strokeStyle = qi;
   for (const r of fx.rings) {
     r.age += dt * 16.7;
     if (r.age >= r.life) continue;
     const k = r.age / r.life;
-    ctx.globalAlpha = 1 - k;
-    ctx.lineWidth = width * 0.3 * (1 - k) + 0.5;
+    ctx.globalAlpha = 0.5 * (1 - k);
+    ctx.strokeStyle = r.color;
+    ctx.lineWidth = width * 0.25 * (1 - k) + 0.5;
     ctx.beginPath();
-    ctx.arc(r.x, r.y, size * 0.07 * k + 2, 0, Math.PI * 2);
+    ctx.arc(r.x, r.y, size * 0.05 * k + 2, 0, Math.PI * 2);
     ctx.stroke();
     liveRings.push(r);
   }
@@ -1100,6 +1474,20 @@ function fxFrame(now) {
     ctx.clearRect(0, 0, size, size);
     fx.running = false;
   }
+}
+
+// ---------- the child's own strokes, kept in place of the standard ones ----------
+function addMine(points) {
+  const size = builtSize;
+  let attr = '';
+  for (const p of points) {
+    const s = toScreen(p.x, p.y, size);
+    attr += s.x.toFixed(1) + ',' + s.y.toFixed(1) + ' ';
+  }
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  line.setAttribute('points', attr.trim());
+  line.setAttribute('stroke-width', String(Math.round(drawingWidth(size) * 1.25)));
+  mineEl.append(line);
 }
 
 // ---------- whole-name celebration: night sky, gold fireworks, red lanterns, firecracker paper ----------
@@ -1315,29 +1703,215 @@ function hideSeal() {
   sealEl.hidden = true;
   sealEl.classList.remove('stamp');
 }
-function stampSeal(stars) {
-  const text = SEAL_TEXT[stars];
+function stampSeal(grade) {
+  const text = SEAL_TEXT[grade];
   const span = document.getElementById('sealText');
   span.textContent = text;
-  const scale = text.length === 1 ? 0.15 : 0.095;
+  const scale = text.length === 1 ? 0.15 : 0.09;
   span.style.fontSize = Math.round(builtSize * scale) + 'px';
   sealEl.hidden = false;
-  sealEl.classList.remove('stamp');
-  void sealEl.offsetWidth;
-  sealEl.classList.add('stamp');
+  restartAnimation(sealEl, 'stamp');
   setTimeout(function () {
     sfxStamp();
-    box.classList.remove('thump');
-    void box.offsetWidth;
-    box.classList.add('thump');
+    restartAnimation(arena, 'thump');
   }, reducedMotion() ? 0 : 230);
 }
 function inkBleed() {
-  writerEl.classList.remove('ink');
-  void writerEl.offsetWidth;
-  writerEl.classList.add('ink');
+  if (keepMode()) {
+    restartAnimation(mineEl, 'ink');
+    return;
+  }
+  restartAnimation(writerEl, 'ink');
   if (writer) writer.updateColor('strokeColor', token('--ink'), { duration: 1400 });
 }
+
+// ---------- 江湖: purse, ranks, weapons, scrolls ----------
+function rankIndex(earned) {
+  let idx = 0;
+  for (let i = 0; i < RANKS.length; i++) {
+    if (earned >= RANKS[i].at) idx = i;
+  }
+  return idx;
+}
+function weaponById(id) {
+  for (const w of WEAPONS) {
+    if (w.id === id) return w;
+  }
+  return null;
+}
+function renderPurse() {
+  const rank = RANKS[rankIndex(purse.earned)];
+  document.getElementById('rankTag').textContent = rank.name;
+  document.getElementById('taels').textContent = purse.taels;
+  document.getElementById('ingots').textContent = purse.ingots;
+  document.getElementById('streak').textContent = purse.streak > 1 ? '連續練功 ' + purse.streak + ' 天' : '';
+  const w = weaponById(purse.equipped);
+  document.getElementById('equipName').textContent = w ? '佩帶：' + w.name : '';
+}
+
+function award(ch, grade, mistakes) {
+  let taels = TAELS_FOR_GRADE[grade];
+  if (state.mode === 'write') taels *= 2;
+
+  const today = localDay(new Date());
+  if (purse.lastDay !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (purse.lastDay === localDay(yesterday)) purse.streak += 1;
+    else purse.streak = 1;
+    purse.lastDay = today;
+    const bonus = 5 + Math.min(purse.streak, 7);
+    taels += bonus;
+    let note = '今日練功　+' + bonus + ' 兩';
+    if (purse.streak > 1) note += '（連續 ' + purse.streak + ' 天）';
+    toast(note);
+  }
+
+  let ingots = 0;
+  if (state.mode === 'write' && mistakes === 0) ingots += 1;
+
+  const rankBefore = rankIndex(purse.earned);
+  purse.taels += taels;
+  purse.earned += taels;
+  purse.ingots += ingots;
+  const rankAfter = rankIndex(purse.earned);
+  if (rankAfter > rankBefore) {
+    toast('晉升江湖名號：「' + RANKS[rankAfter].name + '」');
+    setTimeout(function () { sfxGong(0.5); }, 600);
+  }
+
+  if (state.mode === 'write' && grade === 3 && purse.scrolls.indexOf(ch) < 0) {
+    purse.scrolls.push(ch);
+    toast('習得「' + ch + '字訣」');
+  }
+
+  savePurse();
+  renderPurse();
+  return { taels: taels, ingots: ingots };
+}
+
+function renderArmory() {
+  const idx = rankIndex(purse.earned);
+  document.getElementById('armoryRank').textContent = RANKS[idx].name;
+  const next = RANKS[idx + 1];
+  const nextEl = document.getElementById('armoryNext');
+  const bar = document.getElementById('rankBar');
+  if (next) {
+    nextEl.textContent = '修為 ' + purse.earned + ' / ' + next.at + '　下一階：' + next.name;
+    const span = next.at - RANKS[idx].at;
+    bar.style.width = Math.round(100 * (purse.earned - RANKS[idx].at) / span) + '%';
+  } else {
+    nextEl.textContent = '修為 ' + purse.earned + '　已是最高名號';
+    bar.style.width = '100%';
+  }
+
+  const ladder = document.getElementById('ladder');
+  ladder.innerHTML = '';
+  RANKS.forEach(function (r, i) {
+    const span = document.createElement('span');
+    span.textContent = r.name + ' ' + r.at;
+    if (i <= idx) span.className = 'reached';
+    ladder.append(span);
+  });
+
+  const grid = document.getElementById('weapons');
+  grid.innerHTML = '';
+  for (const w of WEAPONS) {
+    const owned = purse.owned.indexOf(w.id) >= 0;
+    const card = document.createElement('div');
+    card.className = 'weapon';
+    if (!owned) card.classList.add('locked');
+    if (purse.equipped === w.id) card.classList.add('equipped');
+
+    const glyph = document.createElement('div');
+    glyph.className = 'w-glyph';
+    glyph.style.color = w.qi;
+    glyph.textContent = w.glyph;
+
+    const name = document.createElement('div');
+    name.className = 'w-name';
+    name.textContent = w.name;
+
+    const desc = document.createElement('div');
+    desc.className = 'w-desc';
+    desc.textContent = w.desc;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    if (owned) {
+      if (purse.equipped === w.id) {
+        btn.textContent = '佩帶中';
+        btn.disabled = true;
+      } else {
+        btn.textContent = '佩帶';
+        btn.addEventListener('click', function () { equip(w); });
+      }
+    } else {
+      const canBuy = w.ingots ? purse.ingots >= w.ingots : purse.taels >= w.taels;
+      btn.innerHTML = w.ingots ? syceeHtml('gold') + ' ' + w.ingots + ' 元寶' : syceeHtml('silver') + ' ' + w.taels + ' 兩';
+      btn.disabled = !canBuy;
+      btn.addEventListener('click', function () { buy(w); });
+    }
+
+    card.append(glyph, name, desc, btn);
+    grid.append(card);
+  }
+
+  const scrolls = document.getElementById('scrolls');
+  scrolls.innerHTML = '';
+  if (purse.scrolls.length === 0) {
+    const p = document.createElement('span');
+    p.className = 'quiet';
+    p.textContent = '還沒有字訣。在「自己寫」拿到三個圈，就能習得那個字的字訣。';
+    scrolls.append(p);
+  }
+  for (const ch of purse.scrolls) {
+    const s = document.createElement('span');
+    s.className = 'scroll-item';
+    s.textContent = ch + '字訣';
+    scrolls.append(s);
+  }
+}
+
+function buy(w) {
+  if (w.ingots) {
+    if (purse.ingots < w.ingots) return;
+    purse.ingots -= w.ingots;
+  } else {
+    if (purse.taels < w.taels) return;
+    purse.taels -= w.taels;
+  }
+  purse.owned.push(w.id);
+  purse.equipped = w.id;
+  savePurse();
+  renderPurse();
+  renderArmory();
+  sfxCoins();
+  toast('得到兵器「' + w.name + '」');
+}
+function equip(w) {
+  purse.equipped = w.id;
+  savePurse();
+  renderPurse();
+  renderArmory();
+}
+function openArmory() {
+  renderArmory();
+  armoryEl.hidden = false;
+  document.getElementById('armoryClose').focus();
+}
+function closeArmory() {
+  armoryEl.hidden = true;
+  document.getElementById('armoryBtn').focus();
+}
+document.getElementById('armoryBtn').addEventListener('click', openArmory);
+document.getElementById('armoryClose').addEventListener('click', closeArmory);
+armoryEl.addEventListener('click', function (e) {
+  if (e.target === armoryEl) closeArmory();
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && !armoryEl.hidden) closeArmory();
+});
 
 // ---------- info: zhuyin, radical ----------
 function renderInfo(ch, data) {
@@ -1394,7 +1968,7 @@ function renderChips() {
       else if (n) meta.textContent = n + ' 筆';
     } else {
       const best = (state.stars[ch] && state.stars[ch][state.mode]) || 0;
-      meta.innerHTML = '<span class="stars" style="font-size:0.9rem">' + starHtml(best) + '</span>';
+      meta.innerHTML = '<span class="marks">' + marksHtml(best) + '</span>';
     }
 
     b.append(g, meta);
@@ -1415,6 +1989,8 @@ async function build() {
   resultEl.hidden = true;
   hideSeal();
   writerEl.classList.remove('ink');
+  mineEl.classList.remove('ink');
+  mineEl.innerHTML = '';
   if (!ch) return;
 
   let data = null;
@@ -1436,8 +2012,12 @@ async function build() {
   builtSize = size;
   box.style.width = size + 'px';
   box.style.height = size + 'px';
+  mineEl.setAttribute('width', size);
+  mineEl.setAttribute('height', size);
+  mineEl.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
   setupFx(size);
   renderInfo(ch, data);
+  document.getElementById('plaque').textContent = '第' + NUMERALS[state.idx] + '回合';
 
   if (!data) {
     strokeCount[ch] = 0;
@@ -1459,7 +2039,7 @@ async function build() {
     drawingColor: colors.drawingColor,
     highlightColor: colors.highlightColor,
     radicalColor: colors.radicalColor,
-    drawingWidth: Math.max(6, Math.round(size / 36)),
+    drawingWidth: drawingWidth(size),
     strokeAnimationSpeed: state.slow ? 0.6 : 1.2,
     delayBetweenStrokes: state.slow ? 600 : 250,
     charDataLoader: function (c, onLoad, onError) {
@@ -1486,6 +2066,7 @@ function startMode() {
   resultEl.hidden = true;
   watchActions.hidden = state.mode !== 'watch';
   quizActions.hidden = state.mode === 'watch';
+  keepBtn.setAttribute('aria-pressed', state.keep ? 'true' : 'false');
 
   if (state.mode === 'watch') {
     setStatus('「' + ch + '」共 <span class="count">' + total + '</span> 筆');
@@ -1507,7 +2088,14 @@ function startMode() {
     showHintAfterMisses: hintAfter,
     highlightOnComplete: false,
     onCorrectStroke: function (d) {
-      swordQi(d.strokeNum);
+      if (keepMode()) {
+        addMine(d.drawnPath.points);
+        swordQi(d.drawnPath.points);
+      } else {
+        const median = [];
+        for (const p of charData.medians[d.strokeNum]) median.push({ x: p[0], y: p[1] });
+        swordQi(median);
+      }
       sfxSwish();
       if (d.strokesRemaining > 0) {
         setStatus('第 <span class="count">' + (d.strokeNum + 1) + '</span> 筆 ✓　還有 ' + d.strokesRemaining + ' 筆');
@@ -1515,9 +2103,7 @@ function startMode() {
     },
     onMistake: function (d) {
       sfxWood();
-      box.classList.remove('shake');
-      void box.offsetWidth;
-      box.classList.add('shake');
+      restartAnimation(arena, 'shake');
       if (d.mistakesOnStroke >= hintAfter) setStatus('照著發亮的那一筆寫');
       else setStatus('不是這一筆喔，再試一次');
     },
@@ -1530,20 +2116,23 @@ function startMode() {
 function finish(mistakes) {
   const myToken = buildToken;
   const ch = currentChar();
-  const n = starsFor(mistakes);
+  const grade = gradeFor(mistakes);
   if (!state.stars[ch]) state.stars[ch] = {};
   const prev = state.stars[ch][state.mode] || 0;
-  if (n > prev) state.stars[ch][state.mode] = n;
+  if (grade > prev) state.stars[ch][state.mode] = grade;
   save();
   renderChips();
 
+  const reward = award(ch, grade, mistakes);
+  setTimeout(sfxCoins, 900);
+
   inkBleed();
   setTimeout(function () {
-    if (myToken === buildToken) stampSeal(n);
+    if (myToken === buildToken) stampSeal(grade);
   }, 450);
   setTimeout(function () {
     if (myToken === buildToken && state.sound) say(ch);
-  }, 1100);
+  }, 1300);
 
   // fireworks once every character of the name has been written in this mode
   sessionDone.add(ch);
@@ -1553,24 +2142,37 @@ function finish(mistakes) {
   }
   if (allDone && state.chars.length > 1) {
     sessionDone.clear();
-    setTimeout(function () { celebrate(state.chars.join('')); }, 1300);
+    if (state.mode === 'write') {
+      purse.ingots += 1;
+      reward.ingots += 1;
+      savePurse();
+      renderPurse();
+      toast('整個名字都自己寫完　+1 元寶');
+    }
+    setTimeout(function () { celebrate(state.chars.join('')); }, 1500);
   }
 
   setStatus('&nbsp;');
   quizActions.hidden = true;
-  document.getElementById('resultTitle').textContent = mistakes === 0 ? '太厲害了！' : '好棒！寫完了';
-  document.getElementById('resultStars').innerHTML = starHtml(n);
-  document.getElementById('resultMsg').textContent = mistakes === 0 ? '一次都沒寫錯' : '這次錯了 ' + mistakes + ' 次';
+  document.getElementById('resultTitle').textContent = mistakes === 0 ? '一字不差！' : '過關！';
+  document.getElementById('resultMarks').innerHTML = marksHtml(grade);
+  document.getElementById('resultMsg').textContent = mistakes === 0 ? '一筆都沒寫錯' : '這次錯了 ' + mistakes + ' 筆';
+  let rewardHtml = syceeHtml('silver') + '<b>+' + reward.taels + '</b> 兩';
+  if (reward.ingots) rewardHtml += '　' + syceeHtml('gold') + '<b>+' + reward.ingots + '</b> 元寶';
+  document.getElementById('resultReward').innerHTML = rewardHtml;
+
+  compareBtn.hidden = !keepMode();
+  compareBtn.setAttribute('aria-pressed', 'false');
 
   const nextBtn = document.getElementById('nextBtn');
   if (state.idx < state.chars.length - 1) {
     nextBtn.textContent = '下一個字 →';
     nextBtn.dataset.action = 'next';
   } else if (state.mode === 'trace') {
-    nextBtn.textContent = '名字描完了！換自己寫 →';
+    nextBtn.textContent = '換自己寫 →';
     nextBtn.dataset.action = 'to-write';
   } else {
-    nextBtn.textContent = '名字寫完了！從頭再來';
+    nextBtn.textContent = '從頭再來';
     nextBtn.dataset.action = 'restart';
   }
   resultEl.hidden = false;
@@ -1612,6 +2214,20 @@ document.getElementById('againBtn').addEventListener('click', function () { buil
 document.getElementById('sayBtn').addEventListener('click', function () {
   const ch = currentChar();
   if (ch) say(ch);
+});
+keepBtn.addEventListener('click', function () {
+  state.keep = !state.keep;
+  save();
+  renderOptions();
+  build();
+});
+compareBtn.addEventListener('click', function () {
+  if (!writer) return;
+  const on = compareBtn.getAttribute('aria-pressed') !== 'true';
+  compareBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  const color = on ? COMPARE_RED : TRANSPARENT;
+  writer.updateColor('strokeColor', color, { duration: 300 });
+  writer.updateColor('radicalColor', color, { duration: 300 });
 });
 document.getElementById('nextBtn').addEventListener('click', function (e) {
   const action = e.currentTarget.dataset.action;
@@ -1659,6 +2275,7 @@ function setName(text) {
 // settings
 function renderOptions() {
   box.classList.toggle('mi', state.grid === 'mi');
+  keepBtn.setAttribute('aria-pressed', state.keep ? 'true' : 'false');
   document.querySelectorAll('.opt-row').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
@@ -1710,5 +2327,6 @@ new MutationObserver(recolor).observe(document.documentElement, { attributes: tr
 
 loadSaved();
 renderOptions();
+renderPurse();
 setName(state.name);
 </script>
