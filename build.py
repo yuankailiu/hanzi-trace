@@ -1,4 +1,8 @@
-"""Wrap app.html (the Claude artifact fragment) into a standalone index.html for GitHub Pages."""
+"""Wrap app.html (the Claude artifact page) into a standalone index.html for GitHub Pages.
+
+The standalone page adds what an installed web app needs: charset/viewport, the
+manifest and home-screen icons, and the small reset the artifact host provides.
+"""
 from pathlib import Path
 
 HEAD = """<!doctype html>
@@ -7,10 +11,16 @@ HEAD = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="描字本">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%23B8322A%22/%3E%3Ctext x=%2232%22 y=%2246%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22%23FFF4EC%22%3E%E5%AD%97%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#ECE5D6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15120F" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
-:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; height: 100%; }
 body { margin: 0; font: 14px system-ui, sans-serif; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
