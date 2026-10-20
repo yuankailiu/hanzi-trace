@@ -90,11 +90,13 @@ const HAIR = '#3b2f33';
 function deg(a) {
   return a * Math.PI / 180;
 }
+// fill, then outline; lw 0 means no outline (eyes, inner ears), leaving it out means the usual 2.4
 function paint(ctx, fill, lw) {
   if (fill) {
     ctx.fillStyle = fill;
     ctx.fill();
   }
+  if (lw === 0) return;
   ctx.lineWidth = lw || 2.4;
   ctx.strokeStyle = OUTLINE;
   ctx.stroke();

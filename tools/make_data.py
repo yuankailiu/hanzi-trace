@@ -117,6 +117,10 @@ def map_radical(moe_medians, mmh):
     return out
 
 
+# single characters whose everyday reading is a particle or the commoner of two equals
+READING_FIRST = {'了': '˙ㄌㄜ', '著': '˙ㄓㄜ', '長': 'ㄔㄤˊ', '都': 'ㄉㄡ', '還': 'ㄏㄞˊ'}
+
+
 def load_moe_readings(path):
     """{char: [注音, ...]} from the single-character entries of dict-revised.json."""
     keep = re.compile('[^\u3105-\u3129\u02ca\u02c7\u02cb\u02d9]')
@@ -125,11 +129,18 @@ def load_moe_readings(path):
         title = entry.get('title', '')
         if len(title) != 1:
             continue
+        # the dictionary lists readings in 注音 order, not by use: the everyday reading is the one
+        # carrying the most definitions (白 ㄅㄞˊ over its literary ㄅㄛˊ, 色 ㄙㄜˋ, 落 ㄌㄨㄛˋ)
+        heteronyms = sorted(entry.get('heteronyms', []), key=lambda h: -len(h.get('definitions', [])))
         out = []
-        for h in entry.get('heteronyms', []):
+        for h in heteronyms:
             zy = keep.sub('', h.get('bopomofo', '').split('（')[0])
             if zy and zy not in out:
                 out.append(zy)
+        first = READING_FIRST.get(title)
+        if first in out:
+            out.remove(first)
+            out.insert(0, first)
         if out:
             readings[title] = out
     return readings

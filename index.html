@@ -89,6 +89,7 @@ img { max-width: 100%; }
     <button type="button" class="player card" id="playerCard" aria-label="我的俠客">
       <span class="avatar-tile"><canvas id="avatar" width="48" height="36"></canvas></span>
       <span class="player-info">
+        <span class="alias" id="aliasTag" hidden></span>
         <span class="title-row"><span class="rank-tag" id="rankTag">新手</span><span class="lv" id="lvTag">Lv 1</span></span>
         <span class="xp"><i id="xpBar" style="width:0%"></i></span>
         <span class="purse-row">
@@ -308,8 +309,20 @@ img { max-width: 100%; }
     </section>
     <section>
       <div class="tabs" id="shopTabs" role="tablist"></div>
+      <p class="quiet scroll-count" id="scrollCount"></p>
       <div class="items" id="items"></div>
     </section>
+  </div>
+</div>
+
+<!-- one shop item, zoomed in: picture, name with 注音, buy or wear -->
+<div class="sheet" id="itemSheet" hidden role="dialog" aria-modal="true" aria-labelledby="itemTitle">
+  <div class="sheet-panel card item-detail">
+    <canvas id="itemBig"></canvas>
+    <div class="item-title" id="itemTitle"></div>
+    <p class="quiet" id="itemNote"></p>
+    <div class="row item-actions" id="itemActions"></div>
+    <button type="button" data-close>關閉</button>
   </div>
 </div>
 

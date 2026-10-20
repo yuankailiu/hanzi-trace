@@ -326,6 +326,19 @@ canvas.pixel {
 #avatar { width: 100%; height: 100%; }
 .player-info { display: grid; gap: 5px; min-width: 0; flex: 1; }
 .title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.alias {
+  justify-self: start;
+  padding: 0 10px;
+  border: 2px solid var(--panel-edge);
+  border-radius: 999px;
+  background: var(--btn);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  color: var(--ink);
+}
 .rank-tag {
   font-family: var(--font-display);
   font-size: 1.3rem;
@@ -755,6 +768,42 @@ canvas.pixel {
 .item button { padding: 3px 10px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; }
 .item button:disabled { cursor: default; opacity: 0.5; }
 
+/* 字訣本: the characters and words written alone, each one says itself when tapped */
+.scroll-count { margin: 0 0 10px; font-size: 0.9rem; }
+.items.scrollbook { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+.scroll-card {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 6px 4px;
+  font-weight: 400;
+}
+.scroll-card.word { grid-column: span 2; }
+.scroll-card .glyphs { display: flex; gap: 2px; color: var(--ink); }
+.scroll-card .glyph-svg { width: 44px; height: 44px; }
+.scroll-card .zy-line { font-size: 0.72rem; color: var(--muted); font-family: var(--font-display); letter-spacing: 0.05em; }
+.scroll-empty { grid-column: 1 / -1; margin: 6px 0; color: var(--muted); }
+.item { cursor: pointer; }
+
+/* item detail */
+.item-detail {
+  width: min(380px, 100%);
+  justify-items: center;
+  text-align: center;
+  animation: zoom-in 0.28s cubic-bezier(0.2, 1.3, 0.5, 1);
+}
+@keyframes zoom-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+#itemBig { width: 280px; height: 210px; max-width: 100%; background: var(--tile); border: 2.5px solid var(--panel-edge); border-radius: 14px; }
+.item-title { display: flex; justify-content: center; gap: 6px; min-height: 64px; }
+.item-title .char-zy { display: flex; align-items: center; gap: 2px; }
+.item-title .glyph-svg { width: 56px; height: 56px; color: var(--ink); }
+.item-title .zy-v { font-size: 0.95rem; margin-right: 0.6em; }
+.item-title .mystery { font-family: var(--font-display); font-size: 2.2rem; letter-spacing: 0.3em; color: var(--muted); }
+.item-actions { justify-content: center; }
+
 /* Toast: a little hanging sign */
 .toast {
   position: fixed;
@@ -844,6 +893,6 @@ canvas.pixel {
 @media (prefers-reduced-motion: reduce) {
   .arena.shake, .arena.thump, .seal.stamp, #writer.ink, #mine.ink, .purse.pulse b,
   .banner, .banner-name, .banner-sub, .toast, .seg button.nudge, .box.press, .ripple,
-  .player.leveled, .lvup, .tap-ripple { animation: none; }
+  .player.leveled, .lvup, .tap-ripple, .item-detail { animation: none; }
   button { transition: none; }
 }

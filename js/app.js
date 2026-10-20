@@ -64,6 +64,8 @@ const purse = {
   xp: 0,
   owned: [],
   gear: { weapon: '', head: '', waist: '', back: '', pet: '' },
+  scrolls: [],
+  words: [],
   lastDay: '',
   streak: 0,
 };
@@ -74,7 +76,15 @@ const strokeCount = {};
 const glyphData = {};
 const sessionDone = new Set();
 let words = [];
-let shopSlot = 'weapon';
+// whole-word 注音 from the MOE dictionary, so 長大 reads ㄓㄤˇ and 音樂 ㄩㄝˋ
+let readings = {};
+function zhuyinAt(text, i, data) {
+  const r = readings[text];
+  if (r && r.length === Array.from(text).length && r[i]) return r[i];
+  return data && data.zy && data.zy.length ? data.zy[0] : '';
+}
+let shopSlot = 'scrolls';
+const HERO_TABS = [{ id: 'scrolls', name: '字訣本' }].concat(SLOTS);
 
 let writer = null;
 let charData = null;
@@ -244,7 +254,7 @@ function resetProgress() {
   state.recent = [];
   state.list = [];
   state.text = '';
-  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, lastDay: '', streak: 0 });
+  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, scrolls: [], words: [], lastDay: '', streak: 0 });
 }
 function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
@@ -278,8 +288,14 @@ function applyProfile(source) {
       else purse.gear.waist = purse.gear.acc;
     }
     delete purse.gear.acc;
+    purse.scrolls = old.scrolls || [];
+    purse.words = old.words || [];
     purse.lastDay = old.lastDay || '';
     purse.streak = old.streak || 0;
+  }
+  // a character with a 自己寫 grade has been written alone, even if an older version did not record it
+  for (const ch in state.stars) {
+    if (state.stars[ch].write && purse.scrolls.indexOf(ch) < 0) purse.scrolls.push(ch);
   }
   shown.taels = purse.taels;
   shown.ingots = purse.ingots;
@@ -737,6 +753,9 @@ function announceLevels(before, after) {
 }
 
 function renderPurse() {
+  const aliasTag = document.getElementById('aliasTag');
+  aliasTag.textContent = account.alias;
+  aliasTag.hidden = !account.alias;
   const info = levelInfo(purse.xp);
   document.getElementById('rankTag').textContent = TITLES[titleIndexFor(info.level)].name;
   document.getElementById('lvTag').textContent = 'Lv ' + info.level;
@@ -755,6 +774,7 @@ function itemKnown(it, owned, tIdx) {
 function renderHero() {
   const info = levelInfo(purse.xp);
   const tIdx = titleIndexFor(info.level);
+  document.getElementById('heroTitle').textContent = account.alias ? account.alias + ' 的俠客' : '我的俠客';
   document.getElementById('heroRank').textContent = TITLES[tIdx].name;
   document.getElementById('heroLv').textContent = 'Lv ' + info.level;
   document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
@@ -790,7 +810,7 @@ function renderHero() {
 
   const tabs = document.getElementById('shopTabs');
   tabs.innerHTML = '';
-  for (const slot of SLOTS) {
+  for (const slot of HERO_TABS) {
     const t = document.createElement('button');
     t.type = 'button';
     t.setAttribute('role', 'tab');
@@ -805,6 +825,12 @@ function renderHero() {
 
   const grid = document.getElementById('items');
   grid.innerHTML = '';
+  grid.classList.toggle('scrollbook', shopSlot === 'scrolls');
+  document.getElementById('scrollCount').hidden = shopSlot !== 'scrolls';
+  if (shopSlot === 'scrolls') {
+    renderScrollbook(grid);
+    return;
+  }
   for (const it of ITEMS) {
     if (it.slot !== shopSlot) continue;
     const place = placeOf(it);
@@ -839,11 +865,136 @@ function renderHero() {
       btn.addEventListener('click', function () { buy(it); });
       card.append(btn);
     }
+    card.addEventListener('click', function (e) {
+      if (e.target.closest('button')) return;
+      openItem(it);
+    });
     grid.append(card);
     // drawn once the card is laid out, so the picture matches its box
     drawItemIcon(c, it);
     if (!known) silhouette(c, '#2b2233');
   }
+}
+
+// characters drawn from the stroke data into el; zyEl (optional) gets their 注音 in one line
+function fillGlyphs(el, text, zyEl) {
+  el.innerHTML = '';
+  const chars = Array.from(text);
+  const zys = [];
+  chars.forEach(function (ch, i) {
+    zys.push('');
+    const slot = document.createElement('span');
+    slot.className = 'text-glyph';
+    slot.textContent = ch;
+    el.append(slot);
+    getCharData(ch).then(function (d) {
+      if (!d) return;
+      glyphData[ch] = d;
+      slot.replaceWith(glyphSvg(d));
+      zys[i] = zhuyinAt(text, i, d);
+      if (zyEl) zyEl.textContent = zys.join(' ');
+    }, function () {});
+  });
+}
+// each character with its vertical 注音 at the right, as in a textbook
+function fillGlyphsWithZhuyin(el, text) {
+  el.innerHTML = '';
+  Array.from(text).forEach(function (ch, i) {
+    const pair = document.createElement('span');
+    pair.className = 'char-zy';
+    const slot = document.createElement('span');
+    slot.className = 'text-glyph';
+    slot.textContent = ch;
+    const zy = document.createElement('span');
+    zy.className = 'zy-v';
+    pair.append(slot, zy);
+    el.append(pair);
+    getCharData(ch).then(function (d) {
+      if (!d) return;
+      slot.replaceWith(glyphSvg(d));
+      renderZhuyin(zy, zhuyinAt(text, i, d));
+    }, function () {});
+  });
+}
+
+function renderScrollbook(grid) {
+  const nChars = purse.scrolls.length;
+  const nWords = purse.words.length;
+  document.getElementById('scrollCount').textContent = '自己寫學會的：' + nChars + ' 個字、' + nWords + ' 個詞。點一下會念出來。';
+  if (nChars + nWords === 0) {
+    const p = document.createElement('p');
+    p.className = 'scroll-empty';
+    p.textContent = '還是空的。用「自己寫」寫完一個字，它就會收進字訣本。';
+    grid.append(p);
+    return;
+  }
+  for (const text of purse.words.concat(purse.scrolls)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'scroll-card';
+    if (Array.from(text).length > 1) b.classList.add('word');
+    b.setAttribute('aria-label', text);
+    const glyphs = document.createElement('span');
+    glyphs.className = 'glyphs';
+    const zy = document.createElement('span');
+    zy.className = 'zy-line';
+    b.append(glyphs, zy);
+    fillGlyphs(glyphs, text, zy);
+    b.addEventListener('click', function () { say(text); });
+    grid.append(b);
+  }
+}
+
+// the zoomed item card: a big picture, the name with 注音 (read aloud), and buy or wear
+function openItem(it) {
+  const tIdx = titleIndex();
+  const place = placeOf(it);
+  const owned = purse.owned.indexOf(it.id) >= 0;
+  const wearing = purse.gear[place] === it.id;
+  const known = itemKnown(it, owned, tIdx);
+  const sheet = document.getElementById('itemSheet');
+  const title = document.getElementById('itemTitle');
+  const note = document.getElementById('itemNote');
+  const actions = document.getElementById('itemActions');
+  actions.innerHTML = '';
+  note.textContent = '';
+
+  if (known) {
+    fillGlyphsWithZhuyin(title, it.name);
+    if (owned) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = wearing ? '' : 'primary';
+      btn.textContent = wearing ? '拿下來' : '換上';
+      btn.addEventListener('click', function () {
+        equip(place, wearing ? '' : it.id);
+        closeSheet(sheet);
+      });
+      actions.append(btn);
+    } else {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'primary';
+      const canBuy = it.ingots ? purse.ingots >= it.ingots : purse.taels >= it.taels;
+      btn.innerHTML = '買　' + (it.ingots ? syceeHtml('gold') + it.ingots + ' 元寶' : syceeHtml('silver') + it.taels + ' 兩');
+      btn.disabled = !canBuy;
+      if (!canBuy) note.textContent = '銀兩還不夠，多寫幾個字再來。';
+      btn.addEventListener('click', function () {
+        buy(it);
+        closeSheet(sheet);
+      });
+      actions.append(btn);
+    }
+  } else {
+    title.innerHTML = '<span class="mystery">？？？</span>';
+    note.textContent = tIdx < it.minTitle ? '頭銜再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
+  }
+
+  openSheet(sheet);
+  const big = document.getElementById('itemBig');
+  drawItemIcon(big, it);
+  if (!known) silhouette(big, '#2b2233');
+  if (known && state.sound) say(it.name);
 }
 
 function buy(it) {
@@ -963,7 +1114,7 @@ function renderInfo(data) {
     mini.innerHTML = '';
     return;
   }
-  renderZhuyin(zyEl, data.zy && data.zy.length ? data.zy[0] : '');
+  renderZhuyin(zyEl, zhuyinAt(state.text, state.idx, data));
 
   // the model character, with the radical strokes colored
   const radSet = new Set(data.radStrokes || []);
@@ -1186,6 +1337,11 @@ function finish(mistakes) {
   if (grade > prev) state.stars[ch][state.mode] = grade;
 
   const reward = award(grade, mistakes);
+  // written alone: the character goes into the 字訣本
+  if (state.mode === 'write' && purse.scrolls.indexOf(ch) < 0) {
+    purse.scrolls.unshift(ch);
+    toast('習得「' + ch + '」字訣');
+  }
   // a character traced or written counts the word as practiced
   const at = state.recent.indexOf(state.text);
   if (at >= 0) state.recent.splice(at, 1);
@@ -1213,6 +1369,11 @@ function finish(mistakes) {
   });
   if (allDone) {
     sessionDone.clear();
+    if (state.mode === 'write' && state.chars.length > 1 && purse.words.indexOf(state.text) < 0) {
+      purse.words.unshift(state.text);
+      toast('收進字訣本：「' + state.text + '」');
+      save();
+    }
     if (state.mode === 'write' && state.chars.length > 1) {
       purse.ingots += 1;
       save();
@@ -1362,6 +1523,7 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.getElementById('playerCard').addEventListener('click', function () {
+  shopSlot = 'scrolls';
   renderHero();
   openSheet(document.getElementById('heroSheet'));
 });
@@ -1605,6 +1767,10 @@ sealEl.style.maskImage = sealMaskUrl;
 
   const wordsReady = fetch('data/words.json').then(function (r) { return r.json(); }).then(function (list) {
     words = list;
+  }, function () {});
+  fetch('data/readings.json').then(function (r) { return r.json(); }).then(function (map) {
+    readings = map;
+    if (charData) renderInfo(charData);
   }, function () {});
   await cloudRefreshWithin(4000);
   if (state.text || state.myName) startText();
