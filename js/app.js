@@ -3,7 +3,7 @@
 const N_CHUNKS = 128;
 const TRANSPARENT = 'rgba(0,0,0,0)';
 const COMPARE_RED = 'rgba(210,15,57,0.35)';
-const ARENA_PAD = 12;
+const ARENA_PAD = 18;   // arena padding + its border + the paper border
 const NUMERALS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
 const TAELS_FOR_GRADE = { 3: 10, 2: 6, 1: 3 };
@@ -1208,20 +1208,41 @@ function renderModes() {
     b.setAttribute('aria-pressed', b.dataset.mode === state.mode ? 'true' : 'false');
   });
 }
+// switching modes stays on the character the child picked
 function setMode(mode) {
-  if (mode !== 'watch' && state.mode === 'watch') state.idx = 0;
   state.mode = mode;
   sessionDone.clear();
   renderModes();
   renderChips();
   build();
 }
+// a quick second tap on the same mode goes back to the word's first character
+let lastModeTap = { mode: '', at: 0 };
 document.querySelectorAll('#modes button').forEach(function (b) {
   b.addEventListener('click', function () {
-    if (state.sound) say(b.textContent.trim());
+    const now = performance.now();
+    const doubleTap = lastModeTap.mode === b.dataset.mode && now - lastModeTap.at < 450;
+    lastModeTap = { mode: b.dataset.mode, at: now };
+    if (doubleTap) state.idx = 0;
+    else if (state.sound) say(b.textContent.trim());
     setMode(b.dataset.mode);
   });
 });
+
+// press feedback: a ripple spreads from the finger on the main buttons
+document.addEventListener('pointerdown', function (e) {
+  const el = e.target.closest('.icon-btn, .seg button, .say, .chip, .player, .tabs button');
+  if (!el || el.disabled || reducedMotion()) return;
+  const rect = el.getBoundingClientRect();
+  const dot = document.createElement('span');
+  dot.className = 'tap-ripple';
+  dot.style.left = (e.clientX - rect.left) + 'px';
+  dot.style.top = (e.clientY - rect.top) + 'px';
+  el.append(dot);
+  setTimeout(function () { dot.remove(); }, 480);
+});
+// iOS Safari applies :active only when the page listens for touches
+document.addEventListener('touchstart', function () {}, { passive: true });
 
 document.getElementById('restartBtn').addEventListener('click', function () { build(); });
 document.getElementById('againBtn').addEventListener('click', function () { build(); });
@@ -1490,9 +1511,6 @@ const sealMaskUrl = 'url(' + sealMask() + ')';
 sealEl.style.webkitMaskImage = sealMaskUrl;
 sealEl.style.maskImage = sealMaskUrl;
 
-getCharData('武').then(function (d) {
-  if (d) document.getElementById('cornerSeal').append(glyphSvg(d));
-}, function () {});
 
 (async function boot() {
   let alias = '';

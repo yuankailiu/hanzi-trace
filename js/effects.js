@@ -246,17 +246,28 @@ function sfxTick(pitch) {
 }
 
 // ---------- speech ----------
-// Chinese voices on this device, Taiwan first
+// Apple's novelty voices (Eloquence) read Chinese oddly; they never become the default or show in the picker
+const NOVELTY_VOICES = /Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
+
+// rank: Taiwan Mandarin first, 美佳 (Meijia) and its Enhanced/Premium versions above the rest
+function voiceScore(v) {
+  let score = 0;
+  if (/TW/i.test(v.lang)) score += 100;
+  else if (/CN|cmn/i.test(v.lang)) score += 50;
+  if (/Meijia|美佳/i.test(v.name)) score += 40;
+  if (/Premium|Enhanced|高品質|優化|加強/i.test(v.name)) score += 30;
+  if (v.localService) score += 5;
+  return score;
+}
+// Chinese voices on this device, best first
 function chineseVoices() {
   const out = [];
   for (const v of window.speechSynthesis.getVoices()) {
-    if (/^zh/i.test(v.lang) || /^cmn/i.test(v.lang)) out.push(v);
+    if (!/^zh/i.test(v.lang) && !/^cmn/i.test(v.lang)) continue;
+    if (NOVELTY_VOICES.test(v.name)) continue;
+    out.push(v);
   }
-  out.sort(function (a, b) {
-    const ta = /TW/i.test(a.lang) ? 0 : 1;
-    const tb = /TW/i.test(b.lang) ? 0 : 1;
-    return ta - tb;
-  });
+  out.sort(function (a, b) { return voiceScore(b) - voiceScore(a); });
   return out;
 }
 function pickVoice() {
