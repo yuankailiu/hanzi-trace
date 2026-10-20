@@ -135,6 +135,58 @@ function drawWeapon(ctx, id, hx, hy, angDeg) {
     span(11, 15, 0, '#DDE3EA');
     span(11, 14, 1, '#DDE3EA');
     span(12, 14, 2, '#B9C2CC');
+  } else if (id === 'umbrella') {
+    // 油紙傘, closed: a red canopy folded around the shaft, ribs in a darker red
+    span(-2, 2, 0, '#6B4A2A');
+    for (let k = 3; k <= 10; k++) {
+      const w = k < 9 ? 1 : 0;
+      for (let o = -w; o <= w; o++) dot(k, o, o === 0 ? '#D0473F' : '#9E2F2A');
+    }
+    dot(11, 0, '#3B2A20');
+  } else if (id === 'whisk') {
+    // 拂塵: a wooden handle and a spreading tail of white horsehair
+    span(-1, 4, 0, '#8E5A34');
+    dot(5, 0, '#E0B957');
+    for (let k = 6; k <= 12; k++) {
+      const w = k < 8 ? 1 : 2;
+      for (let o = -w; o <= w; o++) dot(k, o, (k + o) % 2 ? '#F4F1EA' : '#C9C2B4');
+    }
+  } else if (id === 'flute') {
+    // 玉笛: a jade flute with finger holes and a red tassel
+    span(-3, 9, 0, '#4FA37A');
+    for (const k of [2, 4, 6, 8]) dot(k, 0, '#2E6B4E');
+    dot(-3, 0, '#E0B957');
+    dot(-4, 1, '#C8463F');
+    dot(-5, 2, '#C8463F');
+  } else if (id === 'dao') {
+    // 柳葉刀: a willow-leaf saber, widest in the middle of the blade
+    dot(-2, 1, '#C8463F');
+    span(-1, 0, 0, '#3B2A20');
+    for (const o of [-1, 0, 1]) dot(1, o, '#C9A03A');
+    span(2, 11, 0, '#DDE3EA');
+    span(4, 9, 1, '#B9C2CC');
+    dot(12, 0, '#FFFFFF');
+  } else if (id === 'jian') {
+    // 青鋼劍: a straight two-edged sword, blue-grey steel with a light and a dark edge
+    dot(-3, 0, '#E0B957');
+    span(-2, 0, 0, '#2B4A66');
+    for (const o of [-1, 0, 1]) dot(1, o, '#E0B957');
+    span(2, 12, 0, '#CFE0EE');
+    span(2, 11, 1, '#7FA6C4');
+    dot(13, 0, '#FFFFFF');
+  } else if (id === 'halberd') {
+    // 方天畫戟: a long red shaft, a spear point and a crescent blade on each side
+    span(-7, 11, 0, '#7A2A26');
+    dot(9, 1, '#C8463F');
+    dot(9, 2, '#C8463F');
+    dot(10, 0, '#D9A441');
+    for (const o of [-2, -1, 1, 2]) dot(11, o, '#C5CCD2');
+    for (const o of [-2, 2]) {
+      dot(10, o, '#C5CCD2');
+      dot(12, o, '#C5CCD2');
+    }
+    span(12, 15, 0, '#E3E8EE');
+    dot(16, 0, '#FFFFFF');
   } else if (id === 'zhanlu') {
     span(-1, 0, 0, '#3B2A20');
     for (const o of [-1, 0, 1]) dot(1, o, '#C9A03A');
@@ -187,7 +239,74 @@ function drawGear(ctx, gear, cx, ht, f) {
   }
 }
 
-// worn accessory, drawn over the robe at the belt
+// head accessory
+function drawHeadAcc(ctx, id, cx, ht, f) {
+  if (id === 'flower') {
+    // 小紅花 behind the ear
+    const x = cx - 5;
+    const y = ht + 1;
+    pxRect(ctx, x, y - 1, 1, 1, '#E5484D');
+    pxRect(ctx, x - 1, y, 1, 1, '#E5484D');
+    pxRect(ctx, x + 1, y, 1, 1, '#E5484D');
+    pxRect(ctx, x, y + 1, 1, 1, '#E5484D');
+    pxRect(ctx, x, y, 1, 1, '#F6D365');
+  } else if (id === 'feather') {
+    // 雉雞翎: two banded pheasant plumes sweeping back, the tips sway
+    const long = [[-2, -1], [-3, -2], [-4, -3], [-5, -4], [-6, -4], [-7, -5 + f], [-8, -5 + f]];
+    const short = [[0, -1], [0, -2], [-1, -3], [-2, -4], [-3, -5 + f], [-4, -5 + f]];
+    long.forEach(function (d, i) { pxRect(ctx, cx + d[0], ht + d[1], 1, 1, i % 2 ? '#5A4632' : '#C9822E'); });
+    short.forEach(function (d, i) { pxRect(ctx, cx + d[0], ht + d[1], 1, 1, i % 2 ? '#C9822E' : '#5A4632'); });
+  } else if (id === 'hairpin') {
+    // 玉簪: a white pin through the hair with a jade bead
+    pxRect(ctx, cx - 5, ht, 1, 1, '#4FA37A');
+    pxRect(ctx, cx - 4, ht - 1, 1, 1, '#7FC9A0');
+    pxRect(ctx, cx - 3, ht - 1, 1, 1, '#F0EEE6');
+    pxRect(ctx, cx - 2, ht - 2, 1, 1, '#F0EEE6');
+    pxRect(ctx, cx - 1, ht - 3, 1, 1, '#F0EEE6');
+  } else if (id === 'bellband') {
+    // 金鈴髮帶: a red band with gold bells on the trailing ends
+    pxRect(ctx, cx - 4, ht + 2, 8, 1, '#C8463F');
+    pxRect(ctx, cx - 5, ht + 2, 1, 1, '#C8463F');
+    pxRect(ctx, cx - 6, ht + 3 + f, 1, 1, '#C8463F');
+    pxRect(ctx, cx - 7, ht + 4 + f, 1, 1, '#E0B957');
+    pxRect(ctx, cx - 5, ht + 4, 1, 1, '#E0B957');
+  } else if (id === 'phoenix') {
+    // 鳳冠: a gold crown with a red jewel, blue kingfisher inlays and pearl strings
+    pxRect(ctx, cx - 4, ht - 1, 8, 1, '#E0B957');
+    pxRect(ctx, cx - 4, ht - 2, 1, 1, '#E0B957');
+    pxRect(ctx, cx - 1, ht - 3, 2, 2, '#E0B957');
+    pxRect(ctx, cx + 3, ht - 2, 1, 1, '#E0B957');
+    pxRect(ctx, cx - 1, ht - 2, 1, 1, '#C8463F');
+    pxRect(ctx, cx - 3, ht - 2, 1, 1, '#3F6FB0');
+    pxRect(ctx, cx + 2, ht - 2, 1, 1, '#3F6FB0');
+    pxRect(ctx, cx + 4, ht, 1, 1, '#F4F1EA');
+    pxRect(ctx, cx + 4, ht + 2 + f, 1, 1, '#F4F1EA');
+    pxRect(ctx, cx - 5, ht, 1, 1, '#F4F1EA');
+    pxRect(ctx, cx - 5, ht + 2 + f, 1, 1, '#F4F1EA');
+  }
+}
+// these take the place of the title's own headgear; the others only push off the straw hat
+const HEADGEAR_ACC = ['bellband', 'phoenix'];
+
+// back accessory, drawn behind the body
+function drawBackAcc(ctx, id, cx, gy, b) {
+  if (id === 'scroll') {
+    // 書卷 slung across the back, sticking out over the left shoulder
+    pxThickLine(ctx, cx - 11, gy - 21 + b, cx - 3, gy - 15 + b, '#E9DFC6');
+    pxRect(ctx, cx - 12, gy - 22 + b, 2, 3, '#8E5A34');
+    pxRect(ctx, cx - 9, gy - 20 + b, 1, 2, '#C8463F');
+  } else if (id === 'swordbox') {
+    // 劍匣: a wooden box with gold corners and a hilt showing at the top
+    pxRect(ctx, cx - 8, gy - 22 + b, 4, 13, '#5A3A22');
+    pxRect(ctx, cx - 8, gy - 22 + b, 4, 1, '#C9A03A');
+    pxRect(ctx, cx - 8, gy - 10 + b, 4, 1, '#C9A03A');
+    pxRect(ctx, cx - 7, gy - 17 + b, 1, 3, '#8E5A34');
+    pxRect(ctx, cx - 7, gy - 24 + b, 1, 2, '#3B2A20');
+    pxRect(ctx, cx - 7, gy - 25 + b, 1, 1, '#C9A03A');
+  }
+}
+
+// waist accessory, drawn over the robe at the belt
 function drawAcc(ctx, id, cx, beltY) {
   if (id === 'bell') {
     pxRect(ctx, cx + 2, beltY + 1, 2, 2, '#E0B957');
@@ -199,6 +318,17 @@ function drawAcc(ctx, id, cx, beltY) {
   } else if (id === 'jade') {
     pxRect(ctx, cx, beltY + 1, 2, 2, PX.jade);
     pxRect(ctx, cx, beltY + 3, 1, 2, '#C8463F');
+  } else if (id === 'sachet') {
+    // 香包: a small pink bag on a gold cord with a red tassel
+    pxRect(ctx, cx - 3, beltY + 1, 1, 1, '#C9A03A');
+    pxRect(ctx, cx - 4, beltY + 2, 3, 2, '#E86F9A');
+    pxRect(ctx, cx - 3, beltY + 2, 1, 1, '#F6B8C6');
+    pxRect(ctx, cx - 3, beltY + 4, 1, 1, '#C8463F');
+  } else if (id === 'pouch') {
+    // 錦囊: a red brocade pouch with a gold pattern and a tied neck
+    pxRect(ctx, cx + 1, beltY + 1, 3, 1, '#8C6B32');
+    pxRect(ctx, cx + 1, beltY + 2, 3, 3, '#B8322A');
+    pxRect(ctx, cx + 2, beltY + 3, 1, 1, '#E0B957');
   }
 }
 
@@ -247,6 +377,76 @@ function drawPetBody(ctx, id, x, gy, f, flat) {
     pxRect(ctx, x, y + 4, 6, 1, '#2B2522');
     pxRect(ctx, x, y + 6, 2, 1, '#2B2522');
     pxRect(ctx, x + 4, y + 6, 2, 1, '#2B2522');
+  } else if (id === 'cat') {
+    // 小花貓: a white cat with orange and black patches, the tail up
+    const y = gy - 5;
+    pxRect(ctx, x, y + 1, 6, 3, '#F4F1EA');
+    pxRect(ctx, x + 1, y + 1, 2, 1, '#D9963A');
+    pxRect(ctx, x + 3, y + 2, 1, 1, '#2B2522');
+    pxRect(ctx, x + 5, y - 1, 3, 3, '#F4F1EA');
+    pxRect(ctx, x + 5, y - 2, 1, 1, '#D9963A');
+    pxRect(ctx, x + 7, y - 2, 1, 1, '#2B2522');
+    pxRect(ctx, x + 7, y, 1, 1, '#2B2522');
+    pxRect(ctx, x, y + 4, 1, 1, '#C9C2B4');
+    pxRect(ctx, x + 4, y + 4, 1, 1, '#C9C2B4');
+    pxRect(ctx, x - 1, y - 1 + h, 1, 3 - h, '#D9963A');
+  } else if (id === 'monkey') {
+    // 小猴子: sitting up, a pale face and belly, the tail curled behind
+    const y = gy - 5 - h;
+    pxRect(ctx, x + 1, y, 4, 4, '#8E5A34');
+    pxRect(ctx, x + 2, y + 1, 2, 2, '#E8C49A');
+    pxRect(ctx, x + 2, y - 3, 4, 3, '#8E5A34');
+    pxRect(ctx, x + 3, y - 2, 2, 2, '#E8C49A');
+    pxRect(ctx, x + 4, y - 2, 1, 1, '#2B2522');
+    pxRect(ctx, x + 1, y - 2, 1, 1, '#E8C49A');
+    pxRect(ctx, x + 1, y + 4, 1, 1, '#5A3A22');
+    pxRect(ctx, x + 4, y + 4, 1, 1, '#5A3A22');
+    pxRect(ctx, x, y + 2, 1, 2, '#8E5A34');
+    pxRect(ctx, x - 1, y + h, 1, 2, '#8E5A34');
+  } else if (id === 'koi') {
+    // 錦鯉: a white and orange carp swimming in the air, with bubbles
+    const y = gy - 9 + h;
+    pxRect(ctx, x, y, 6, 3, '#F4F1EA');
+    pxRect(ctx, x + 1, y, 2, 2, '#E8642E');
+    pxRect(ctx, x + 4, y + 2, 1, 1, '#E8642E');
+    pxRect(ctx, x + 5, y, 1, 1, '#C8463F');
+    pxRect(ctx, x + 5, y + 1, 1, 1, '#2B2522');
+    pxRect(ctx, x - 1, y + 1, 1, 1, '#E8642E');
+    pxRect(ctx, x - 2, y - h, 1, 2, '#E8642E');
+    pxRect(ctx, x - 2, y + 2, 1, 1 + h, '#E8642E');
+    pxRect(ctx, x + 2, y + 3, 1, 1, '#E8642E');
+    pxRect(ctx, x + 7, y - 2 - h, 1, 1, '#9FD3F0');
+    pxRect(ctx, x + 8, y - 4, 1, 1, '#9FD3F0');
+  } else if (id === 'dragon') {
+    // 小青龍: a green dragon winding through the air, gold belly and horn
+    const y = gy - 15;
+    const phase = h * 1.5;
+    for (let i = 0; i < 7; i++) {
+      const yy = y + Math.round(Math.sin((i + phase) * 0.9) * 1.5);
+      pxRect(ctx, x + i, yy, 1, 2, '#3E9E7E');
+      pxRect(ctx, x + i, yy + 2, 1, 1, '#E0B957');
+      if (i % 3 === 1) pxRect(ctx, x + i, yy - 1, 1, 1, '#2E6B4E');
+    }
+    const hy = y + Math.round(Math.sin((7 + phase) * 0.9) * 1.5);
+    pxRect(ctx, x + 7, hy - 1, 3, 3, '#3E9E7E');
+    pxRect(ctx, x + 8, hy, 1, 1, '#2B2522');
+    pxRect(ctx, x + 7, hy - 2, 1, 1, '#E0B957');
+    pxRect(ctx, x + 10, hy + 1, 1, 1, '#C8463F');
+  } else if (id === 'qilin') {
+    // 麒麟: a golden beast with a green horn, a dark mane and a flame tail
+    const y = gy - 6;
+    pxRect(ctx, x, y + 1, 7, 3, '#D9A441');
+    pxRect(ctx, x + 1, y + 2, 1, 1, '#B07A2A');
+    pxRect(ctx, x + 3, y + 1, 1, 1, '#B07A2A');
+    pxRect(ctx, x + 5, y + 2, 1, 1, '#B07A2A');
+    pxRect(ctx, x + 6, y - 2, 3, 3, '#D9A441');
+    pxRect(ctx, x + 5, y - 2, 1, 3, '#5A4632');
+    pxRect(ctx, x + 8, y - 1, 1, 1, '#2B2522');
+    pxRect(ctx, x + 7, y - 3, 1, 1, '#4FA37A');
+    pxRect(ctx, x + 6, y - 4, 1, 1, '#4FA37A');
+    for (const lx of [0, 2, 4, 6]) pxRect(ctx, x + lx, y + 4, 1, 2, '#5A4632');
+    pxRect(ctx, x - 1, y + h, 1, 2, '#E8642E');
+    pxRect(ctx, x - 2, y - 1 + h, 1, 1, '#F2C84B');
   } else if (id === 'crane') {
     const y = gy - 12;
     pxRect(ctx, x + 1, y + 6, 4, 3, '#F4F1EA');
@@ -302,7 +502,9 @@ function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi, gender) {
   if (cape) {
     pxRect(ctx, cx - 6, gy - 18 + b, 2, 11 + f, cape);
     pxRect(ctx, cx - 7, gy - 11 + b + f, 1, 4, cape);
+    if (gear.back === 'goldcloak') pxRect(ctx, cx - 6, gy - 18 + b, 2, 1, '#FFF3B0');
   }
+  drawBackAcc(ctx, gear.back, cx, gy, b);
 
   // back arm (and the second sword of 干將莫邪)
   const back = [cx + p.back[0], gy + p.back[1] + b];
@@ -346,7 +548,10 @@ function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi, gender) {
   pxRect(ctx, cx + 3, ht + 6, 1, 1, PX.blush);
   pxRect(ctx, cx - 1, ht + 6, 1, 1, PX.blush);
   if (p.smile) pxRect(ctx, cx + 1, ht + 7, 1, 1, '#A8322A');
-  drawGear(ctx, look.gear, cx, ht, f);
+  let headgear = look.gear;
+  if (gear.head && (HEADGEAR_ACC.indexOf(gear.head) >= 0 || headgear === 'hat')) headgear = 'none';
+  drawGear(ctx, headgear, cx, ht, f);
+  drawHeadAcc(ctx, gear.head, cx, ht, f);
 
   // front arm with the weapon, hand drawn over the hilt
   const hand = [cx + p.hand[0], gy + p.hand[1] + b];

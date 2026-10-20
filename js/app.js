@@ -43,7 +43,7 @@ const state = {
   music: 'xiangqi',
   volume: 0.8,
   gender: 'boy',
-  heroStyle: 'q',
+  heroStyle: 'pixel',
   theme: 'light',
   voice: '',
   grid: 'tian',
@@ -235,7 +235,7 @@ function qiColor() {
 // ---------- profile: what gets saved per 俠客 ----------
 function serializeProfile() {
   return {
-    v: 3,
+    v: 4,
     savedAt: Date.now(),
     settings: {
       content: state.content, music: state.music, volume: state.volume, gender: state.gender, heroStyle: state.heroStyle, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
@@ -262,9 +262,11 @@ function applyProfile(source) {
   const p = JSON.parse(JSON.stringify(source));
   resetProgress();
   if (p.settings) {
-    for (const key of ['content', 'music', 'gender', 'heroStyle', 'theme', 'voice', 'grid']) {
+    for (const key of ['content', 'music', 'gender', 'theme', 'voice', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
+    // profiles before v4 saved Q版 only because it was the default; the pixel style is the default now
+    if (p.v >= 4 && typeof p.settings.heroStyle === 'string') state.heroStyle = p.settings.heroStyle;
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
       if (typeof p.settings[key] === 'boolean') state[key] = p.settings[key];
     }
