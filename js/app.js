@@ -343,7 +343,7 @@ async function cloudSave() {
   }
   renderProfileStatus();
 }
-// on start, take the cloud copy if another device saved more recently
+// on start, before anything is saved locally: take the cloud copy if another device saved more recently
 async function cloudRefresh() {
   if (!cloudEnabled() || !account.alias || !account.pass) return;
   try {
@@ -353,14 +353,32 @@ async function cloudRefresh() {
     const localAt = local && local.savedAt ? local.savedAt : 0;
     if (res && res.data && (res.data.savedAt || 0) > localAt) {
       applyProfile(res.data);
-      save();
+      try {
+        localStorage.setItem(PROFILE_PREFIX + account.alias, JSON.stringify(res.data));
+      } catch (e) {}
       renderAll();
-      startText();
+      renderProfileStatus();
+      return true;
     }
   } catch (e) {
     account.sync = 'offline';
   }
   renderProfileStatus();
+  return false;
+}
+// coming back to the app (another device may have practiced meanwhile)
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) return;
+  cloudRefresh().then(function (changed) {
+    if (changed) startText();
+  });
+});
+// waits for the cloud at most a few seconds, so a slow network never blocks practice
+function cloudRefreshWithin(ms) {
+  return Promise.race([
+    cloudRefresh(),
+    new Promise(function (resolve) { setTimeout(resolve, ms); }),
+  ]);
 }
 
 async function passHash(alias, pass) {
@@ -1476,7 +1494,7 @@ getCharData('武').then(function (d) {
   if (d) document.getElementById('cornerSeal').append(glyphSvg(d));
 }, function () {});
 
-(function boot() {
+(async function boot() {
   let alias = '';
   try {
     alias = localStorage.getItem(CURRENT_KEY) || '';
@@ -1489,10 +1507,11 @@ getCharData('武').then(function (d) {
   renderAll();
   startAvatar();
 
-  fetch('data/words.json').then(function (r) { return r.json(); }).then(function (list) {
+  const wordsReady = fetch('data/words.json').then(function (r) { return r.json(); }).then(function (list) {
     words = list;
-    if (!state.text && !state.myName) startText();
   }, function () {});
+  await cloudRefreshWithin(4000);
   if (state.text || state.myName) startText();
-  cloudRefresh();
+  await wordsReady;
+  if (!state.chars.length) startText();
 })();
