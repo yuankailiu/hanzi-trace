@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="描字本">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%23B8322A%22/%3E%3Ctext x=%2232%22 y=%2246%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22%23FFF4EC%22%3E%E5%AD%97%3C/text%3E%3C/svg%3E">
 <style>
 :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 body { margin: 0; font: 14px system-ui, sans-serif; }
@@ -19,11 +20,13 @@ img { max-width: 100%; }
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-/* Layout: one-screen practice notebook — name chips on top, a red 田字格 writing box in the middle, controls underneath (side panel on wide screens) */
+/* Layout: one-screen practice notebook — name chips on top, a red 田字格 on rice paper in the middle, controls underneath (side panel on wide screens) */
 :root {
   --bg: #EDF2F0;
   --paper: #FFFFFF;
   --ink: #1E2622;
+  --ink-wet: #4A5752;
+  --ink-halo: rgba(30, 38, 34, 0.32);
   --muted: #5B6863;
   --line: #D3DCD8;
   --frame: #C8463F;
@@ -33,6 +36,11 @@ img { max-width: 100%; }
   --accent-soft: #D7EEE5;
   --accent-ink: #FFFFFF;
   --hint: #F0A202;
+  --qi: #E3A21A;
+  --radical: #2B5C9E;
+  --seal: #B8322A;
+  --seal-ink: #FFF4EC;
+  --seal-blend: multiply;
   --star: #F2B705;
   --star-off: #D3DCD8;
   --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "STKaiti", "DFKai-SB", serif;
@@ -40,16 +48,20 @@ img { max-width: 100%; }
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --muted: #9AA7A2; --line: #2F3A37;
-    --frame: #B4483F; --grid: #6A3330; --outline: #2C3734; --accent: #3FBF8F; --accent-soft: #1D3A30;
-    --accent-ink: #0B1411; --hint: #F5B83D; --star: #F5C542; --star-off: #3A4643;
+    --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --ink-wet: #B9C4C0; --ink-halo: rgba(236, 242, 239, 0.22);
+    --muted: #9AA7A2; --line: #2F3A37; --frame: #B4483F; --grid: #6A3330; --outline: #2C3734;
+    --accent: #3FBF8F; --accent-soft: #1D3A30; --accent-ink: #0B1411; --hint: #F5B83D; --qi: #FFD36A;
+    --radical: #82AEEA; --seal: #C9443A; --seal-ink: #FFF4EC; --seal-blend: normal;
+    --star: #F5C542; --star-off: #3A4643;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --muted: #9AA7A2; --line: #2F3A37;
-  --frame: #B4483F; --grid: #6A3330; --outline: #2C3734; --accent: #3FBF8F; --accent-soft: #1D3A30;
-  --accent-ink: #0B1411; --hint: #F5B83D; --star: #F5C542; --star-off: #3A4643;
+  --bg: #111715; --paper: #1A2220; --ink: #ECF2EF; --ink-wet: #B9C4C0; --ink-halo: rgba(236, 242, 239, 0.22);
+  --muted: #9AA7A2; --line: #2F3A37; --frame: #B4483F; --grid: #6A3330; --outline: #2C3734;
+  --accent: #3FBF8F; --accent-soft: #1D3A30; --accent-ink: #0B1411; --hint: #F5B83D; --qi: #FFD36A;
+  --radical: #82AEEA; --seal: #C9443A; --seal-ink: #FFF4EC; --seal-blend: normal;
+  --star: #F5C542; --star-off: #3A4643;
   color-scheme: dark;
 }
 
@@ -185,15 +197,17 @@ main {
   width: 300px;
   height: 300px;
   max-width: 100%;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-size: 256px 256px;
   border-radius: 6px;
   box-shadow: 0 1px 0 var(--line), 0 10px 30px -18px rgba(0, 0, 0, 0.35);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
-.box svg.grid, #writer { position: absolute; inset: 0; }
+.box svg.grid, #writer, #fx { position: absolute; inset: 0; }
 .box svg.grid { width: 100%; height: 100%; }
+#fx { pointer-events: none; }
 .grid .frame { fill: none; stroke: var(--frame); stroke-width: 3; }
 .grid .guide { stroke: var(--grid); stroke-width: 1.5; stroke-dasharray: 6 6; }
 .grid .diag { display: none; }
@@ -209,8 +223,52 @@ main {
   50% { transform: translateX(6px); }
   75% { transform: translateX(-3px); }
 }
+.box.thump { animation: thump 0.22s ease-out; }
+@keyframes thump {
+  40% { transform: translateY(3px) scale(0.992); }
+}
+
+/* Ink drying: wet halo spreads into the paper, then settles */
+#writer.ink { animation: inkbleed 1.6s ease-out forwards; }
+@keyframes inkbleed {
+  0% { filter: drop-shadow(0 0 0 var(--ink-halo)); }
+  35% { filter: drop-shadow(0 0 7px var(--ink-halo)) blur(0.6px); }
+  100% { filter: drop-shadow(0 0 1.5px var(--ink-halo)); }
+}
+
+/* Cinnabar seal */
+.seal {
+  position: absolute;
+  right: 3%;
+  bottom: 3%;
+  width: 23%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--seal);
+  color: var(--seal-ink);
+  border-radius: 9%;
+  box-shadow: inset 0 0 0 4px var(--seal), inset 0 0 0 6px var(--seal-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+  mix-blend-mode: var(--seal-blend);
+  opacity: 0.93;
+  transform: rotate(-8deg);
+  pointer-events: none;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+.seal span { writing-mode: vertical-rl; letter-spacing: 0.05em; }
+.seal.stamp { animation: stamp 0.38s cubic-bezier(0.3, 1.4, 0.6, 1); }
+@keyframes stamp {
+  0% { transform: scale(2.4) rotate(-18deg); opacity: 0; }
+  60% { transform: scale(0.92) rotate(-7deg); opacity: 0.95; }
+  100% { transform: scale(1) rotate(-8deg); opacity: 0.93; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .box.shake { animation: none; }
+  .box.shake, .box.thump, .seal.stamp, #writer.ink { animation: none; }
 }
 
 /* Side panel */
@@ -219,6 +277,38 @@ main {
   gap: 14px;
   min-width: 0;
 }
+.info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+}
+.mini { width: 64px; height: 64px; flex: none; }
+.mini .o { fill: var(--muted); opacity: 0.3; }
+.mini .r { fill: var(--radical); }
+.info-text { display: grid; gap: 4px; min-width: 0; }
+.zy-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.zy {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+.say {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 999px;
+}
+.say svg { width: 18px; height: 18px; fill: currentColor; }
+.rad-line { font-size: 0.9rem; color: var(--muted); }
+.rad-line b { font-family: var(--font-display); font-size: 1.15rem; color: var(--radical); font-weight: 700; }
+
 .seg {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -294,6 +384,60 @@ footer {
   max-width: 70ch;
 }
 footer a { color: inherit; }
+
+/* Whole-name celebration: a night-sky veil with the name, fireworks canvas on top.
+   Deliberately fixed colors (night sky, gold, lantern red) in both themes. */
+.banner {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(10, 12, 24, 0.72);
+  color: #FFD36A;
+  font-family: var(--font-display);
+  text-align: center;
+  animation: veil 4.8s ease forwards;
+}
+.banner-name {
+  font-size: clamp(3rem, 15vw, 8rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.1;
+  text-shadow: 0 0 18px rgba(255, 170, 40, 0.6), 0 4px 0 #8E1A12;
+  animation: rise 0.8s cubic-bezier(0.2, 1.3, 0.5, 1) both;
+}
+.banner-sub {
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+  color: #FFF1D6;
+  letter-spacing: 0.3em;
+  animation: rise 0.8s 0.25s cubic-bezier(0.2, 1.3, 0.5, 1) both;
+}
+@keyframes veil {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes rise {
+  from { transform: translateY(24px) scale(0.8); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+#sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 41;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .banner, .banner-name, .banner-sub { animation: none; }
+}
 </style>
 
 <div class="app">
@@ -319,10 +463,25 @@ footer a { color: inherit; }
           <rect class="frame" x="0" y="0" width="100" height="100" vector-effect="non-scaling-stroke"></rect>
         </svg>
         <div id="writer"></div>
+        <div class="seal" id="seal" hidden><span id="sealText">甲上</span></div>
+        <canvas id="fx"></canvas>
       </div>
     </div>
 
     <div class="panel">
+      <div class="info" id="info">
+        <svg class="mini" id="mini" viewBox="0 0 1024 1024" aria-hidden="true"></svg>
+        <div class="info-text">
+          <div class="zy-row">
+            <span class="zy" id="zy"></span>
+            <button type="button" class="say" id="sayBtn" aria-label="念出這個字">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"></path></svg>念
+            </button>
+          </div>
+          <div class="rad-line" id="radLine"></div>
+        </div>
+      </div>
+
       <div class="seg" id="modes" role="group" aria-label="練習方式">
         <button type="button" data-mode="watch" aria-pressed="true">看筆順<span>一筆一筆看</span></button>
         <button type="button" data-mode="trace" aria-pressed="false">描字<span>照灰色描</span></button>
@@ -352,6 +511,16 @@ footer a { color: inherit; }
 
       <details class="settings">
         <summary>設定</summary>
+        <div class="opt-row" data-opt="sound">
+          <span class="label">聲音</span>
+          <button type="button" data-val="1">開</button>
+          <button type="button" data-val="0">關</button>
+        </div>
+        <div class="opt-row" data-opt="radical">
+          <span class="label">部首上色</span>
+          <button type="button" data-val="1">開</button>
+          <button type="button" data-val="0">關</button>
+        </div>
         <div class="opt-row" data-opt="grid">
           <span class="label">格子</span>
           <button type="button" data-val="tian">田字格</button>
@@ -372,11 +541,17 @@ footer a { color: inherit; }
   </main>
 
   <footer>
-    用手指或觸控筆在格子裡照順序寫。寫錯筆畫會提示，錯兩次以上會亮出該寫的那一筆。
+    用手指或觸控筆在格子裡照順序寫。寫錯筆畫會提示，錯兩次以上會亮出該寫的那一筆；整個名字寫完會放煙火。
     筆順資料來自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener">Make Me a Hanzi</a>（Arphic Public License），以
-    <a href="https://hanziwriter.org" target="_blank" rel="noopener">Hanzi Writer</a> 呈現；少數字的筆順可能和台灣教育部標準不同。
+    <a href="https://hanziwriter.org" target="_blank" rel="noopener">Hanzi Writer</a> 呈現；少數字的筆順可能和台灣教育部標準不同，注音由拼音轉換，破音字以第一個讀音為主。
   </footer>
 </div>
+
+<div class="banner" id="banner" hidden>
+  <div class="banner-name" id="bannerName"></div>
+  <div class="banner-sub">練成了！</div>
+</div>
+<canvas id="sky" hidden></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.2/dist/hanzi-writer.min.js"></script>
 <script>
@@ -392,6 +567,40 @@ const watchActions = document.getElementById('watchActions');
 const quizActions = document.getElementById('quizActions');
 const resultEl = document.getElementById('result');
 const nameInput = document.getElementById('nameInput');
+const sealEl = document.getElementById('seal');
+const fxCanvas = document.getElementById('fx');
+const skyCanvas = document.getElementById('sky');
+const bannerEl = document.getElementById('banner');
+
+const RADICAL_NAMES = {
+  '氵': '三點水', '冫': '兩點水', '口': '口字旁', '艹': '草字頭', '艸': '草字頭', '木': '木字旁',
+  '扌': '提手旁', '手': '手字底', '亻': '單人旁', '人': '人字旁', '彳': '雙人旁',
+  '钅': '金字旁', '釒': '金字旁', '金': '金字旁', '虫': '虫字旁', '土': '土字旁',
+  '⺼': '肉月旁', '月': '月字旁', '忄': '豎心旁', '心': '心字底', '阝': '耳朵旁', '卩': '單耳旁',
+  '女': '女字旁', '言': '言字旁', '訁': '言字旁', '讠': '言字旁', '⺮': '竹字頭', '竹': '竹字頭',
+  '纟': '絞絲旁', '糹': '絞絲旁', '糸': '絞絲旁', '辶': '走馬旁', '辵': '走馬旁',
+  '火': '火字旁', '灬': '四點火', '疒': '病字旁', '足': '足字旁', '日': '日字旁', '石': '石字旁',
+  '山': '山字旁', '王': '斜玉旁', '玉': '玉字底', '目': '目字旁', '犭': '反犬旁', '犬': '犬字旁',
+  '魚': '魚字旁', '鱼': '魚字旁', '鳥': '鳥字旁', '鸟': '鳥字旁', '衤': '衣字旁', '衣': '衣字底',
+  '刂': '立刀旁', '刀': '刀字旁', '宀': '寶蓋頭', '冖': '禿寶蓋', '穴': '穴寶蓋', '酉': '酉字旁',
+  '禾': '禾木旁', '貝': '貝字旁', '贝': '貝字旁', '广': '廣字頭', '厂': '廠字頭', '尸': '尸字頭',
+  '馬': '馬字旁', '马': '馬字旁', '巾': '巾字旁', '車': '車字旁', '车': '車字旁', '米': '米字旁',
+  '門': '門字框', '门': '門字框', '囗': '國字框', '冂': '同字框', '匚': '匚字框',
+  '頁': '頁字旁', '页': '頁字旁', '力': '力字旁', '飠': '食字旁', '饣': '食字旁', '食': '食字旁',
+  '礻': '示字旁', '示': '示字底', '雨': '雨字頭', '攵': '反文旁', '攴': '反文旁', '舟': '舟字旁',
+  '戈': '戈字旁', '牛': '牛字旁', '耳': '耳字旁', '子': '子字旁', '弓': '弓字旁', '歹': '歹字旁',
+  '皿': '皿字底', '欠': '欠字旁', '羽': '羽字旁', '革': '革字旁', '儿': '兒字底', '罒': '四字頭',
+  '羊': '羊字旁', '走': '走字旁', '白': '白字旁', '又': '又字旁', '骨': '骨字旁', '亠': '文字頭',
+  '寸': '寸字旁', '方': '方字旁', '黑': '黑字旁', '水': '水字底', '彡': '三撇', '立': '立字旁',
+  '勹': '包字頭', '見': '見字旁', '见': '見字旁', '角': '角字旁', '虍': '虎字頭', '斤': '斤字旁',
+  '止': '止字旁', '行': '行字旁', '缶': '缶字旁', '士': '士字旁', '夕': '夕字旁', '矢': '矢字旁',
+  '小': '小字頭', '⺌': '小字頭', '廾': '廾字底', '風': '風字旁', '豆': '豆字旁', '舌': '舌字旁',
+  '工': '工字旁', '文': '文字旁', '爫': '爪字頭', '片': '片字旁', '皮': '皮字旁', '身': '身字旁',
+  '覀': '西字頭', '廴': '建字底', '耂': '老字頭', '老': '老字頭', '大': '大字頭', '田': '田字旁',
+  '十': '十字旁', '气': '氣字頭', '髟': '髮字頭', '鬼': '鬼字旁', '殳': '殳字旁', '毛': '毛字旁',
+};
+
+const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
 
 const state = {
   name: '劉岱恬',
@@ -401,11 +610,15 @@ const state = {
   grid: 'tian',
   lenient: true,
   slow: true,
+  sound: true,
+  radical: true,
   stars: {},
 };
 const strokeCount = {};
+const sessionDone = new Set();
 
 let writer = null;
+let charData = null;
 let builtSize = 0;
 let buildToken = 0;
 let stepNum = 0;
@@ -418,14 +631,18 @@ function loadSaved() {
     const saved = JSON.parse(raw);
     if (saved.name) state.name = saved.name;
     if (saved.grid) state.grid = saved.grid;
-    if (typeof saved.lenient === 'boolean') state.lenient = saved.lenient;
-    if (typeof saved.slow === 'boolean') state.slow = saved.slow;
+    for (const key of ['lenient', 'slow', 'sound', 'radical']) {
+      if (typeof saved[key] === 'boolean') state[key] = saved[key];
+    }
     if (saved.stars) state.stars = saved.stars;
   } catch (e) {}
 }
 function save() {
   try {
-    const out = { name: state.name, grid: state.grid, lenient: state.lenient, slow: state.slow, stars: state.stars };
+    const out = {
+      name: state.name, grid: state.grid, lenient: state.lenient, slow: state.slow,
+      sound: state.sound, radical: state.radical, stars: state.stars,
+    };
     localStorage.setItem(STORE_KEY, JSON.stringify(out));
   } catch (e) {}
 }
@@ -453,12 +670,16 @@ function getCharData(ch) {
 function token(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
+function reducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 function writerColors() {
   return {
-    strokeColor: token('--ink'),
+    strokeColor: token(state.mode === 'watch' ? '--ink' : '--ink-wet'),
     outlineColor: token('--outline'),
     drawingColor: token('--accent'),
     highlightColor: token('--hint'),
+    radicalColor: state.radical ? token('--radical') : null,
   };
 }
 function parseName(text) {
@@ -472,6 +693,9 @@ function boxSize() {
   const w = stage.clientWidth;
   const h = window.innerHeight * 0.62;
   return Math.round(Math.max(220, Math.min(w, h, 600)));
+}
+function boxPadding(size) {
+  return Math.round(size * 0.06);
 }
 function starsFor(mistakes) {
   if (mistakes <= 1) return 3;
@@ -490,6 +714,678 @@ function setStatus(html) {
 }
 function currentChar() {
   return state.chars[state.idx];
+}
+function rand(a, b) {
+  return a + Math.random() * (b - a);
+}
+function setupCanvas(canvas, w, h) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+
+// Hanzi Writer's coordinate frame: x in [0, 1024], y in [-124, 900] pointing up.
+function toScreen(pt, size) {
+  const pad = boxPadding(size);
+  const scale = (size - 2 * pad) / 1024;
+  const x = pad + pt[0] * scale;
+  const y = size - pad - 124 * scale - pt[1] * scale;
+  return { x: x, y: y };
+}
+
+// ---------- textures (rice paper fibers, worn seal edge) ----------
+function paperTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.strokeStyle = 'rgba(128, 120, 100, 0.07)';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < 700; i++) {
+    const x = Math.random() * 256;
+    const y = Math.random() * 256;
+    const a = Math.random() * Math.PI * 2;
+    const len = rand(3, 14);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(
+      x + Math.cos(a + 0.6) * len * 0.5,
+      y + Math.sin(a + 0.6) * len * 0.5,
+      x + Math.cos(a) * len,
+      y + Math.sin(a) * len
+    );
+    ctx.stroke();
+  }
+  return c.toDataURL();
+}
+function sealMask() {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, 128, 128);
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 160; i++) {
+    const edge = Math.random() < 0.6;
+    let x = Math.random() * 128;
+    let y = Math.random() * 128;
+    if (edge) {
+      if (Math.random() < 0.5) x = Math.random() < 0.5 ? rand(0, 6) : rand(122, 128);
+      else y = Math.random() < 0.5 ? rand(0, 6) : rand(122, 128);
+    }
+    ctx.globalAlpha = rand(0.3, 1);
+    ctx.beginPath();
+    ctx.arc(x, y, rand(0.4, edge ? 2.6 : 1.4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  return c.toDataURL();
+}
+box.style.backgroundImage = 'url(' + paperTexture() + ')';
+const sealMaskUrl = 'url(' + sealMask() + ')';
+sealEl.style.webkitMaskImage = sealMaskUrl;
+sealEl.style.maskImage = sealMaskUrl;
+
+// ---------- sound (synthesized with Web Audio, no files) ----------
+let audioCtx = null;
+let noiseBuf = null;
+function getAudio() {
+  if (!state.sound) return null;
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audioCtx = new AC();
+    noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+    const samples = noiseBuf.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+['pointerdown', 'touchend', 'click'].forEach(function (ev) {
+  document.addEventListener(ev, function () { getAudio(); }, { capture: true, passive: true });
+});
+
+function envelope(ac, t, peak, attack, decay) {
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+  return g;
+}
+function noiseSource(ac) {
+  const src = ac.createBufferSource();
+  src.buffer = noiseBuf;
+  return src;
+}
+
+// 唰: a band-passed noise sweep plus a faint metallic ring
+function sfxSwish() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+
+  const src = noiseSource(ac);
+  const bp = ac.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.Q.value = 1.4;
+  bp.frequency.setValueAtTime(4200, t);
+  bp.frequency.exponentialRampToValueAtTime(700, t + 0.2);
+  const g = envelope(ac, t, 0.45, 0.03, 0.2);
+  src.connect(bp).connect(g).connect(ac.destination);
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + 0.26);
+
+  for (const f of [2350, 3170]) {
+    const o = ac.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = f;
+    const og = envelope(ac, t + 0.05, 0.035, 0.01, 0.35);
+    o.connect(og).connect(ac.destination);
+    o.start(t + 0.05);
+    o.stop(t + 0.45);
+  }
+}
+
+// 碰: a seal hitting paper on a desk
+function sfxStamp() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+
+  const o = ac.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(48, t + 0.18);
+  const g = envelope(ac, t, 0.9, 0.005, 0.28);
+  o.connect(g).connect(ac.destination);
+  o.start(t);
+  o.stop(t + 0.32);
+
+  const src = noiseSource(ac);
+  const lp = ac.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 900;
+  const ng = envelope(ac, t, 0.4, 0.003, 0.08);
+  src.connect(lp).connect(ng).connect(ac.destination);
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + 0.1);
+}
+
+// 木魚: a gentle wooden knock for a wrong stroke
+function sfxWood() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const o = ac.createOscillator();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(660, t);
+  o.frequency.exponentialRampToValueAtTime(500, t + 0.06);
+  const g = envelope(ac, t, 0.28, 0.004, 0.12);
+  o.connect(g).connect(ac.destination);
+  o.start(t);
+  o.stop(t + 0.16);
+}
+
+// 銅鑼: inharmonic partials with a slight pitch drop after the strike
+function sfxGong() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const master = ac.createGain();
+  master.gain.value = 0.8;
+  master.connect(ac.destination);
+
+  const base = 92;
+  const ratios = [1, 1.52, 2.03, 2.61, 3.15, 3.76, 4.42];
+  for (let i = 0; i < ratios.length; i++) {
+    const f = base * ratios[i];
+    const o = ac.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f * 1.012, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + 0.6);
+    const decay = 4.2 - i * 0.45;
+    const g = envelope(ac, t, 0.32 / (i + 1), 0.015, decay);
+    o.connect(g).connect(master);
+    o.start(t);
+    o.stop(t + decay + 0.1);
+  }
+
+  const src = noiseSource(ac);
+  const lp = ac.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 2000;
+  const ng = envelope(ac, t, 0.3, 0.003, 0.06);
+  src.connect(lp).connect(ng).connect(master);
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + 0.1);
+}
+
+// 鞭炮: a cluster of short high-passed noise pops
+function sfxCrackle() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  for (let i = 0; i < 9; i++) {
+    const at = t + Math.random() * 0.45;
+    const src = noiseSource(ac);
+    const hp = ac.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1800;
+    const g = envelope(ac, at, rand(0.15, 0.4), 0.002, 0.03);
+    src.connect(hp).connect(g).connect(ac.destination);
+    src.start(at, Math.random() * 0.5);
+    src.stop(at + 0.05);
+  }
+}
+
+// ---------- speech ----------
+function pickVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  let best = null;
+  for (const v of voices) {
+    const lang = v.lang.replace('_', '-');
+    if (lang === 'zh-TW') return v;
+    if (!best && /^zh/i.test(lang)) best = v;
+  }
+  return best;
+}
+function say(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW';
+  u.rate = 0.75;
+  const v = pickVoice();
+  if (v) u.voice = v;
+  window.speechSynthesis.speak(u);
+}
+if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+
+// ---------- box effects: 劍氣 along each correct stroke ----------
+const fx = { ctx: null, size: 0, slashes: [], sparks: [], rings: [], running: false, last: 0 };
+
+function setupFx(size) {
+  fx.ctx = setupCanvas(fxCanvas, size, size);
+  fx.size = size;
+  fx.slashes = [];
+  fx.sparks = [];
+  fx.rings = [];
+}
+
+function swordQi(strokeNum) {
+  if (reducedMotion() || !charData) return;
+  const median = charData.medians[strokeNum];
+  if (!median || median.length < 2) return;
+
+  const pts = [];
+  for (const p of median) pts.push(toScreen(p, fx.size));
+
+  // resample the median every ~5 px so the glow travels smoothly
+  const samples = [{ x: pts[0].x, y: pts[0].y, d: 0 }];
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const dx = pts[i].x - pts[i - 1].x;
+    const dy = pts[i].y - pts[i - 1].y;
+    const seg = Math.hypot(dx, dy);
+    const n = Math.max(1, Math.ceil(seg / 5));
+    for (let k = 1; k <= n; k++) {
+      samples.push({
+        x: pts[i - 1].x + dx * k / n,
+        y: pts[i - 1].y + dy * k / n,
+        d: total + seg * k / n,
+      });
+    }
+    total += seg;
+  }
+  const dur = Math.min(320, 140 + total * 0.6);
+  fx.slashes.push({ samples: samples, length: total, start: performance.now(), dur: dur, ended: false });
+  startFx();
+}
+
+function startFx() {
+  if (fx.running) return;
+  fx.running = true;
+  fx.last = performance.now();
+  requestAnimationFrame(fxFrame);
+}
+
+function fxFrame(now) {
+  const dt = Math.min(48, Math.max(0, now - fx.last)) / 16.7;
+  fx.last = now;
+  const ctx = fx.ctx;
+  const size = fx.size;
+  const qi = token('--qi');
+  ctx.clearRect(0, 0, size, size);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const width = size / 26;
+  const keep = [];
+  for (const s of fx.slashes) {
+    const p = Math.min(1, Math.max(0, (now - s.start) / s.dur));
+    let fade = 1;
+    if (p >= 1) fade = Math.max(0, 1 - (now - s.start - s.dur) / 380);
+    const head = s.length * p;
+    const samples = s.samples;
+
+    let headPt = samples[0];
+    ctx.shadowColor = qi;
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = qi;
+    for (let i = 1; i < samples.length; i++) {
+      if (samples[i].d > head) break;
+      const ratio = head > 0 ? samples[i].d / head : 1;
+      ctx.globalAlpha = fade * (0.12 + 0.88 * ratio * ratio);
+      ctx.lineWidth = width * (0.45 + 0.55 * ratio);
+      ctx.beginPath();
+      ctx.moveTo(samples[i - 1].x, samples[i - 1].y);
+      ctx.lineTo(samples[i].x, samples[i].y);
+      ctx.stroke();
+      headPt = samples[i];
+    }
+    ctx.shadowBlur = 0;
+
+    // bright core at the leading edge
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = '#FFF8E1';
+    ctx.beginPath();
+    ctx.arc(headPt.x, headPt.y, width * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (p < 1) {
+      for (let k = 0; k < 2; k++) {
+        const a = Math.random() * Math.PI * 2;
+        const v = rand(0.6, 2.2) * size / 400;
+        fx.sparks.push({ x: headPt.x, y: headPt.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rand(250, 480) });
+      }
+    } else if (!s.ended) {
+      s.ended = true;
+      for (let k = 0; k < 12; k++) {
+        const a = k / 12 * Math.PI * 2;
+        const v = rand(1.5, 3.2) * size / 400;
+        fx.sparks.push({ x: headPt.x, y: headPt.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rand(300, 520) });
+      }
+      fx.rings.push({ x: headPt.x, y: headPt.y, age: 0, life: 420 });
+    }
+    if (fade > 0) keep.push(s);
+  }
+  fx.slashes = keep;
+
+  const liveSparks = [];
+  ctx.fillStyle = qi;
+  for (const sp of fx.sparks) {
+    sp.age += dt * 16.7;
+    if (sp.age >= sp.life) continue;
+    sp.x += sp.vx * dt;
+    sp.y += sp.vy * dt;
+    sp.vx *= 0.94;
+    sp.vy = sp.vy * 0.94 + 0.04 * dt;
+    ctx.globalAlpha = 1 - sp.age / sp.life;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, width * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    liveSparks.push(sp);
+  }
+  fx.sparks = liveSparks;
+
+  const liveRings = [];
+  ctx.strokeStyle = qi;
+  for (const r of fx.rings) {
+    r.age += dt * 16.7;
+    if (r.age >= r.life) continue;
+    const k = r.age / r.life;
+    ctx.globalAlpha = 1 - k;
+    ctx.lineWidth = width * 0.3 * (1 - k) + 0.5;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, size * 0.07 * k + 2, 0, Math.PI * 2);
+    ctx.stroke();
+    liveRings.push(r);
+  }
+  fx.rings = liveRings;
+  ctx.globalAlpha = 1;
+
+  if (fx.slashes.length || fx.sparks.length || fx.rings.length) {
+    requestAnimationFrame(fxFrame);
+  } else {
+    ctx.clearRect(0, 0, size, size);
+    fx.running = false;
+  }
+}
+
+// ---------- whole-name celebration: night sky, gold fireworks, red lanterns, firecracker paper ----------
+const sky = { ctx: null, w: 0, h: 0, parts: [], lanterns: [], paper: [], bursts: [], start: 0, running: false, last: 0 };
+const BURST_COLORS = ['#FFD36A', '#FFB33B', '#FF6B4A', '#FFF1D6', '#E8392B'];
+const PAPER_COLORS = ['#D62828', '#B5171C', '#E84A3A', '#F2B705'];
+let bannerTimer = 0;
+
+function celebrate(name) {
+  document.getElementById('bannerName').textContent = name;
+  bannerEl.hidden = false;
+  bannerEl.style.animation = 'none';
+  void bannerEl.offsetWidth;
+  bannerEl.style.animation = '';
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(function () { bannerEl.hidden = true; }, reducedMotion() ? 3500 : 4800);
+  sfxGong();
+  if (reducedMotion()) return;
+
+  sky.w = window.innerWidth;
+  sky.h = window.innerHeight;
+  sky.ctx = setupCanvas(skyCanvas, sky.w, sky.h);
+  sky.parts = [];
+  sky.lanterns = [];
+  sky.paper = [];
+  sky.start = performance.now();
+  sky.bursts = [];
+  for (const t of [150, 500, 900, 1300, 1750, 2250, 2800, 3300]) sky.bursts.push({ t: t, done: false });
+
+  const unit = Math.min(sky.w, sky.h);
+  for (let i = 0; i < 6; i++) {
+    sky.lanterns.push({
+      x0: sky.w * (0.1 + 0.8 * (i + rand(0.2, 0.8)) / 6),
+      y: sky.h + rand(40, 260),
+      size: unit * rand(0.06, 0.1),
+      speed: rand(1.4, 2.4) * unit / 700,
+      phase: Math.random() * Math.PI * 2,
+    });
+  }
+  for (let i = 0; i < 60; i++) {
+    sky.paper.push({
+      x: Math.random() * sky.w,
+      y: -rand(10, sky.h * 0.6),
+      vx: rand(-0.6, 0.6),
+      vy: rand(1.2, 2.6),
+      rot: Math.random() * Math.PI,
+      vr: rand(-0.15, 0.15),
+      w: rand(5, 10),
+      h: rand(8, 16),
+      color: PAPER_COLORS[Math.floor(Math.random() * PAPER_COLORS.length)],
+    });
+  }
+
+  skyCanvas.hidden = false;
+  if (!sky.running) {
+    sky.running = true;
+    sky.last = performance.now();
+    requestAnimationFrame(skyFrame);
+  }
+}
+
+function burst(x, y) {
+  const unit = Math.min(sky.w, sky.h) / 700;
+  const count = 64;
+  const hue = BURST_COLORS[Math.floor(Math.random() * BURST_COLORS.length)];
+  for (let i = 0; i < count; i++) {
+    const a = i / count * Math.PI * 2 + rand(-0.1, 0.1);
+    const v = rand(2.2, 5) * unit;
+    let color = hue;
+    if (Math.random() < 0.3) color = BURST_COLORS[Math.floor(Math.random() * BURST_COLORS.length)];
+    sky.parts.push({
+      x: x, y: y, px: x, py: y,
+      vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+      age: 0, life: rand(1000, 1600),
+      color: color, size: rand(1.6, 3) * unit + 0.6,
+    });
+  }
+  sfxCrackle();
+}
+
+function drawLantern(ctx, x, y, s, t) {
+  const glow = ctx.createRadialGradient(x, y, s * 0.2, x, y, s * 1.7);
+  glow.addColorStop(0, 'rgba(255, 170, 60, 0.45)');
+  glow.addColorStop(1, 'rgba(255, 170, 60, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, s * 1.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // string
+  ctx.strokeStyle = 'rgba(255, 220, 160, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x, y - s * 0.62);
+  ctx.lineTo(x, y - s * 1.1);
+  ctx.stroke();
+
+  // body
+  const body = ctx.createLinearGradient(x - s * 0.62, 0, x + s * 0.62, 0);
+  body.addColorStop(0, '#8E1510');
+  body.addColorStop(0.5, '#E8392B');
+  body.addColorStop(1, '#8E1510');
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.ellipse(x, y, s * 0.62, s * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ribs
+  ctx.strokeStyle = 'rgba(120, 15, 10, 0.55)';
+  ctx.lineWidth = Math.max(1, s * 0.03);
+  for (const rx of [0.36, 0.14]) {
+    ctx.beginPath();
+    ctx.ellipse(x, y, s * rx, s * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // gold caps
+  ctx.fillStyle = '#F2B705';
+  ctx.fillRect(x - s * 0.24, y - s * 0.6, s * 0.48, s * 0.13);
+  ctx.fillRect(x - s * 0.24, y + s * 0.47, s * 0.48, s * 0.13);
+
+  // tassel, swinging a little
+  const swing = Math.sin(t * 0.004) * s * 0.08;
+  ctx.strokeStyle = '#F2B705';
+  ctx.lineWidth = Math.max(1, s * 0.04);
+  for (const dx of [-0.06, 0, 0.06]) {
+    ctx.beginPath();
+    ctx.moveTo(x + s * dx, y + s * 0.6);
+    ctx.lineTo(x + s * dx + swing, y + s * 1.1);
+    ctx.stroke();
+  }
+}
+
+function skyFrame(now) {
+  const dt = Math.min(48, Math.max(0, now - sky.last)) / 16.7;
+  sky.last = now;
+  const elapsed = now - sky.start;
+  const ctx = sky.ctx;
+  ctx.clearRect(0, 0, sky.w, sky.h);
+
+  for (const b of sky.bursts) {
+    if (!b.done && elapsed >= b.t) {
+      b.done = true;
+      burst(sky.w * rand(0.15, 0.85), sky.h * rand(0.12, 0.45));
+    }
+  }
+
+  let fadeOut = 1;
+  if (elapsed > 4200) fadeOut = Math.max(0, 1 - (elapsed - 4200) / 700);
+
+  // lanterns rise behind everything
+  ctx.globalAlpha = fadeOut;
+  for (const L of sky.lanterns) {
+    L.y -= L.speed * dt;
+    const x = L.x0 + Math.sin(now * 0.0012 + L.phase) * L.size * 0.5;
+    drawLantern(ctx, x, L.y, L.size, now + L.phase * 1000);
+  }
+
+  // firecracker paper drifting down
+  for (const p of sky.paper) {
+    p.x += p.vx * dt + Math.sin(now * 0.002 + p.rot) * 0.3;
+    p.y += p.vy * dt;
+    p.rot += p.vr * dt;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.rot * 2)));
+    ctx.restore();
+  }
+
+  // firework sparks, additive so they glow on the night veil
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  const live = [];
+  for (const q of sky.parts) {
+    q.age += dt * 16.7;
+    if (q.age >= q.life) continue;
+    q.px = q.x;
+    q.py = q.y;
+    q.x += q.vx * dt;
+    q.y += q.vy * dt;
+    q.vx *= 0.975;
+    q.vy = q.vy * 0.975 + 0.045 * dt;
+    const k = q.age / q.life;
+    let twinkle = 1;
+    if (k > 0.6 && Math.random() < 0.3) twinkle = 0.3;
+    ctx.globalAlpha = (1 - k) * fadeOut * twinkle;
+    ctx.strokeStyle = q.color;
+    ctx.lineWidth = q.size;
+    ctx.beginPath();
+    ctx.moveTo(q.px, q.py);
+    ctx.lineTo(q.x, q.y);
+    ctx.stroke();
+    live.push(q);
+  }
+  sky.parts = live;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+
+  if (elapsed < 4900) {
+    requestAnimationFrame(skyFrame);
+  } else {
+    ctx.clearRect(0, 0, sky.w, sky.h);
+    skyCanvas.hidden = true;
+    sky.running = false;
+  }
+}
+bannerEl.addEventListener('click', function () { bannerEl.hidden = true; });
+
+// ---------- seal + ink ----------
+function hideSeal() {
+  sealEl.hidden = true;
+  sealEl.classList.remove('stamp');
+}
+function stampSeal(stars) {
+  const text = SEAL_TEXT[stars];
+  const span = document.getElementById('sealText');
+  span.textContent = text;
+  const scale = text.length === 1 ? 0.15 : 0.095;
+  span.style.fontSize = Math.round(builtSize * scale) + 'px';
+  sealEl.hidden = false;
+  sealEl.classList.remove('stamp');
+  void sealEl.offsetWidth;
+  sealEl.classList.add('stamp');
+  setTimeout(function () {
+    sfxStamp();
+    box.classList.remove('thump');
+    void box.offsetWidth;
+    box.classList.add('thump');
+  }, reducedMotion() ? 0 : 230);
+}
+function inkBleed() {
+  writerEl.classList.remove('ink');
+  void writerEl.offsetWidth;
+  writerEl.classList.add('ink');
+  if (writer) writer.updateColor('strokeColor', token('--ink'), { duration: 1400 });
+}
+
+// ---------- info: zhuyin, radical ----------
+function renderInfo(ch, data) {
+  const zyEl = document.getElementById('zy');
+  const radLine = document.getElementById('radLine');
+  const mini = document.getElementById('mini');
+  if (!data) {
+    zyEl.textContent = ch || '';
+    radLine.textContent = '';
+    mini.innerHTML = '';
+    return;
+  }
+
+  zyEl.textContent = data.zy && data.zy.length ? data.zy.join('　') : ch;
+
+  const rad = data.rad || '';
+  if (rad) {
+    const name = RADICAL_NAMES[rad];
+    radLine.innerHTML = '部首 <b></b>' + (name ? '　' + name : '');
+    radLine.querySelector('b').textContent = rad;
+  } else {
+    radLine.textContent = '';
+  }
+
+  // the whole character in grey with the radical strokes colored
+  const radSet = new Set(data.radStrokes || []);
+  let paths = '<g transform="scale(1,-1) translate(0,-900)">';
+  for (let i = 0; i < data.strokes.length; i++) {
+    const cls = radSet.has(i) ? 'r' : 'o';
+    paths += '<path class="' + cls + '" d="' + data.strokes[i] + '"></path>';
+  }
+  mini.innerHTML = paths + '</g>';
 }
 
 // ---------- chips ----------
@@ -520,6 +1416,7 @@ function renderChips() {
     b.append(g, meta);
     b.addEventListener('click', function () {
       state.idx = i;
+      if (state.sound) say(ch);
       renderChips();
       build();
     });
@@ -532,6 +1429,8 @@ async function build() {
   const myToken = ++buildToken;
   const ch = currentChar();
   resultEl.hidden = true;
+  hideSeal();
+  writerEl.classList.remove('ink');
   if (!ch) return;
 
   let data = null;
@@ -546,12 +1445,15 @@ async function build() {
 
   if (writer) writer.cancelQuiz();
   writer = null;
+  charData = data;
   writerEl.innerHTML = '';
 
   const size = boxSize();
   builtSize = size;
   box.style.width = size + 'px';
   box.style.height = size + 'px';
+  setupFx(size);
+  renderInfo(ch, data);
 
   if (!data) {
     strokeCount[ch] = 0;
@@ -565,13 +1467,14 @@ async function build() {
   writer = HanziWriter.create(writerEl, ch, {
     width: size,
     height: size,
-    padding: Math.round(size * 0.06),
+    padding: boxPadding(size),
     showCharacter: false,
     showOutline: state.mode !== 'write',
     strokeColor: colors.strokeColor,
     outlineColor: colors.outlineColor,
     drawingColor: colors.drawingColor,
     highlightColor: colors.highlightColor,
+    radicalColor: colors.radicalColor,
     drawingWidth: Math.max(6, Math.round(size / 36)),
     strokeAnimationSpeed: state.slow ? 0.6 : 1.2,
     delayBetweenStrokes: state.slow ? 600 : 250,
@@ -618,13 +1521,16 @@ function startMode() {
   writer.quiz({
     leniency: state.lenient ? 1.5 : 1.0,
     showHintAfterMisses: hintAfter,
-    highlightOnComplete: true,
+    highlightOnComplete: false,
     onCorrectStroke: function (d) {
+      swordQi(d.strokeNum);
+      sfxSwish();
       if (d.strokesRemaining > 0) {
         setStatus('第 <span class="count">' + (d.strokeNum + 1) + '</span> 筆 ✓　還有 ' + d.strokesRemaining + ' 筆');
       }
     },
     onMistake: function (d) {
+      sfxWood();
       box.classList.remove('shake');
       void box.offsetWidth;
       box.classList.add('shake');
@@ -638,6 +1544,7 @@ function startMode() {
 }
 
 function finish(mistakes) {
+  const myToken = buildToken;
   const ch = currentChar();
   const n = starsFor(mistakes);
   if (!state.stars[ch]) state.stars[ch] = {};
@@ -645,6 +1552,25 @@ function finish(mistakes) {
   if (n > prev) state.stars[ch][state.mode] = n;
   save();
   renderChips();
+
+  inkBleed();
+  setTimeout(function () {
+    if (myToken === buildToken) stampSeal(n);
+  }, 450);
+  setTimeout(function () {
+    if (myToken === buildToken && state.sound) say(ch);
+  }, 1100);
+
+  // fireworks once every character of the name has been written in this mode
+  sessionDone.add(ch);
+  let allDone = true;
+  for (const c of state.chars) {
+    if (!sessionDone.has(c) && strokeCount[c] !== 0) allDone = false;
+  }
+  if (allDone && state.chars.length > 1) {
+    sessionDone.clear();
+    setTimeout(function () { celebrate(state.chars.join('')); }, 1300);
+  }
 
   setStatus('&nbsp;');
   quizActions.hidden = true;
@@ -669,6 +1595,7 @@ function finish(mistakes) {
 // ---------- controls ----------
 function setMode(mode) {
   state.mode = mode;
+  sessionDone.clear();
   document.querySelectorAll('#modes button').forEach(function (b) {
     b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false');
   });
@@ -698,6 +1625,10 @@ document.getElementById('stepBtn').addEventListener('click', function () {
 document.getElementById('restartBtn').addEventListener('click', function () { build(); });
 document.getElementById('demoBtn').addEventListener('click', function () { setMode('watch'); });
 document.getElementById('againBtn').addEventListener('click', function () { build(); });
+document.getElementById('sayBtn').addEventListener('click', function () {
+  const ch = currentChar();
+  if (ch) say(ch);
+});
 document.getElementById('nextBtn').addEventListener('click', function (e) {
   const action = e.currentTarget.dataset.action;
   if (action === 'next') {
@@ -728,6 +1659,7 @@ function setName(text) {
   state.name = chars.join('');
   state.chars = chars;
   state.idx = 0;
+  sessionDone.clear();
   nameInput.value = state.name;
   save();
   renderChips();
@@ -767,6 +1699,10 @@ document.querySelectorAll('.opt-row').forEach(function (row) {
     state[opt] = b.dataset.val === '1';
     renderOptions();
     save();
+    if (opt === 'sound') {
+      if (state.sound) sfxStamp();
+      return;
+    }
     build();
   });
 });
@@ -781,7 +1717,9 @@ new ResizeObserver(function () {
 function recolor() {
   if (!writer) return;
   const colors = writerColors();
-  for (const key in colors) writer.updateColor(key, colors[key]);
+  for (const key in colors) {
+    if (colors[key]) writer.updateColor(key, colors[key]);
+  }
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolor);
 new MutationObserver(recolor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
