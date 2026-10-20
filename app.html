@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;600;700&display=swap">
 <style>
-/* Layout: a practice-hall page on 宣紙 — header + 江湖 standing strip, name tags, a lacquered-wood 擂台 frame around the 田字格, controls in a side column */
+/* Layout: a practice-hall page on 宣紙 — header, a player strip with the pixel 俠客 and purse, name tags, a lacquered-wood 擂台 frame around the 田字格, icon controls in a side column */
 :root {
   --bg: #ECE5D6;
   --paper: #FBF8F1;
@@ -77,6 +77,7 @@ body {
   border-radius: 2px;
   box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--line-soft);
 }
+.quiet { color: var(--muted); }
 
 /* Header */
 header {
@@ -157,32 +158,81 @@ button:hover { border-color: var(--accent); }
 button:focus-visible, .chip:focus-visible { outline: 2px solid var(--hint); outline-offset: 2px; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 button[aria-pressed="true"].toggle { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.icon-btn {
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+}
+.icon-btn svg { width: 28px; height: 28px; }
+.icon-btn .badge {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.i-line { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.i-fill { fill: currentColor; }
 
-/* 江湖 standing strip */
-.jianghu {
+/* Player strip: pixel 俠客 on a small stage, rank, purse */
+.player {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 18px;
+  gap: 10px 18px;
   padding: 8px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  font-size: 0.92rem;
 }
+.avatar-tile {
+  flex: none;
+  width: 144px;
+  height: 108px;
+  background: #F3EBDD;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.avatar-tile canvas, .ladder canvas, .weapon canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+#avatar { width: 144px; height: 108px; }
+.player-info { display: grid; gap: 4px; min-width: 0; }
 .rank-tag {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--accent);
 }
+.purse-row { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.95rem; }
 .purse { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
-.purse b { font-weight: 700; }
+.purse b { font-weight: 700; display: inline-block; }
+.purse.pulse b { animation: pulse 0.3s ease-out; }
+@keyframes pulse {
+  40% { transform: scale(1.35); color: var(--accent); }
+}
 .sycee { width: 22px; height: 15px; flex: none; }
 .sycee.silver { color: var(--silver); }
 .sycee.gold { color: var(--gold); }
-.jianghu .quiet { color: var(--muted); }
-.jianghu button { margin-left: auto; padding: 5px 12px; font-size: 0.88rem; }
+.sycee.flying {
+  position: fixed;
+  z-index: 46;
+  width: 28px;
+  height: 19px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+.player .small { font-size: 0.85rem; }
+.player-info button { justify-self: start; padding: 4px 14px; font-size: 0.88rem; }
+.player-info .small:empty { display: none; }
 
 /* Name tags */
 .chips {
@@ -335,7 +385,7 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .arena.shake, .arena.thump, .seal.stamp, #writer.ink, #mine.ink { animation: none; }
+  .arena.shake, .arena.thump, .seal.stamp, #writer.ink, #mine.ink, .purse.pulse b { animation: none; }
 }
 
 /* Side panel */
@@ -347,29 +397,43 @@ main {
 .info {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
+  gap: 16px;
+  padding: 12px 16px;
 }
-.mini { width: 60px; height: 60px; flex: none; }
-.mini .o { fill: var(--muted); opacity: 0.28; }
+.char-zy { display: flex; align-items: center; gap: 4px; flex: none; }
+.mini { width: 76px; height: 76px; flex: none; }
+.mini .o { fill: var(--ink); opacity: 0.75; }
 .mini .r { fill: var(--radical); }
-.info-text { display: grid; gap: 4px; min-width: 0; }
-.zy-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.zy {
+
+/* Vertical 注音 to the right of the character, tone mark at the right of the last symbol */
+.zy-v {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
   font-family: var(--font-display);
-  font-size: 1.55rem;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
+  font-size: 1.05rem;
+  line-height: 1.05;
+  margin-right: 0.7em;
 }
+.zy-v .tone {
+  position: absolute;
+  left: 100%;
+  bottom: 0.45em;
+  font-size: 0.95em;
+  line-height: 1;
+}
+.zy-v .dot { line-height: 0.8; }
+.info-text { display: grid; gap: 6px; justify-items: start; min-width: 0; }
 .say {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   font-size: 0.85rem;
   border-radius: 999px;
 }
-.say svg { width: 16px; height: 16px; fill: currentColor; }
+.say svg { width: 18px; height: 18px; fill: currentColor; }
 .rad-line { font-size: 0.88rem; color: var(--muted); }
 .rad-line b { font-family: var(--font-display); font-size: 1.15rem; color: var(--radical); font-weight: 700; }
 
@@ -392,18 +456,10 @@ main {
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .seg button[aria-pressed="true"] span { color: var(--accent-ink); opacity: 0.85; }
 
-.status {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  min-height: 2.2em;
-  text-align: center;
-  text-wrap: balance;
-}
-.status .count { font-variant-numeric: tabular-nums; }
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
 }
 .result {
@@ -483,7 +539,7 @@ footer a { color: inherit; }
 }
 .armory-panel {
   width: min(660px, 100%);
-  max-height: 86vh;
+  max-height: 88vh;
   overflow: auto;
   padding: 18px 20px 20px;
   display: grid;
@@ -501,39 +557,36 @@ footer a { color: inherit; }
 .rank-row .rank-tag { font-size: 1.4rem; }
 .bar { height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; margin-top: 8px; }
 .bar i { display: block; height: 100%; background: var(--accent); }
-.ladder { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 0.82rem; color: var(--muted); }
-.ladder .reached { color: var(--ink); }
+.ladder {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.ladder-item { display: grid; justify-items: center; gap: 2px; font-family: var(--font-display); font-size: 0.85rem; }
+.ladder-item canvas { width: 72px; height: 54px; background: #F3EBDD; border: 1px solid var(--line); }
+.ladder-item.now { color: var(--accent); font-weight: 700; }
+.ladder-item.now canvas { border-color: var(--accent); }
+.ladder-item.locked { color: var(--muted); }
 .weapons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
   gap: 10px;
 }
 .weapon {
   display: grid;
   gap: 6px;
-  align-content: start;
   justify-items: center;
   text-align: center;
-  padding: 12px 10px;
+  padding: 10px 8px;
   border: 1px solid var(--line);
   border-radius: 2px;
 }
+.weapon canvas { width: 96px; height: 60px; background: #F3EBDD; }
+.weapon.locked canvas { opacity: 0.55; }
 .weapon.equipped { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.w-glyph {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid currentColor;
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-.weapon.locked .w-glyph { opacity: 0.45; }
-.w-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; letter-spacing: 0.08em; }
-.w-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
-.weapon button { padding: 4px 10px; font-size: 0.82rem; }
+.w-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; letter-spacing: 0.06em; }
+.weapon button { padding: 4px 10px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; }
 .weapon button:disabled { cursor: default; opacity: 0.5; border-color: var(--line); }
 .scrolls { display: flex; flex-wrap: wrap; gap: 8px; }
 .scroll-item {
@@ -543,7 +596,9 @@ footer a { color: inherit; }
   font-family: var(--font-display);
   letter-spacing: 0.1em;
 }
-.rules { margin: 0; padding-left: 1.2em; font-size: 0.86rem; color: var(--muted); display: grid; gap: 2px; }
+.how { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.9rem; }
+.how span { display: inline-flex; align-items: center; gap: 6px; }
+.how .scroll-item { padding: 0 6px; font-size: 0.85rem; }
 
 /* Whole-name celebration: a night-sky veil with the name, fireworks canvas on top.
    Deliberately fixed colors (night sky, gold, lantern red) in both themes. */
@@ -605,6 +660,13 @@ footer a { color: inherit; }
     <path fill="currentColor" d="M1 7.5c2 1.2 4.2 1.3 6.3.4C8 4.6 9.8 2.6 12 2.6s4 2 4.7 5.3c2.1.9 4.3.8 6.3-.4-.6 4.6-5 7-11 7S1.6 12.1 1 7.5z"></path>
     <path fill="currentColor" opacity="0.55" d="M3.5 10.2c2.4 1.6 5.3 2.3 8.5 2.3s6.1-.7 8.5-2.3c-1.6 2.4-4.7 3.5-8.5 3.5s-6.9-1.1-8.5-3.5z"></path>
   </symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path class="i-fill" d="M7 4.5v15l12.5-7.5z"></path></symbol>
+  <symbol id="i-step" viewBox="0 0 24 24"><path class="i-fill" d="M5 5v14l10-7z"></path><rect class="i-fill" x="16.5" y="5" width="2.8" height="14" rx="1"></rect></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24"><path class="i-line" d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"></path><path class="i-line" d="M4.5 3.5v4.2h4.2"></path></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path class="i-line" d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"></path><circle class="i-fill" cx="12" cy="12" r="3.2"></circle></symbol>
+  <symbol id="i-brush" viewBox="0 0 24 24"><path class="i-line" d="M20.5 3.5 11.8 12.2"></path><path class="i-fill" d="M11.4 11.6c-2.7-.5-5.2 1.4-5.7 4.2-.3 1.7-1.1 2.7-2.7 3.5 3.7.7 7.3-.3 8.8-3 .9-1.6.9-3.4-.4-4.7z"></path></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path class="i-line" d="M4.5 12h15M13.5 6l6 6-6 6"></path></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><rect class="i-line" x="3" y="3" width="12" height="12" rx="1.5"></rect><rect class="i-line" x="9" y="9" width="12" height="12" rx="1.5"></rect></symbol>
 </svg>
 
 <div class="app">
@@ -620,13 +682,17 @@ footer a { color: inherit; }
     </form>
   </header>
 
-  <div class="jianghu" id="jianghu">
-    <span class="rank-tag" id="rankTag">初入江湖</span>
-    <span class="purse"><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg><b id="taels">0</b> 兩</span>
-    <span class="purse"><svg class="sycee gold" aria-hidden="true"><use href="#sycee"></use></svg><b id="ingots">0</b> 元寶</span>
-    <span class="quiet" id="streak"></span>
-    <span class="quiet" id="equipName"></span>
-    <button type="button" id="armoryBtn">兵器譜</button>
+  <div class="player">
+    <div class="avatar-tile"><canvas id="avatar" width="48" height="36" aria-label="你的俠客"></canvas></div>
+    <div class="player-info">
+      <span class="rank-tag" id="rankTag">初入江湖</span>
+      <div class="purse-row">
+        <span class="purse" id="taelsBox"><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg><b id="taels">0</b> 兩</span>
+        <span class="purse" id="ingotsBox"><svg class="sycee gold" aria-hidden="true"><use href="#sycee"></use></svg><b id="ingots">0</b> 元寶</span>
+      </div>
+      <span class="quiet small" id="streak"></span>
+      <button type="button" id="armoryBtn">兵器譜</button>
+    </div>
   </div>
 
   <nav class="chips" id="chips" aria-label="名字裡的字"></nav>
@@ -653,14 +719,14 @@ footer a { color: inherit; }
 
     <div class="panel">
       <div class="info card" id="info">
-        <svg class="mini" id="mini" viewBox="0 0 1024 1024" aria-hidden="true"></svg>
+        <div class="char-zy">
+          <svg class="mini" id="mini" viewBox="0 0 1024 1024" aria-hidden="true"></svg>
+          <span class="zy-v" id="zy"></span>
+        </div>
         <div class="info-text">
-          <div class="zy-row">
-            <span class="zy" id="zy"></span>
-            <button type="button" class="say" id="sayBtn" aria-label="念出這個字">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"></path></svg>念
-            </button>
-          </div>
+          <button type="button" class="say" id="sayBtn" aria-label="念出這個字">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"></path></svg>念
+          </button>
           <div class="rad-line" id="radLine"></div>
         </div>
       </div>
@@ -671,27 +737,40 @@ footer a { color: inherit; }
         <button type="button" data-mode="write" aria-pressed="false">自己寫<span>過招</span></button>
       </div>
 
-      <div class="status" id="status" aria-live="polite">&nbsp;</div>
-
       <div class="actions" id="watchActions">
-        <button type="button" class="primary" id="playBtn">▶ 播放筆順</button>
-        <button type="button" id="stepBtn">下一筆</button>
+        <button type="button" class="icon-btn primary" id="playBtn" aria-label="播放筆順" title="播放筆順">
+          <svg aria-hidden="true"><use href="#i-play"></use></svg>
+        </button>
+        <button type="button" class="icon-btn" id="stepBtn" aria-label="一筆一筆看" title="一筆一筆看">
+          <svg aria-hidden="true"><use href="#i-step"></use></svg><span class="badge" id="stepCount"></span>
+        </button>
       </div>
       <div class="actions" id="quizActions" hidden>
-        <button type="button" id="restartBtn">↺ 重寫</button>
-        <button type="button" id="demoBtn">看示範</button>
-        <button type="button" class="toggle" id="keepBtn" aria-pressed="false">保留我的筆跡</button>
+        <button type="button" class="icon-btn" id="restartBtn" aria-label="重寫" title="重寫">
+          <svg aria-hidden="true"><use href="#i-replay"></use></svg>
+        </button>
+        <button type="button" class="icon-btn" id="demoBtn" aria-label="看示範" title="看示範">
+          <svg aria-hidden="true"><use href="#i-eye"></use></svg>
+        </button>
+        <button type="button" class="icon-btn toggle" id="keepBtn" aria-pressed="false" aria-label="保留我的筆跡" title="保留我的筆跡">
+          <svg aria-hidden="true"><use href="#i-brush"></use></svg>
+        </button>
       </div>
 
       <div class="result card" id="result" hidden>
         <div class="big" id="resultTitle">過關！</div>
         <div class="marks" id="resultMarks"></div>
-        <div id="resultMsg"></div>
         <div class="reward" id="resultReward"></div>
         <div class="actions">
-          <button type="button" class="toggle" id="compareBtn" aria-pressed="false" hidden>對照標準字</button>
-          <button type="button" id="againBtn">再寫一次</button>
-          <button type="button" class="primary" id="nextBtn">下一個字 →</button>
+          <button type="button" class="icon-btn toggle" id="compareBtn" aria-pressed="false" aria-label="對照標準字" title="對照標準字" hidden>
+            <svg aria-hidden="true"><use href="#i-compare"></use></svg>
+          </button>
+          <button type="button" class="icon-btn" id="againBtn" aria-label="再寫一次" title="再寫一次">
+            <svg aria-hidden="true"><use href="#i-replay"></use></svg>
+          </button>
+          <button type="button" class="icon-btn primary" id="nextBtn" aria-label="下一個字" title="下一個字">
+            <svg aria-hidden="true"><use href="#i-next"></use></svg>
+          </button>
         </div>
       </div>
 
@@ -732,7 +811,7 @@ footer a { color: inherit; }
   </main>
 
   <footer>
-    用手指或觸控筆在格子裡照順序寫。寫錯筆畫會提示，錯兩次以上會亮出該寫的那一筆；整個名字寫完會放煙火。
+    用手指或觸控筆在格子裡照順序寫。寫錯筆畫格子會晃一下，錯兩次以上會亮出該寫的那一筆；整個名字寫完會放煙火。
     筆順資料來自 <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener">Make Me a Hanzi</a>（Arphic Public License），以
     <a href="https://hanziwriter.org" target="_blank" rel="noopener">Hanzi Writer</a> 呈現；少數字的筆順可能和台灣教育部標準不同，注音由拼音轉換，破音字以第一個讀音為主。
   </footer>
@@ -745,7 +824,6 @@ footer a { color: inherit; }
       <button type="button" id="armoryClose">關閉</button>
     </div>
     <section>
-      <h3>江湖名號</h3>
       <div class="rank-row">
         <span class="rank-tag" id="armoryRank"></span>
         <span class="quiet" id="armoryNext"></span>
@@ -758,19 +836,13 @@ footer a { color: inherit; }
       <div class="weapons" id="weapons"></div>
     </section>
     <section>
-      <h3>武功字訣</h3>
+      <h3>字訣</h3>
       <div class="scrolls" id="scrolls"></div>
     </section>
-    <section>
-      <h3>怎麼得到銀兩</h3>
-      <ul class="rules">
-        <li>描字寫完一個字：三個圈 10 兩、兩個圈 6 兩、一個圈 3 兩</li>
-        <li>自己寫：銀兩加倍；一筆都沒寫錯再得 1 個元寶</li>
-        <li>自己寫拿到三個圈：習得這個字的「字訣」</li>
-        <li>整個名字都自己寫完：再得 1 個元寶</li>
-        <li>每天第一次練功另外加碼，連續天數越多加越多</li>
-        <li>修為（累積賺到的銀兩）越高，江湖名號越高；買兵器不會減修為</li>
-      </ul>
+    <section class="how">
+      <span><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg>寫完一個字</span>
+      <span><svg class="sycee gold" aria-hidden="true"><use href="#sycee"></use></svg>自己寫全對</span>
+      <span><span class="scroll-item">訣</span>自己寫三個圈</span>
     </section>
   </div>
 </div>
@@ -790,6 +862,7 @@ const STORE_KEY = 'bishun-trace.v1';
 const PURSE_KEY = 'bishun-trace.purse.v1';
 const TRANSPARENT = 'rgba(0,0,0,0)';
 const COMPARE_RED = 'rgba(178,58,46,0.38)';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const box = document.getElementById('box');
 const arena = document.getElementById('arena');
@@ -797,7 +870,6 @@ const stage = document.getElementById('stage');
 const writerEl = document.getElementById('writer');
 const mineEl = document.getElementById('mine');
 const chipsEl = document.getElementById('chips');
-const statusEl = document.getElementById('status');
 const watchActions = document.getElementById('watchActions');
 const quizActions = document.getElementById('quizActions');
 const resultEl = document.getElementById('result');
@@ -810,6 +882,7 @@ const toastEl = document.getElementById('toast');
 const armoryEl = document.getElementById('armory');
 const keepBtn = document.getElementById('keepBtn');
 const compareBtn = document.getElementById('compareBtn');
+const stepCountEl = document.getElementById('stepCount');
 
 const ARENA_PAD = 12;
 const NUMERALS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
@@ -845,27 +918,27 @@ const RADICAL_NAMES = {
 const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
 const TAELS_FOR_GRADE = { 3: 10, 2: 6, 1: 3 };
 
-// 江湖名號 by 修為 (all taels ever earned)
+// 江湖名號 by 修為 (all taels ever earned); each rank changes the pixel 俠客's outfit
 const RANKS = [
-  { at: 0, name: '初入江湖' },
-  { at: 30, name: '武館學徒' },
-  { at: 100, name: '少俠' },
-  { at: 250, name: '俠客' },
-  { at: 500, name: '大俠' },
-  { at: 900, name: '一代宗師' },
-  { at: 1500, name: '武林盟主' },
+  { at: 0, name: '初入江湖', robe: '#9A948A', belt: '#5A4632', gear: 'none' },
+  { at: 30, name: '武館學徒', robe: '#3F6FB0', belt: '#2A3F66', gear: 'band' },
+  { at: 100, name: '少俠', robe: '#2E8B7A', belt: '#1D5A4F', gear: 'bandTails' },
+  { at: 250, name: '俠客', robe: '#3A3A44', belt: '#B23A2E', gear: 'hat' },
+  { at: 500, name: '大俠', robe: '#E9E4D8', belt: '#2F5D7C', gear: 'hat', cape: '#A8322A' },
+  { at: 900, name: '一代宗師', robe: '#6B4C9A', belt: '#D9B25A', gear: 'goldBand', cape: '#2F2A44' },
+  { at: 1500, name: '武林盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
 ];
 
-// 兵器譜: price in taels or ingots; the equipped weapon tints the 劍氣
+// 兵器譜: price in taels or ingots; the equipped weapon is held by the 俠客 and tints the 劍氣
 const WEAPONS = [
-  { id: 'wood', name: '木劍', glyph: '劍', taels: 20, qi: '#A9834F', desc: '練武的第一把劍，木頭做的，不會傷人。' },
-  { id: 'staff', name: '竹棍', glyph: '棍', taels: 35, qi: '#7E9A4E', desc: '竹子做的長棍，又輕又韌。' },
-  { id: 'fan', name: '鐵扇', glyph: '扇', taels: 60, qi: '#7F8C99', desc: '扇骨是鐵打的，打開能擋暗器。' },
-  { id: 'spear', name: '紅纓槍', glyph: '槍', taels: 100, qi: '#C2453C', desc: '槍頭綁紅穗，人稱「百兵之王」。' },
-  { id: 'ring', name: '九環刀', glyph: '刀', taels: 160, qi: '#C9A03A', desc: '刀背掛著九個鐵環，揮起來叮噹響。' },
-  { id: 'guandao', name: '青龍偃月刀', glyph: '刀', taels: 260, qi: '#3E8E7E', desc: '《三國演義》裡關羽的大刀，重八十二斤。' },
-  { id: 'zhanlu', name: '湛盧劍', glyph: '湛', ingots: 3, qi: '#5B7FB5', desc: '春秋鑄劍大師歐冶子所鑄，傳說是仁者之劍。' },
-  { id: 'ganjiang', name: '干將莫邪', glyph: '干', ingots: 5, qi: '#8E6FB8', desc: '鑄劍師夫妻干將、莫邪，鑄成一雌一雄兩把名劍。' },
+  { id: 'wood', name: '木劍', taels: 20, qi: '#A9834F' },
+  { id: 'staff', name: '竹棍', taels: 35, qi: '#7E9A4E' },
+  { id: 'fan', name: '鐵扇', taels: 60, qi: '#7F8C99' },
+  { id: 'spear', name: '紅纓槍', taels: 100, qi: '#C2453C' },
+  { id: 'ring', name: '九環刀', taels: 160, qi: '#C9A03A' },
+  { id: 'guandao', name: '青龍偃月刀', taels: 260, qi: '#3E8E7E' },
+  { id: 'zhanlu', name: '湛盧劍', ingots: 3, qi: '#5B7FB5' },
+  { id: 'ganjiang', name: '干將莫邪', ingots: 5, qi: '#8E6FB8' },
 ];
 
 const state = {
@@ -891,6 +964,8 @@ const purse = {
   lastDay: '',
   streak: 0,
 };
+// counters on screen lag behind the purse while coins are flying
+const shown = { taels: 0, ingots: 0 };
 const strokeCount = {};
 const sessionDone = new Set();
 
@@ -916,6 +991,8 @@ function loadSaved() {
     const rawPurse = localStorage.getItem(PURSE_KEY);
     if (rawPurse) Object.assign(purse, JSON.parse(rawPurse));
   } catch (e) {}
+  shown.taels = purse.taels;
+  shown.ingots = purse.ingots;
 }
 function save() {
   try {
@@ -1011,9 +1088,6 @@ function marksHtml(n) {
 }
 function syceeHtml(kind) {
   return '<svg class="sycee ' + kind + '" aria-hidden="true"><use href="#sycee"></use></svg>';
-}
-function setStatus(html) {
-  statusEl.innerHTML = html;
 }
 function currentChar() {
   return state.chars[state.idx];
@@ -1256,22 +1330,18 @@ function sfxCrackle() {
   }
 }
 
-// 叮: coins dropping into the purse
-function sfxCoins() {
+// 叮: one coin landing in the purse
+function sfxTick(pitch) {
   const ac = getAudio();
   if (!ac) return;
   const t = ac.currentTime;
-  const notes = [1568, 2093, 2637];
-  for (let i = 0; i < notes.length; i++) {
-    const at = t + i * 0.07;
-    const o = ac.createOscillator();
-    o.type = 'sine';
-    o.frequency.value = notes[i];
-    const g = envelope(ac, at, 0.08, 0.004, 0.25);
-    o.connect(g).connect(ac.destination);
-    o.start(at);
-    o.stop(at + 0.3);
-  }
+  const o = ac.createOscillator();
+  o.type = 'sine';
+  o.frequency.value = pitch || 2093;
+  const g = envelope(ac, t, 0.07, 0.003, 0.18);
+  o.connect(g).connect(ac.destination);
+  o.start(t);
+  o.stop(t + 0.22);
 }
 
 // ---------- speech ----------
@@ -1320,6 +1390,269 @@ function nextToast() {
   }, 2400);
 }
 
+// ---------- pixel 俠客 (drawn on a 48x36 canvas, shown at 3x) ----------
+const AV_W = 48;
+const AV_H = 36;
+const AV_CX = 17;
+const AV_GY = 32;
+const PX = {
+  skin: '#F2C49B',
+  hair: '#2B2522',
+  pants: '#4A4038',
+  blush: '#E8968A',
+  collar: '#F6F1E6',
+  sweat: '#5FA8E0',
+  straw: '#C9A35A',
+  strawDark: '#8C6B32',
+  band: '#C8463F',
+  gold: '#E0B957',
+};
+
+// hand / backHand are offsets from (center, ground); ang is the weapon direction in degrees (0 = right, -90 = up)
+const POSES = {
+  stand: { b: 0, j: 0, s: 0, hand: [5, -13], back: [-6, -12], ang: -55, backAng: -125 },
+  bob: { b: 1, j: 0, s: 0, hand: [5, -12], back: [-6, -11], ang: -50, backAng: -120 },
+  raise: { b: 0, j: 0, s: 1, hand: [4, -21], back: [-7, -14], ang: -110, backAng: -70 },
+  thrust: { b: 0, j: 0, s: 1, hand: [9, -16], back: [-8, -16], ang: -5, backAng: 185, fx: 'slash' },
+  sweep: { b: 1, j: 0, s: 1, hand: [7, -10], back: [-7, -15], ang: 35, backAng: 145, fx: 'slash' },
+  jump: { b: 0, j: 4, s: 0, hand: [5, -24], back: [-7, -24], ang: -80, backAng: -100, fx: 'spark', smile: true },
+  hurt: { b: 1, j: 0, s: 0, hand: [4, -11], back: [-5, -11], ang: 25, backAng: -150, fx: 'sweat' },
+};
+const IDLE_SEQ = ['stand', 'stand', 'bob', 'bob', 'stand', 'stand', 'bob', 'bob', 'raise', 'thrust', 'thrust', 'sweep', 'sweep', 'stand', 'bob', 'bob'];
+const ACTIONS = {
+  attack: ['raise', 'thrust', 'sweep', 'stand'],
+  cheer: ['jump', 'jump', 'stand', 'jump', 'jump', 'stand'],
+  hurt: ['hurt', 'hurt', 'hurt', 'hurt', 'stand'],
+};
+
+function pxRect(ctx, x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x, y, w, h);
+}
+// 2-px-wide Bresenham line, for sleeves
+function pxThickLine(ctx, x0, y0, x1, y1, c) {
+  ctx.fillStyle = c;
+  const dx = Math.abs(x1 - x0);
+  const dy = -Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1;
+  const sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy;
+  let x = x0;
+  let y = y0;
+  while (true) {
+    ctx.fillRect(x, y, 2, 2);
+    if (x === x1 && y === y1) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x += sx; }
+    if (e2 <= dx) { err += dx; y += sy; }
+  }
+}
+
+function drawWeapon(ctx, id, hx, hy, angDeg) {
+  if (!id) return;
+  const a = angDeg * Math.PI / 180;
+  const dx = Math.cos(a);
+  const dy = Math.sin(a);
+  const ox = hx + 1;
+  const oy = hy + 1;
+  function dot(k, off, c) {
+    ctx.fillStyle = c;
+    ctx.fillRect(Math.round(ox + dx * k - dy * off), Math.round(oy + dy * k + dx * off), 1, 1);
+  }
+  function span(k0, k1, off, c) {
+    for (let k = k0; k <= k1; k += 0.7) dot(k, off, c);
+  }
+
+  if (id === 'wood') {
+    span(-1, 0, 0, '#6B4A2A');
+    for (const o of [-1, 0, 1]) dot(1, o, '#6B4A2A');
+    span(2, 10, 0, '#B07A45');
+    dot(11, 0, '#D7A56E');
+  } else if (id === 'staff') {
+    span(-7, 10, 0, '#8DA35A');
+    for (const k of [-4, 1, 6]) dot(k, 0, '#5E7A36');
+  } else if (id === 'fan') {
+    for (let k = 1; k <= 6; k++) {
+      const w = Math.floor(k * 0.7);
+      for (let o = -w; o <= w; o++) {
+        const edge = o === -w || o === w;
+        dot(k, o, edge ? '#5F6B76' : '#AEB8C2');
+      }
+    }
+  } else if (id === 'spear') {
+    span(-4, 12, 0, '#7A5230');
+    span(13, 15, 0, '#E3E8EE');
+    dot(13, -1, '#E3E8EE');
+    dot(13, 1, '#E3E8EE');
+    dot(12, -1, '#C8463F');
+    dot(12, 1, '#C8463F');
+    dot(11, 1, '#C8463F');
+    dot(11, 2, '#C8463F');
+  } else if (id === 'ring') {
+    span(-1, 1, 0, '#6B4A2A');
+    for (const o of [-1, 0, 1, 2]) dot(2, o, '#C9A03A');
+    span(3, 10, 0, '#DDE3EA');
+    span(3, 9, 1, '#B9C2CC');
+    for (const k of [4, 6, 8]) dot(k, -1, '#C9A03A');
+  } else if (id === 'guandao') {
+    span(-7, 10, 0, '#3E6B4E');
+    dot(10, -1, '#C8463F');
+    span(11, 15, 0, '#DDE3EA');
+    span(11, 14, 1, '#DDE3EA');
+    span(12, 14, 2, '#B9C2CC');
+  } else if (id === 'zhanlu') {
+    span(-1, 0, 0, '#3B2A20');
+    for (const o of [-1, 0, 1]) dot(1, o, '#C9A03A');
+    span(2, 11, 0, '#A9C8F5');
+    dot(12, 0, '#FFFFFF');
+  } else if (id === 'gan') {
+    span(-1, 0, 0, '#3B2A20');
+    for (const o of [-1, 0, 1]) dot(1, o, '#3B2A20');
+    span(2, 10, 0, '#7E8A99');
+    dot(11, 0, '#AEB8C2');
+  } else if (id === 'mo') {
+    span(-1, 0, 0, '#3B2A20');
+    for (const o of [-1, 0, 1]) dot(1, o, '#C9A03A');
+    span(2, 10, 0, '#E5E9EE');
+    dot(11, 0, '#FFFFFF');
+  }
+}
+
+function drawGear(ctx, gear, cx, ht, f) {
+  if (gear === 'band' || gear === 'bandTails') {
+    pxRect(ctx, cx - 4, ht + 2, 8, 1, PX.band);
+  }
+  if (gear === 'bandTails') {
+    pxRect(ctx, cx - 5, ht + 2, 1, 1, PX.band);
+    pxRect(ctx, cx - 6, ht + 2 + f, 1, 1, PX.band);
+    pxRect(ctx, cx - 7, ht + 3 + f, 1, 1, PX.band);
+  }
+  if (gear === 'goldBand') {
+    pxRect(ctx, cx - 4, ht + 2, 8, 1, PX.gold);
+    pxRect(ctx, cx - 5, ht + 3, 1, 3, PX.hair);
+  }
+  if (gear === 'hat') {
+    pxRect(ctx, cx - 2, ht - 2, 4, 1, PX.straw);
+    pxRect(ctx, cx - 4, ht - 1, 8, 1, PX.straw);
+    pxRect(ctx, cx - 6, ht, 12, 1, PX.straw);
+    pxRect(ctx, cx - 7, ht + 1, 14, 1, PX.strawDark);
+  }
+  if (gear === 'crown') {
+    pxRect(ctx, cx - 2, ht - 3, 4, 3, PX.gold);
+    pxRect(ctx, cx - 1, ht - 2, 2, 1, PX.band);
+    pxRect(ctx, cx - 4, ht + 2, 8, 1, PX.gold);
+  }
+}
+
+function drawFloor(ctx) {
+  pxRect(ctx, 0, AV_GY, AV_W, 1, '#A8322A');
+  pxRect(ctx, 0, AV_GY + 1, AV_W, AV_H - AV_GY - 1, '#6E4A2E');
+  for (let x = 3; x < AV_W; x += 8) pxRect(ctx, x, AV_GY + 1, 1, AV_H - AV_GY - 1, '#55381F');
+}
+
+function drawAvatar(ctx, rankIdx, weaponId, poseName, frame, qi) {
+  const look = RANKS[rankIdx];
+  const p = POSES[poseName];
+  const cx = AV_CX;
+  const gy = AV_GY - p.j;
+  const b = p.b;
+  const f = frame % 2;
+  const ht = gy - 27 + b;
+
+  // cape behind the body
+  if (look.cape) {
+    pxRect(ctx, cx - 6, gy - 18 + b, 2, 11 + f, look.cape);
+    pxRect(ctx, cx - 7, gy - 11 + b + f, 1, 4, look.cape);
+  }
+
+  // back arm (and the second sword of 干將莫邪)
+  const back = [cx + p.back[0], gy + p.back[1] + b];
+  pxThickLine(ctx, cx - 4, gy - 17 + b, back[0], back[1], look.robe);
+  if (weaponId === 'ganjiang') drawWeapon(ctx, 'mo', back[0], back[1], p.backAng);
+  pxRect(ctx, back[0], back[1], 2, 2, PX.skin);
+
+  // legs and shoes
+  const s = p.s;
+  pxRect(ctx, cx - 3 - s, gy - 6, 2, 5, PX.pants);
+  pxRect(ctx, cx + 1 + s, gy - 6, 2, 5, PX.pants);
+  pxRect(ctx, cx - 4 - s, gy - 1, 3, 1, PX.hair);
+  pxRect(ctx, cx + 1 + s, gy - 1, 3, 1, PX.hair);
+
+  // robe, flared hem, belt, collar
+  pxRect(ctx, cx - 4, gy - 18 + b, 8, 12 - b, look.robe);
+  pxRect(ctx, cx - 5, gy - 8, 10, 2, look.robe);
+  pxRect(ctx, cx - 4, gy - 12 + b, 8, 1, look.belt);
+  pxRect(ctx, cx - 1, gy - 18 + b, 1, 2, PX.collar);
+  pxRect(ctx, cx, gy - 17 + b, 1, 1, PX.collar);
+
+  // head: face, hair, bun
+  pxRect(ctx, cx - 4, ht + 1, 8, 8, PX.skin);
+  pxRect(ctx, cx - 4, ht, 8, 3, PX.hair);
+  pxRect(ctx, cx - 4, ht + 3, 2, 3, PX.hair);
+  pxRect(ctx, cx - 3, ht - 2, 2, 2, PX.hair);
+  pxRect(ctx, cx, ht + 4, 1, 1, PX.hair);
+  pxRect(ctx, cx + 2, ht + 4, 1, 1, PX.hair);
+  pxRect(ctx, cx + 3, ht + 6, 1, 1, PX.blush);
+  pxRect(ctx, cx - 1, ht + 6, 1, 1, PX.blush);
+  if (p.smile) pxRect(ctx, cx + 1, ht + 7, 1, 1, '#A8322A');
+  drawGear(ctx, look.gear, cx, ht, f);
+
+  // front arm with the weapon, hand drawn over the hilt
+  const hand = [cx + p.hand[0], gy + p.hand[1] + b];
+  pxThickLine(ctx, cx + 3, gy - 17 + b, hand[0], hand[1], look.robe);
+  drawWeapon(ctx, weaponId === 'ganjiang' ? 'gan' : weaponId, hand[0], hand[1], p.ang);
+  pxRect(ctx, hand[0], hand[1], 2, 2, PX.skin);
+
+  if (p.fx === 'slash' && qi) {
+    for (let deg = -70; deg <= 50; deg += 9) {
+      const r = deg * Math.PI / 180;
+      pxRect(ctx, Math.round(cx + 3 + Math.cos(r) * 13), Math.round(gy - 17 + b + Math.sin(r) * 13), 1, 1, qi);
+    }
+  }
+  if (p.fx === 'spark') {
+    for (let i = 0; i < 5; i++) pxRect(ctx, cx - 9 + Math.floor(Math.random() * 20), ht - 4 + Math.floor(Math.random() * 10), 1, 1, '#F2C84B');
+  }
+  if (p.fx === 'sweat') {
+    pxRect(ctx, cx + 5, ht + 1, 1, 2, PX.sweat);
+  }
+}
+
+const avatar = { ctx: null, queue: [], idle: 0, frame: 0, last: 0 };
+function avatarPlay(name) {
+  avatar.queue = ACTIONS[name].slice();
+  if (reducedMotion()) avatarDraw(avatar.queue[0]);
+}
+function avatarDraw(poseName) {
+  const ctx = avatar.ctx;
+  ctx.clearRect(0, 0, AV_W, AV_H);
+  drawFloor(ctx);
+  drawAvatar(ctx, rankIndex(purse.earned), purse.equipped, poseName, avatar.frame, qiColor());
+}
+function avatarTick(now) {
+  const wait = avatar.queue.length ? 95 : 170;
+  if (now - avatar.last >= wait) {
+    avatar.last = now;
+    let pose;
+    if (avatar.queue.length) {
+      pose = avatar.queue.shift();
+    } else {
+      pose = IDLE_SEQ[avatar.idle % IDLE_SEQ.length];
+      avatar.idle += 1;
+    }
+    avatar.frame += 1;
+    avatarDraw(pose);
+  }
+  requestAnimationFrame(avatarTick);
+}
+function startAvatar() {
+  avatar.ctx = document.getElementById('avatar').getContext('2d');
+  if (reducedMotion()) {
+    avatarDraw('stand');
+    return;
+  }
+  requestAnimationFrame(avatarTick);
+}
+
 // ---------- box effects: 劍氣 along each correct stroke ----------
 const fx = { ctx: null, size: 0, slashes: [], sparks: [], rings: [], running: false, last: 0 };
 
@@ -1332,9 +1665,8 @@ function setupFx(size) {
 }
 
 function qiColor() {
-  for (const w of WEAPONS) {
-    if (w.id === purse.equipped) return w.qi;
-  }
+  const w = weaponById(purse.equipped);
+  if (w) return w.qi;
   return token('--qi');
 }
 
@@ -1484,10 +1816,65 @@ function addMine(points) {
     const s = toScreen(p.x, p.y, size);
     attr += s.x.toFixed(1) + ',' + s.y.toFixed(1) + ' ';
   }
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  const line = document.createElementNS(SVG_NS, 'polyline');
   line.setAttribute('points', attr.trim());
   line.setAttribute('stroke-width', String(Math.round(drawingWidth(size) * 1.25)));
   mineEl.append(line);
+}
+
+// ---------- coins flying from the seal up to the purse ----------
+function renderCounters() {
+  document.getElementById('taels').textContent = shown.taels;
+  document.getElementById('ingots').textContent = shown.ingots;
+}
+function flyCoins(kind, amount) {
+  const key = kind === 'gold' ? 'ingots' : 'taels';
+  if (amount <= 0) return;
+  if (reducedMotion()) {
+    shown[key] = purse[key];
+    renderCounters();
+    return;
+  }
+
+  const targetBox = document.getElementById(key + 'Box');
+  const target = document.getElementById(key).getBoundingClientRect();
+  const from = sealEl.hidden ? box.getBoundingClientRect() : sealEl.getBoundingClientRect();
+  const sx = from.left + from.width / 2;
+  const sy = from.top + from.height / 2;
+  const tx = target.left + target.width / 2;
+  const ty = target.top + target.height / 2;
+
+  let n = Math.min(8, Math.max(3, Math.ceil(amount / 3)));
+  if (kind === 'gold') n = Math.min(amount, 5);
+  const share = Math.ceil(amount / n);
+  let landed = 0;
+
+  for (let i = 0; i < n; i++) {
+    const coin = document.createElementNS(SVG_NS, 'svg');
+    coin.setAttribute('class', 'sycee flying ' + kind);
+    coin.setAttribute('viewBox', '0 0 24 16');
+    coin.innerHTML = '<use href="#sycee"></use>';
+    coin.style.left = (sx - 14) + 'px';
+    coin.style.top = (sy - 10) + 'px';
+    document.body.append(coin);
+
+    const ox = rand(-50, 50);
+    const oy = rand(-70, -25);
+    const anim = coin.animate([
+      { transform: 'translate(0px, 0px) scale(0.5)', opacity: 0 },
+      { transform: 'translate(' + ox + 'px, ' + oy + 'px) scale(1.3)', opacity: 1, offset: 0.3 },
+      { transform: 'translate(' + (tx - sx) + 'px, ' + (ty - sy) + 'px) scale(0.75)', opacity: 1 },
+    ], { duration: 950, delay: i * 90, easing: 'cubic-bezier(0.5, 0, 0.75, 0.45)', fill: 'both' });
+    anim.onfinish = function () {
+      coin.remove();
+      landed += 1;
+      if (landed === n) shown[key] = purse[key];
+      else shown[key] = Math.min(purse[key], shown[key] + share);
+      renderCounters();
+      restartAnimation(targetBox, 'pulse');
+      sfxTick(kind === 'gold' ? 2637 : 2093);
+    };
+  }
 }
 
 // ---------- whole-name celebration: night sky, gold fireworks, red lanterns, firecracker paper ----------
@@ -1505,6 +1892,7 @@ function celebrate(name) {
   clearTimeout(bannerTimer);
   bannerTimer = setTimeout(function () { bannerEl.hidden = true; }, reducedMotion() ? 3500 : 4800);
   sfxGong();
+  avatarPlay('cheer');
   if (reducedMotion()) return;
 
   sky.w = window.innerWidth;
@@ -1740,13 +2128,9 @@ function weaponById(id) {
   return null;
 }
 function renderPurse() {
-  const rank = RANKS[rankIndex(purse.earned)];
-  document.getElementById('rankTag').textContent = rank.name;
-  document.getElementById('taels').textContent = purse.taels;
-  document.getElementById('ingots').textContent = purse.ingots;
+  document.getElementById('rankTag').textContent = RANKS[rankIndex(purse.earned)].name;
   document.getElementById('streak').textContent = purse.streak > 1 ? '連續練功 ' + purse.streak + ' 天' : '';
-  const w = weaponById(purse.equipped);
-  document.getElementById('equipName').textContent = w ? '佩帶：' + w.name : '';
+  renderCounters();
 }
 
 function award(ch, grade, mistakes) {
@@ -1776,7 +2160,7 @@ function award(ch, grade, mistakes) {
   purse.ingots += ingots;
   const rankAfter = rankIndex(purse.earned);
   if (rankAfter > rankBefore) {
-    toast('晉升江湖名號：「' + RANKS[rankAfter].name + '」');
+    toast('晉升「' + RANKS[rankAfter].name + '」');
     setTimeout(function () { sfxGong(0.5); }, 600);
   }
 
@@ -1790,6 +2174,19 @@ function award(ch, grade, mistakes) {
   return { taels: taels, ingots: ingots };
 }
 
+function drawWeaponCard(canvas, w) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (w.id === 'ganjiang') {
+    drawWeapon(ctx, 'gan', 6, 15, -40);
+    drawWeapon(ctx, 'mo', 24, 15, -140);
+  } else if (w.id === 'staff' || w.id === 'spear' || w.id === 'guandao') {
+    drawWeapon(ctx, w.id, 10, 13, -28);
+  } else {
+    drawWeapon(ctx, w.id, 8, 14, -35);
+  }
+}
+
 function renderArmory() {
   const idx = rankIndex(purse.earned);
   document.getElementById('armoryRank').textContent = RANKS[idx].name;
@@ -1797,21 +2194,37 @@ function renderArmory() {
   const nextEl = document.getElementById('armoryNext');
   const bar = document.getElementById('rankBar');
   if (next) {
-    nextEl.textContent = '修為 ' + purse.earned + ' / ' + next.at + '　下一階：' + next.name;
+    nextEl.textContent = '再 ' + (next.at - purse.earned) + ' 兩 →「' + next.name + '」';
     const span = next.at - RANKS[idx].at;
     bar.style.width = Math.round(100 * (purse.earned - RANKS[idx].at) / span) + '%';
   } else {
-    nextEl.textContent = '修為 ' + purse.earned + '　已是最高名號';
+    nextEl.textContent = '最高名號';
     bar.style.width = '100%';
   }
 
+  // every rank as a little 俠客; ranks not reached yet are shown as a shadow
   const ladder = document.getElementById('ladder');
   ladder.innerHTML = '';
   RANKS.forEach(function (r, i) {
-    const span = document.createElement('span');
-    span.textContent = r.name + ' ' + r.at;
-    if (i <= idx) span.className = 'reached';
-    ladder.append(span);
+    const item = document.createElement('div');
+    item.className = 'ladder-item';
+    if (i === idx) item.classList.add('now');
+    if (i > idx) item.classList.add('locked');
+    const c = document.createElement('canvas');
+    c.width = AV_W;
+    c.height = AV_H;
+    const ctx = c.getContext('2d');
+    drawAvatar(ctx, i, '', 'stand', 0, null);
+    if (i > idx) {
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.fillStyle = 'rgba(110, 100, 90, 0.9)';
+      ctx.fillRect(0, 0, AV_W, AV_H);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    const label = document.createElement('span');
+    label.textContent = r.name;
+    item.append(c, label);
+    ladder.append(item);
   });
 
   const grid = document.getElementById('weapons');
@@ -1823,37 +2236,34 @@ function renderArmory() {
     if (!owned) card.classList.add('locked');
     if (purse.equipped === w.id) card.classList.add('equipped');
 
-    const glyph = document.createElement('div');
-    glyph.className = 'w-glyph';
-    glyph.style.color = w.qi;
-    glyph.textContent = w.glyph;
+    const c = document.createElement('canvas');
+    c.width = 32;
+    c.height = 20;
+    drawWeaponCard(c, w);
 
     const name = document.createElement('div');
     name.className = 'w-name';
     name.textContent = w.name;
 
-    const desc = document.createElement('div');
-    desc.className = 'w-desc';
-    desc.textContent = w.desc;
-
     const btn = document.createElement('button');
     btn.type = 'button';
     if (owned) {
       if (purse.equipped === w.id) {
-        btn.textContent = '佩帶中';
-        btn.disabled = true;
+        btn.textContent = '✓ 拿著';
+        btn.addEventListener('click', function () { equip(''); });
       } else {
-        btn.textContent = '佩帶';
-        btn.addEventListener('click', function () { equip(w); });
+        btn.textContent = '拿起來';
+        btn.addEventListener('click', function () { equip(w.id); });
       }
     } else {
       const canBuy = w.ingots ? purse.ingots >= w.ingots : purse.taels >= w.taels;
-      btn.innerHTML = w.ingots ? syceeHtml('gold') + ' ' + w.ingots + ' 元寶' : syceeHtml('silver') + ' ' + w.taels + ' 兩';
+      btn.innerHTML = w.ingots ? syceeHtml('gold') + w.ingots : syceeHtml('silver') + w.taels;
+      btn.setAttribute('aria-label', '買' + w.name);
       btn.disabled = !canBuy;
       btn.addEventListener('click', function () { buy(w); });
     }
 
-    card.append(glyph, name, desc, btn);
+    card.append(c, name, btn);
     grid.append(card);
   }
 
@@ -1862,7 +2272,7 @@ function renderArmory() {
   if (purse.scrolls.length === 0) {
     const p = document.createElement('span');
     p.className = 'quiet';
-    p.textContent = '還沒有字訣。在「自己寫」拿到三個圈，就能習得那個字的字訣。';
+    p.textContent = '還沒有';
     scrolls.append(p);
   }
   for (const ch of purse.scrolls) {
@@ -1883,17 +2293,21 @@ function buy(w) {
   }
   purse.owned.push(w.id);
   purse.equipped = w.id;
+  shown.taels = purse.taels;
+  shown.ingots = purse.ingots;
   savePurse();
   renderPurse();
   renderArmory();
-  sfxCoins();
-  toast('得到兵器「' + w.name + '」');
+  sfxTick(1568);
+  avatarPlay('attack');
+  toast('得到「' + w.name + '」');
 }
-function equip(w) {
-  purse.equipped = w.id;
+function equip(id) {
+  purse.equipped = id;
   savePurse();
   renderPurse();
   renderArmory();
+  avatarPlay('attack');
 }
 function openArmory() {
   renderArmory();
@@ -1913,19 +2327,53 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape' && !armoryEl.hidden) closeArmory();
 });
 
-// ---------- info: zhuyin, radical ----------
+// ---------- info: vertical 注音, radical ----------
+function renderZhuyin(el, zy) {
+  el.innerHTML = '';
+  if (!zy) return;
+  let body = zy;
+  let tone = '';
+  let neutral = false;
+  if (body[0] === '˙') {
+    neutral = true;
+    body = body.slice(1);
+  }
+  const last = body[body.length - 1];
+  if ('ˊˇˋ'.indexOf(last) >= 0) {
+    tone = last;
+    body = body.slice(0, -1);
+  }
+  if (neutral) {
+    const d = document.createElement('span');
+    d.className = 'dot';
+    d.textContent = '˙';
+    el.append(d);
+  }
+  for (const sym of Array.from(body)) {
+    const s = document.createElement('span');
+    s.textContent = sym;
+    el.append(s);
+  }
+  if (tone) {
+    const t = document.createElement('span');
+    t.className = 'tone';
+    t.textContent = tone;
+    el.append(t);
+  }
+}
+
 function renderInfo(ch, data) {
   const zyEl = document.getElementById('zy');
   const radLine = document.getElementById('radLine');
   const mini = document.getElementById('mini');
   if (!data) {
-    zyEl.textContent = ch || '';
+    zyEl.innerHTML = '';
     radLine.textContent = '';
     mini.innerHTML = '';
     return;
   }
 
-  zyEl.textContent = data.zy && data.zy.length ? data.zy.join('　') : ch;
+  renderZhuyin(zyEl, data.zy && data.zy.length ? data.zy[0] : '');
 
   const rad = data.rad || '';
   if (rad) {
@@ -1936,11 +2384,11 @@ function renderInfo(ch, data) {
     radLine.textContent = '';
   }
 
-  // the whole character in grey with the radical strokes colored
+  // the model character, with the radical strokes colored
   const radSet = new Set(data.radStrokes || []);
   let paths = '<g transform="scale(1,-1) translate(0,-900)">';
   for (let i = 0; i < data.strokes.length; i++) {
-    const cls = radSet.has(i) ? 'r' : 'o';
+    const cls = radSet.has(i) && state.radical ? 'r' : 'o';
     paths += '<path class="' + cls + '" d="' + data.strokes[i] + '"></path>';
   }
   mini.innerHTML = paths + '</g>';
@@ -2052,7 +2500,6 @@ async function build() {
 function showMissing(msg) {
   watchActions.hidden = true;
   quizActions.hidden = true;
-  setStatus('&nbsp;');
   const div = document.createElement('div');
   div.className = 'missing-msg';
   div.textContent = msg;
@@ -2060,28 +2507,21 @@ function showMissing(msg) {
 }
 
 function startMode() {
-  const ch = currentChar();
-  const total = strokeCount[ch];
   stepNum = 0;
+  stepCountEl.textContent = '';
   resultEl.hidden = true;
   watchActions.hidden = state.mode !== 'watch';
   quizActions.hidden = state.mode === 'watch';
   keepBtn.setAttribute('aria-pressed', state.keep ? 'true' : 'false');
 
   if (state.mode === 'watch') {
-    setStatus('「' + ch + '」共 <span class="count">' + total + '</span> 筆');
-    writer.animateCharacter({
-      onComplete: function () {
-        setStatus('看完了！換「描字」試試看');
-      },
-    });
+    writer.animateCharacter();
     return;
   }
 
   const hintAfter = state.mode === 'trace' ? 2 : 3;
   if (state.mode === 'write') writer.hideOutline();
   else writer.showOutline();
-  setStatus('從第 <span class="count">1</span> 筆開始寫（共 ' + total + ' 筆）');
 
   writer.quiz({
     leniency: state.lenient ? 1.5 : 1.0,
@@ -2097,15 +2537,12 @@ function startMode() {
         swordQi(median);
       }
       sfxSwish();
-      if (d.strokesRemaining > 0) {
-        setStatus('第 <span class="count">' + (d.strokeNum + 1) + '</span> 筆 ✓　還有 ' + d.strokesRemaining + ' 筆');
-      }
+      avatarPlay('attack');
     },
-    onMistake: function (d) {
+    onMistake: function () {
       sfxWood();
       restartAnimation(arena, 'shake');
-      if (d.mistakesOnStroke >= hintAfter) setStatus('照著發亮的那一筆寫');
-      else setStatus('不是這一筆喔，再試一次');
+      avatarPlay('hurt');
     },
     onComplete: function (d) {
       finish(d.totalMistakes);
@@ -2124,12 +2561,16 @@ function finish(mistakes) {
   renderChips();
 
   const reward = award(ch, grade, mistakes);
-  setTimeout(sfxCoins, 900);
+  avatarPlay('cheer');
 
   inkBleed();
   setTimeout(function () {
     if (myToken === buildToken) stampSeal(grade);
   }, 450);
+  setTimeout(function () {
+    flyCoins('silver', reward.taels);
+    if (reward.ingots) setTimeout(function () { flyCoins('gold', reward.ingots); }, 500);
+  }, 800);
   setTimeout(function () {
     if (myToken === buildToken && state.sound) say(ch);
   }, 1300);
@@ -2146,35 +2587,35 @@ function finish(mistakes) {
       purse.ingots += 1;
       reward.ingots += 1;
       savePurse();
-      renderPurse();
       toast('整個名字都自己寫完　+1 元寶');
+      setTimeout(function () { flyCoins('gold', 1); }, 2000);
     }
-    setTimeout(function () { celebrate(state.chars.join('')); }, 1500);
+    setTimeout(function () { celebrate(state.chars.join('')); }, 2400);
   }
 
-  setStatus('&nbsp;');
   quizActions.hidden = true;
   document.getElementById('resultTitle').textContent = mistakes === 0 ? '一字不差！' : '過關！';
   document.getElementById('resultMarks').innerHTML = marksHtml(grade);
-  document.getElementById('resultMsg').textContent = mistakes === 0 ? '一筆都沒寫錯' : '這次錯了 ' + mistakes + ' 筆';
-  let rewardHtml = syceeHtml('silver') + '<b>+' + reward.taels + '</b> 兩';
-  if (reward.ingots) rewardHtml += '　' + syceeHtml('gold') + '<b>+' + reward.ingots + '</b> 元寶';
+  let rewardHtml = syceeHtml('silver') + '<b>+' + reward.taels + '</b>';
+  if (reward.ingots) rewardHtml += '　' + syceeHtml('gold') + '<b>+' + reward.ingots + '</b>';
   document.getElementById('resultReward').innerHTML = rewardHtml;
 
   compareBtn.hidden = !keepMode();
   compareBtn.setAttribute('aria-pressed', 'false');
 
   const nextBtn = document.getElementById('nextBtn');
+  let action = 'restart';
+  let label = '從頭再來';
   if (state.idx < state.chars.length - 1) {
-    nextBtn.textContent = '下一個字 →';
-    nextBtn.dataset.action = 'next';
+    action = 'next';
+    label = '下一個字';
   } else if (state.mode === 'trace') {
-    nextBtn.textContent = '換自己寫 →';
-    nextBtn.dataset.action = 'to-write';
-  } else {
-    nextBtn.textContent = '從頭再來';
-    nextBtn.dataset.action = 'restart';
+    action = 'to-write';
+    label = '換自己寫';
   }
+  nextBtn.dataset.action = action;
+  nextBtn.setAttribute('aria-label', label);
+  nextBtn.title = label;
   resultEl.hidden = false;
 }
 
@@ -2194,7 +2635,6 @@ document.querySelectorAll('#modes button').forEach(function (b) {
 
 document.getElementById('playBtn').addEventListener('click', function () {
   if (!writer) return;
-  stepNum = 0;
   startMode();
 });
 document.getElementById('stepBtn').addEventListener('click', function () {
@@ -2206,7 +2646,7 @@ document.getElementById('stepBtn').addEventListener('click', function () {
   }
   writer.animateStroke(stepNum);
   stepNum += 1;
-  setStatus('第 <span class="count">' + stepNum + ' / ' + total + '</span> 筆');
+  stepCountEl.textContent = stepNum + '/' + total;
 });
 document.getElementById('restartBtn').addEventListener('click', function () { build(); });
 document.getElementById('demoBtn').addEventListener('click', function () { setMode('watch'); });
@@ -2253,7 +2693,7 @@ document.getElementById('nameForm').addEventListener('submit', function (e) {
 function setName(text) {
   const chars = parseName(text);
   if (chars.length === 0) {
-    setStatus('請輸入中文字');
+    toast('請輸入中文字');
     return;
   }
   state.name = chars.join('');
@@ -2328,5 +2768,6 @@ new MutationObserver(recolor).observe(document.documentElement, { attributes: tr
 loadSaved();
 renderOptions();
 renderPurse();
+startAvatar();
 setName(state.name);
 </script>
