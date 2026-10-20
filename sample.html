@@ -81,7 +81,9 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
 }
 .row { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
 
-/* scene cards */
+/* character cards and in-game tiles */
+.char { width: 300px; height: 300px; max-width: 100%; display: block; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 rgba(29, 21, 23, 0.35); }
+.tile { width: 144px; height: 108px; display: block; border: 2.5px solid var(--ink); border-radius: 10px; box-shadow: 0 3px 0 rgba(29, 21, 23, 0.35); }
 .scene { width: 360px; max-width: 100%; aspect-ratio: 4 / 3; display: block; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 4px 0 rgba(29, 21, 23, 0.35); background: #7c9b4a; }
 .caption { margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
 
@@ -213,13 +215,18 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
 </style>
 
 <div class="wrap">
-  <h1>俠客畫風樣本<small>2000 年代 Flash 線上遊戲的 2D 卡通風：粗黑描邊、平塗色塊加一層陰影與高光、Q 版 1.6 頭身，武俠題材</small></h1>
+  <h1>俠客畫風樣本<small>人物參考《萌三國》：約 2 頭身、3/4 側臉、動漫大眼、尖束髮絲與光澤、層次服裝與金邊；物品與背包沿用已確認的風格</small></h1>
 
   <section class="frame">
     <h2>角色</h2>
     <div class="row">
-      <div><canvas class="scene" id="sceneBoy"></canvas><div class="caption">少俠（男）：紅頭巾、髮髻、紅纓槍</div></div>
-      <div><canvas class="scene" id="sceneGirl"></canvas><div class="caption">女俠：雙丫髻、緞帶、鐵扇</div></div>
+      <div><canvas class="char" id="charBoy"></canvas><div class="caption">少俠：高馬尾、銀髮冠、白頭巾、青色武袍配護肩，手持青鋼劍</div></div>
+      <div><canvas class="char" id="charGirl"></canvas><div class="caption">女俠：雙丫髻配金飾與小紅花、珠串緞帶、紅色交領長裙，手持摺扇</div></div>
+    </div>
+    <h2 style="margin-top:16px">縮小到遊戲裡的大小</h2>
+    <div class="row">
+      <canvas class="tile" id="tileBoy"></canvas>
+      <canvas class="tile" id="tileGirl"></canvas>
     </div>
   </section>
 
@@ -257,10 +264,10 @@ h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; let
   <section class="frame">
     <h2>共用規則</h2>
     <ul class="rules">
-      <li>外輪廓 3.2 粗黑線，內部細節 1.4 細線；每種材質只用「底色＋一層陰影＋白色高光」。</li>
-      <li>人物 1.6 頭身：大圓頭、臉在頭的前下方、表情集中在眉毛和眼睛，鼻子省略、嘴巴一筆。</li>
-      <li>兵器斜放、頭部誇張放大，小尺寸也看得清楚；物品格是深色漸層方格加浮雕。</li>
-      <li>場景是斜俯視草地，甕、草堆、石燈籠、紅楓當擺設；人物比背景亮，靠描邊和陰影分開。</li>
+      <li>人物：約 2 頭身、3/4 側臉，細一點的深色外框（2.4），每種顏色只有「底色＋一層陰影＋白色高光」。</li>
+      <li>臉：動漫大眼（粗上眼線、彩色虹膜漸層、兩個亮點），眉眼帶表情；鼻子一小筆、嘴巴一條線；男生臉頰三道紅線。</li>
+      <li>頭髮：一撮一撮尖尖的髮束，頭頂一道光澤；男生高馬尾配髮冠、頭巾，女生雙丫髻配金飾、緞帶與珠串。</li>
+      <li>服裝：交領層次、金邊、護肩、護腕、腰帶扣或蝴蝶結；物品與背包沿用已確認的粗黑描邊風格。</li>
     </ul>
   </section>
 </div>
@@ -389,162 +396,6 @@ function drawIcon(canvas, id, burst) {
   ctx.restore();
 }
 
-// ---------- the hero, 1.6 heads tall, in a 120 x 120 frame ----------
-function drawKid(ctx, o) {
-  const t = o.t;
-  const girl = o.gender === 'girl';
-  const bob = Math.sin(t / 380) * 1.4;
-  const blink = (t % 3400) < 140;
-  const flutter = Math.sin(t / 200) * 3;
-  const robe = girl ? '#e8737a' : '#3f6fb0';
-  const robeShade = girl ? '#c85660' : '#2e5590';
-  const skin = '#ffdcbc';
-  const hair = '#2a2633';
-  const by = bob;
-
-  // shadow
-  ctx.fillStyle = 'rgba(29,21,23,0.28)';
-  ctx.beginPath(); ctx.ellipse(60, 113, 24, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-
-  // weapon held behind the body (spear or fan), tilted up-right
-  ctx.save();
-  if (girl) {
-    ctx.translate(82, 88 + by); ctx.rotate(-0.95 + Math.sin(t / 500) * 0.06); ctx.scale(0.42, 0.42); drawFan(ctx);
-  } else {
-    ctx.translate(70, 104 + by); ctx.rotate(-1.15 + Math.sin(t / 600) * 0.04); ctx.scale(0.86, 0.86); drawSpear(ctx);
-  }
-  ctx.restore();
-
-  // legs and boots
-  ctx.beginPath(); ctx.roundRect(47, 97 + by * 0.3, 11, 11, 3); fs(ctx, '#2d2a3a');
-  ctx.beginPath(); ctx.roundRect(62, 97 + by * 0.3, 11, 11, 3); fs(ctx, '#2d2a3a');
-  oval(ctx, 51, 109, 8, 4.6, 0, '#1f1a22');
-  oval(ctx, 69, 109, 8, 4.6, 0, '#1f1a22');
-  highlight(ctx, function () { ctx.ellipse(49, 107.5, 3.5, 1.4, 0, Math.PI, Math.PI * 1.9); }, 1.4, 0.5);
-  highlight(ctx, function () { ctx.ellipse(67, 107.5, 3.5, 1.4, 0, Math.PI, Math.PI * 1.9); }, 1.4, 0.5);
-
-  // robe: base, one shade on the far side, crossed white collar, sash
-  const hem = girl ? 25 : 21;
-  ctx.beginPath();
-  ctx.moveTo(45, 78 + by); ctx.lineTo(75, 78 + by);
-  ctx.quadraticCurveTo(60 + hem, 92 + by, 60 + hem, 101 + by);
-  ctx.quadraticCurveTo(60, 105 + by, 60 - hem, 101 + by);
-  ctx.quadraticCurveTo(60 - hem, 92 + by, 45, 78 + by);
-  ctx.closePath();
-  fs(ctx, robe);
-  ctx.save(); ctx.clip();
-  ctx.fillStyle = robeShade; ctx.fillRect(67, 70 + by, 30, 40);
-  ctx.restore();
-  ctx.beginPath();
-  ctx.moveTo(45, 78 + by); ctx.lineTo(75, 78 + by);
-  ctx.quadraticCurveTo(60 + hem, 92 + by, 60 + hem, 101 + by);
-  ctx.quadraticCurveTo(60, 105 + by, 60 - hem, 101 + by);
-  ctx.quadraticCurveTo(60 - hem, 92 + by, 45, 78 + by);
-  fs(ctx, null, OUT);
-  ctx.beginPath(); ctx.moveTo(52, 78 + by); ctx.lineTo(61, 90 + by); ctx.lineTo(69, 78 + by); ctx.closePath(); fs(ctx, '#fbf6ee', IN);
-  ctx.beginPath(); ctx.moveTo(57, 78 + by); ctx.lineTo(63, 86 + by); ctx.strokeStyle = INK; ctx.lineWidth = IN; ctx.stroke();
-  ctx.beginPath(); ctx.roundRect(41, 90 + by, 38, 6, 2); fs(ctx, girl ? '#f2c14b' : '#d0473f', 2.4);
-  oval(ctx, 66, 93 + by, 3.4, 3, 0, girl ? '#f2c14b' : '#d0473f', 1.8);
-
-  // hands (mitts), the right one on the weapon
-  circle(ctx, 39, 90 + by, 5.6, skin, 2.6);
-  circle(ctx, girl ? 82 : 80, 87 + by, 5.6, skin, 2.6);
-
-  // back hair for the girl, buns
-  if (girl) {
-    for (const s of [-1, 1]) {
-      circle(ctx, 60 + s * 27, 22 + by, 11, hair);
-      highlight(ctx, function () { ctx.arc(60 + s * 27 - 2, 20 + by, 6, Math.PI * 1.1, Math.PI * 1.6); }, 2, 0.45);
-      // ribbon loops
-      oval(ctx, 60 + s * 35, 30 + by, 6, 3.6, s * 0.7 + flutter * 0.03, '#ef6b73', 2);
-      ctx.beginPath(); ctx.moveTo(60 + s * 34, 32 + by); ctx.quadraticCurveTo(60 + s * 40, 42 + by, 60 + s * 37 + flutter * 0.4, 50 + by);
-      ctx.strokeStyle = INK; ctx.lineWidth = 5.6; ctx.stroke(); ctx.strokeStyle = '#ef6b73'; ctx.lineWidth = 3; ctx.stroke();
-    }
-  } else {
-    circle(ctx, 48, 15 + by, 10.5, hair);
-    highlight(ctx, function () { ctx.arc(46, 13 + by, 5.5, Math.PI * 1.1, Math.PI * 1.6); }, 2, 0.45);
-    ctx.beginPath(); ctx.roundRect(42, 22 + by, 14, 5, 2); fs(ctx, '#d0473f', 2);
-  }
-
-  // head: a big round hair cap with the face set low and forward
-  circle(ctx, 60, 49 + by, 34, hair);
-  oval(ctx, 63, 59 + by, 24, 20, -0.05, skin, 1.6);
-  // fringe over the forehead
-  ctx.beginPath();
-  if (girl) {
-    ctx.moveTo(37, 60 + by);
-    ctx.quadraticCurveTo(40, 40 + by, 50, 50 + by);
-    ctx.quadraticCurveTo(56, 40 + by, 63, 50 + by);
-    ctx.quadraticCurveTo(70, 40 + by, 77, 50 + by);
-    ctx.quadraticCurveTo(86, 42 + by, 88, 60 + by);
-  } else {
-    ctx.moveTo(37, 60 + by);
-    ctx.lineTo(42, 42 + by); ctx.lineTo(50, 51 + by); ctx.lineTo(55, 39 + by); ctx.lineTo(63, 51 + by);
-    ctx.lineTo(70, 39 + by); ctx.lineTo(76, 50 + by); ctx.lineTo(86, 43 + by); ctx.lineTo(88, 60 + by);
-  }
-  ctx.lineTo(92, 40 + by);
-  ctx.quadraticCurveTo(60, 8 + by, 30, 40 + by);
-  ctx.closePath();
-  fs(ctx, hair, IN);
-  if (girl) {
-    oval(ctx, 39, 68 + by, 4.6, 11, 0.2, hair, 1.8);
-    oval(ctx, 88, 66 + by, 4.2, 10, -0.2, hair, 1.8);
-  }
-  // headband with flying tails (boy)
-  if (!girl) {
-    for (const off of [0, 6]) {
-      ctx.beginPath(); ctx.moveTo(30, 46 + by); ctx.quadraticCurveTo(16, 40 + off + flutter, 4, 48 + off - flutter);
-      ctx.strokeStyle = INK; ctx.lineWidth = 8.4; ctx.stroke(); ctx.strokeStyle = '#d0473f'; ctx.lineWidth = 5; ctx.stroke();
-    }
-    ctx.beginPath(); ctx.moveTo(28, 46 + by); ctx.quadraticCurveTo(60, 30 + by, 93, 41 + by);
-    ctx.strokeStyle = INK; ctx.lineWidth = 10; ctx.stroke(); ctx.strokeStyle = '#d0473f'; ctx.lineWidth = 6.4; ctx.stroke();
-    highlight(ctx, function () { ctx.moveTo(40, 40 + by); ctx.quadraticCurveTo(60, 32.5 + by, 78, 36 + by); }, 1.6, 0.6);
-  }
-  // the outer outline again, so every shape sits inside one clean silhouette
-  circle(ctx, 60, 49 + by, 34, null, OUT);
-  highlight(ctx, function () { ctx.arc(60, 49 + by, 29, Math.PI * 1.12, Math.PI * 1.42); }, 3.2, 0.5);
-
-  // face: eyebrows and eyes carry the expression
-  const ey = 62 + by;
-  if (blink) {
-    for (const x of [55, 73]) { ctx.beginPath(); ctx.arc(x, ey - 1, 5, Math.PI * 0.15, Math.PI * 0.85); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.stroke(); }
-  } else {
-    for (const x of [55, 73]) {
-      oval(ctx, x, ey, 5.8, 7.2, 0, '#ffffff', 1.8);
-      oval(ctx, x + 1.8, ey + 0.8, 3.6, 5, 0, INK, 0);
-      circle(ctx, x + 0.6, ey - 1.6, 1.5, '#ffffff', 0);
-    }
-    if (girl) {
-      for (const s of [-1, 1]) {
-        const x = s < 0 ? 49.5 : 78.5;
-        ctx.beginPath(); ctx.moveTo(x, ey - 4); ctx.lineTo(x + s * 3, ey - 6.5); ctx.strokeStyle = INK; ctx.lineWidth = 1.8; ctx.stroke();
-      }
-    }
-  }
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = girl ? 2.2 : 3.6;
-  ctx.beginPath();
-  if (girl) {
-    ctx.moveTo(49, 51 + by); ctx.quadraticCurveTo(54, 49 + by, 59, 51.5 + by);
-    ctx.moveTo(69, 51.5 + by); ctx.quadraticCurveTo(74, 49 + by, 79, 51 + by);
-  } else {
-    ctx.moveTo(48, 50 + by); ctx.lineTo(60, 54.5 + by);
-    ctx.moveTo(68, 54.5 + by); ctx.lineTo(80, 50 + by);
-  }
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(239,107,115,0.45)';
-  ctx.beginPath(); ctx.ellipse(48, 70 + by, 4, 2.4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(80, 69 + by, 4, 2.4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath();
-  if (girl) {
-    ctx.moveTo(61, 72 + by); ctx.quadraticCurveTo(65, 77 + by, 69, 72 + by); ctx.closePath();
-    fs(ctx, '#c0392b', 1.6);
-  } else {
-    ctx.moveTo(61, 73 + by); ctx.quadraticCurveTo(66, 75 + by, 71, 71.5 + by);
-    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke();
-  }
-}
-
 // ---------- scene: oblique grass ground, maple border, jars, hay, stone lantern ----------
 function drawJar(ctx, x, y, s) {
   oval(ctx, x, y + 14 * s, 14 * s, 4 * s, 0, 'rgba(29,21,23,0.25)', 0);
@@ -584,23 +435,478 @@ function drawGrassTuft(ctx, x, y) {
   ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 2, y - 7); ctx.lineTo(x, y - 1); ctx.lineTo(x + 2, y - 8); ctx.lineTo(x + 4, y);
   ctx.strokeStyle = '#4d6b2c'; ctx.lineWidth = 1.6; ctx.stroke();
 }
-function drawScene(canvas, gender, t) {
+// ---------- 武俠 heroes in the 萌三國 manner: ~2 heads tall, 3/4 view facing left, anime eyes,
+// pointed hair locks with a glossy band, layered costume with gold trim; cel shading = base + one shade + highlight.
+// Both live in a 240 x 240 frame, feet near y 230.
+const LINE = '#2a1d1d';
+const LW = 2.4;
+const FINE = 1.2;
+
+function edge(ctx, lw) {
+  ctx.lineWidth = lw || LW;
+  ctx.strokeStyle = LINE;
+  ctx.stroke();
+}
+// fill a path, lay its shade inside it (clipped), then outline it
+function cel(ctx, path, base, shade) {
+  ctx.beginPath();
+  path();
+  ctx.fillStyle = base;
+  ctx.fill();
+  if (shade) {
+    ctx.save();
+    ctx.clip();
+    ctx.beginPath();
+    shade();
+    ctx.fillStyle = 'rgba(40, 20, 30, 0.22)';
+    ctx.fill();
+    ctx.restore();
+    ctx.beginPath();
+    path();
+  }
+  edge(ctx);
+}
+function band(ctx, path, width, color) {
+  ctx.beginPath();
+  path();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = width + 2 * LW;
+  ctx.stroke();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+}
+function shine(ctx, path, width, alpha) {
+  ctx.save();
+  ctx.beginPath();
+  path();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255, 255, 255, ' + alpha + ')';
+  ctx.lineWidth = width;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// anime eye: white, colored iris with a gradient, pupil, two catch-lights, a heavy upper lid
+function animeEye(ctx, cx, cy, w, h, iris, girl, closed, far) {
+  if (closed) {
+    ctx.beginPath();
+    ctx.moveTo(cx - w, cy);
+    ctx.quadraticCurveTo(cx, cy + h * 0.45, cx + w, cy - h * 0.1);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = LINE;
+    ctx.stroke();
+    return;
+  }
+  const lidY = cy - h * 0.55;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx - w, cy - h * 0.15);
+  ctx.quadraticCurveTo(cx - w * 0.2, lidY - h * 0.45, cx + w, lidY + h * 0.05);
+  ctx.quadraticCurveTo(cx + w * 0.9, cy + h * 0.75, cx, cy + h * 0.8);
+  ctx.quadraticCurveTo(cx - w * 0.8, cy + h * 0.6, cx - w, cy - h * 0.15);
+  ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.clip();
+  const g = ctx.createLinearGradient(0, cy - h * 0.8, 0, cy + h * 0.8);
+  g.addColorStop(0, iris[0]);
+  g.addColorStop(1, iris[1]);
+  ctx.beginPath();
+  ctx.ellipse(cx + (far ? -1 : 1), cy + h * 0.12, w * 0.58, h * 0.78, 0, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + (far ? -1 : 1), cy + h * 0.2, w * 0.28, h * 0.42, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a1014';
+  ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx - w * 0.2, cy - h * 0.18, w * 0.24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx + w * 0.22, cy + h * 0.42, w * 0.11, 0, Math.PI * 2);
+  ctx.fill();
+  // heavy upper lid, flicked at the outer corner
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 1.05, cy - h * 0.1);
+  ctx.quadraticCurveTo(cx - w * 0.2, lidY - h * 0.5, cx + w * 1.05, lidY + h * 0.05);
+  if (girl) ctx.lineTo(cx + w * 1.35, lidY - h * 0.2);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = girl ? 3.6 : 3.4;
+  ctx.strokeStyle = LINE;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.5, cy + h * 0.78);
+  ctx.lineTo(cx + w * 0.45, cy + h * 0.74);
+  ctx.lineWidth = FINE;
+  ctx.stroke();
+}
+
+function drawWuxiaBoy(ctx, t) {
+  const breathe = Math.sin(t / 650) * 1.2;
+  const sway = Math.sin(t / 700) * 4;
+  const blink = (t % 3700) < 130;
+  const y = breathe;
+  const C = {
+    skin: '#ffe2cc', hair: '#252737', robe: '#3c8f9c', robe2: '#56a9b4', inner: '#f6f4ee',
+    gold: '#e8b648', silver: '#d9dfe6', leather: '#4a3a35', pants: '#eef0f3', boots: '#2e3446',
+  };
+
+  ctx.fillStyle = 'rgba(40, 30, 30, 0.22)';
+  ctx.beginPath(); ctx.ellipse(124, 231, 48, 8, 0, 0, Math.PI * 2); ctx.fill();
+
+  // high ponytail sweeping back, behind everything
+  cel(ctx, function () {
+    ctx.moveTo(140, 44 + y);
+    ctx.bezierCurveTo(166, 6 + y, 218, 20 + y, 212, 70 + y);
+    ctx.bezierCurveTo(209, 102 + y, 224, 130, 204 + sway, 176);
+    ctx.bezierCurveTo(200, 150, 188, 122 + y, 192, 96 + y);
+    ctx.bezierCurveTo(194, 74 + y, 178, 60 + y, 158, 64 + y);
+    ctx.closePath();
+  }, C.hair, function () { ctx.rect(150, 60 + y, 50, 140); });
+  shine(ctx, function () { ctx.moveTo(176, 22 + y); ctx.bezierCurveTo(200, 26 + y, 206, 50 + y, 204, 74 + y); }, 3, 0.35);
+  // headband tails flowing back
+  for (const k of [0, 1]) {
+    cel(ctx, function () {
+      ctx.moveTo(170, 70 + y + k * 6);
+      ctx.quadraticCurveTo(196, 74 + y + k * 8, 216 + k * 4, 104 + k * 10 + sway * 0.6);
+      ctx.lineTo(206 + k * 4, 110 + k * 10 + sway * 0.6);
+      ctx.quadraticCurveTo(190, 86 + y + k * 8, 166, 82 + y + k * 6);
+      ctx.closePath();
+    }, '#f4f4f0');
+  }
+
+  // back arm, hand resting at the hip
+  band(ctx, function () { ctx.moveTo(156, 150 + y); ctx.lineTo(168, 180 + y); }, 15, C.robe);
+  ctx.beginPath(); ctx.arc(166, 188 + y, 8.5, 0, Math.PI * 2); ctx.fillStyle = C.skin; ctx.fill(); edge(ctx);
+
+  // legs and boots with gold cuffs
+  cel(ctx, function () { ctx.roundRect(98, 194, 16, 26, 5); }, C.pants);
+  cel(ctx, function () { ctx.roundRect(130, 194, 16, 24, 5); }, C.pants, function () { ctx.rect(138, 190, 10, 30); });
+  for (const b of [[94, 116, 86], [126, 150, 124]]) {
+    cel(ctx, function () {
+      ctx.moveTo(b[0], 212);
+      ctx.lineTo(b[1], 212);
+      ctx.lineTo(b[1] + 1, 230);
+      ctx.quadraticCurveTo(b[2], 233, b[2] - 2, 226);
+      ctx.quadraticCurveTo(b[0] - 4, 220, b[0], 212);
+      ctx.closePath();
+    }, C.boots);
+    band(ctx, function () { ctx.moveTo(b[0] + 1, 214); ctx.lineTo(b[1] - 1, 214); }, 3, C.gold);
+  }
+
+  // robe skirt panels split at the front, white lining in the split
+  cel(ctx, function () { ctx.moveTo(118, 184 + y); ctx.lineTo(130, 184 + y); ctx.lineTo(132, 214); ctx.lineTo(116, 214); ctx.closePath(); }, C.inner);
+  cel(ctx, function () { ctx.moveTo(98, 184 + y); ctx.lineTo(122, 184 + y); ctx.lineTo(120, 220); ctx.lineTo(84, 216); ctx.closePath(); }, C.robe);
+  cel(ctx, function () { ctx.moveTo(126, 184 + y); ctx.lineTo(154, 184 + y); ctx.lineTo(164, 214); ctx.lineTo(128, 220); ctx.closePath(); }, C.robe, function () { ctx.rect(140, 180, 30, 50); });
+  band(ctx, function () { ctx.moveTo(86, 214); ctx.lineTo(119, 218); ctx.moveTo(129, 218); ctx.lineTo(162, 212); }, 2, C.gold);
+
+  // torso, crossed collar with gold trim
+  cel(ctx, function () {
+    ctx.moveTo(100, 140 + y); ctx.lineTo(156, 140 + y);
+    ctx.quadraticCurveTo(162, 164 + y, 158, 188 + y);
+    ctx.lineTo(96, 188 + y);
+    ctx.quadraticCurveTo(92, 164 + y, 100, 140 + y);
+    ctx.closePath();
+  }, C.robe, function () { ctx.rect(140, 136 + y, 30, 60); });
+  cel(ctx, function () { ctx.moveTo(114, 140 + y); ctx.lineTo(128, 166 + y); ctx.lineTo(142, 140 + y); ctx.closePath(); }, C.inner);
+  band(ctx, function () { ctx.moveTo(110, 140 + y); ctx.lineTo(132, 176 + y); }, 6, C.robe2);
+  band(ctx, function () { ctx.moveTo(146, 140 + y); ctx.lineTo(127, 168 + y); }, 6, C.robe2);
+  shine(ctx, function () { ctx.moveTo(111, 141 + y); ctx.lineTo(130, 172 + y); }, 1.4, 0.8);
+
+  // belt with a gold buckle and a jade pendant
+  cel(ctx, function () { ctx.roundRect(94, 178 + y, 66, 12, 3); }, C.leather);
+  cel(ctx, function () { ctx.roundRect(120, 175 + y, 17, 17, 4); }, C.gold);
+  ctx.beginPath(); ctx.roundRect(124, 179 + y, 9, 9, 2); edge(ctx, FINE);
+  band(ctx, function () { ctx.moveTo(104, 190 + y); ctx.lineTo(104, 202 + y); }, 1.6, '#d0473f');
+  ctx.beginPath(); ctx.arc(104, 206 + y, 4.5, 0, Math.PI * 2); ctx.fillStyle = '#6fbf8e'; ctx.fill(); edge(ctx, 1.8);
+
+  // shoulder guards
+  cel(ctx, function () { ctx.moveTo(154, 144 + y); ctx.quadraticCurveTo(166, 134 + y, 174, 148 + y); ctx.quadraticCurveTo(170, 160 + y, 158, 162 + y); ctx.closePath(); }, C.silver);
+  cel(ctx, function () {
+    ctx.moveTo(84, 148 + y);
+    ctx.quadraticCurveTo(96, 128 + y, 118, 138 + y);
+    ctx.quadraticCurveTo(120, 158 + y, 104, 168 + y);
+    ctx.quadraticCurveTo(86, 166 + y, 84, 148 + y);
+    ctx.closePath();
+  }, C.silver, function () { ctx.rect(84, 154 + y, 40, 20); });
+  ctx.beginPath(); ctx.moveTo(90, 150 + y); ctx.quadraticCurveTo(100, 142 + y, 114, 146 + y); edge(ctx, FINE);
+  ctx.beginPath(); ctx.arc(104, 141 + y, 3, 0, Math.PI * 2); ctx.fillStyle = C.gold; ctx.fill(); edge(ctx, 1.4);
+  shine(ctx, function () { ctx.moveTo(92, 141 + y); ctx.quadraticCurveTo(100, 134 + y, 110, 136 + y); }, 2, 0.8);
+
+  // sword raised beside the face, front arm with a leather bracer
+  ctx.save();
+  ctx.translate(66, 186 + y);
+  ctx.rotate(-1.92 + Math.sin(t / 900) * 0.03);
+  ctx.scale(1.02, 1.02);
+  drawJian(ctx);
+  ctx.restore();
+  band(ctx, function () { ctx.moveTo(98, 152 + y); ctx.lineTo(80, 174 + y); }, 16, C.robe);
+  band(ctx, function () { ctx.moveTo(81, 174 + y); ctx.lineTo(68, 184 + y); }, 13, C.leather);
+  band(ctx, function () { ctx.moveTo(84, 170 + y); ctx.lineTo(78, 177 + y); }, 3, C.gold);
+  ctx.beginPath(); ctx.arc(64, 186 + y, 9.5, 0, Math.PI * 2); ctx.fillStyle = C.skin; ctx.fill(); edge(ctx);
+  ctx.beginPath(); ctx.moveTo(58, 182 + y); ctx.lineTo(68, 182 + y); ctx.moveTo(57, 187 + y); ctx.lineTo(67, 188 + y); edge(ctx, FINE);
+
+  // neck and face, shaded under the jaw and below the fringe
+  cel(ctx, function () { ctx.rect(116, 122 + y, 22, 22); }, C.skin, function () { ctx.rect(116, 122 + y, 22, 12); });
+  cel(ctx, function () {
+    ctx.moveTo(78, 78 + y);
+    ctx.bezierCurveTo(72, 106 + y, 92, 132 + y, 118, 141 + y);
+    ctx.bezierCurveTo(142, 139 + y, 162, 122 + y, 168, 96 + y);
+    ctx.bezierCurveTo(170, 84 + y, 168, 76 + y, 166, 70 + y);
+    ctx.closePath();
+  }, C.skin, function () {
+    ctx.moveTo(150, 132 + y); ctx.quadraticCurveTo(166, 116 + y, 170, 90 + y); ctx.lineTo(180, 90 + y); ctx.lineTo(180, 140 + y); ctx.closePath();
+    ctx.rect(70, 76 + y, 110, 12);
+  });
+  cel(ctx, function () { ctx.ellipse(168, 102 + y, 7, 10, 0.1, 0, Math.PI * 2); }, C.skin);
+  ctx.beginPath(); ctx.arc(167, 102 + y, 4, Math.PI * 0.6, Math.PI * 1.5); edge(ctx, FINE);
+
+  // hair: a crown with pointed bangs and a long lock down the near cheek
+  cel(ctx, function () {
+    ctx.moveTo(66, 92 + y);
+    ctx.bezierCurveTo(58, 44 + y, 110, 8 + y, 152, 22 + y);
+    ctx.bezierCurveTo(180, 32 + y, 186, 62 + y, 176, 88 + y);
+    ctx.quadraticCurveTo(172, 100 + y, 166, 110 + y);
+    ctx.quadraticCurveTo(164, 92 + y, 158, 82 + y);
+    ctx.quadraticCurveTo(154, 90 + y, 146, 98 + y);
+    ctx.quadraticCurveTo(144, 86 + y, 134, 78 + y);
+    ctx.quadraticCurveTo(130, 92 + y, 120, 98 + y);
+    ctx.quadraticCurveTo(118, 84 + y, 108, 78 + y);
+    ctx.quadraticCurveTo(102, 90 + y, 92, 96 + y);
+    ctx.quadraticCurveTo(90, 86 + y, 84, 82 + y);
+    ctx.quadraticCurveTo(78, 106 + y, 72, 130 + y);
+    ctx.quadraticCurveTo(70, 110 + y, 66, 92 + y);
+    ctx.closePath();
+  }, C.hair, function () { ctx.rect(60, 60 + y, 130, 60); });
+  // glossy band across the crown
+  ctx.beginPath();
+  const gloss = [[80, 56], [92, 44], [100, 52], [112, 40], [122, 48], [134, 38], [146, 46], [150, 54], [136, 50], [126, 58], [114, 50], [104, 60], [94, 54], [84, 62]];
+  gloss.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1] + y); else ctx.moveTo(p[0], p[1] + y); });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(150, 165, 205, 0.45)';
+  ctx.fill();
+  // white headband over the forehead, silver hair crown and pin on top
+  band(ctx, function () { ctx.moveTo(68, 76 + y); ctx.quadraticCurveTo(120, 52 + y, 176, 70 + y); }, 9, '#f4f4f0');
+  ctx.beginPath(); ctx.moveTo(72, 80 + y); ctx.quadraticCurveTo(120, 58 + y, 172, 74 + y); ctx.strokeStyle = 'rgba(40, 20, 30, 0.2)'; ctx.lineWidth = 2; ctx.stroke();
+  band(ctx, function () { ctx.moveTo(98, 22 + y); ctx.lineTo(146, 12 + y); }, 3, C.gold);
+  cel(ctx, function () { ctx.moveTo(108, 26 + y); ctx.lineTo(112, 10 + y); ctx.lineTo(121, 0 + y); ctx.lineTo(130, 9 + y); ctx.lineTo(134, 24 + y); ctx.closePath(); }, C.silver, function () { ctx.rect(122, 0 + y, 14, 30); });
+  ctx.beginPath(); ctx.arc(121, 15 + y, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#6fbf8e'; ctx.fill(); edge(ctx, 1.4);
+
+  // eyes and brows carry a determined look; small nose and mouth; red cheek marks
+  animeEye(ctx, 102, 106 + y, 10.5, 12, ['#3a2418', '#a8683a'], false, blink, true);
+  animeEye(ctx, 141, 106 + y, 11.5, 12.5, ['#3a2418', '#a8683a'], false, blink, false);
+  band(ctx, function () { ctx.moveTo(88, 88 + y); ctx.quadraticCurveTo(100, 89 + y, 113, 95 + y); }, 3.4, LINE);
+  band(ctx, function () { ctx.moveTo(130, 95 + y); ctx.quadraticCurveTo(142, 88 + y, 157, 87 + y); }, 3.4, LINE);
+  ctx.beginPath(); ctx.moveTo(124, 117 + y); ctx.quadraticCurveTo(121, 121 + y, 123, 123 + y); edge(ctx, 1.6);
+  ctx.beginPath(); ctx.moveTo(114, 131 + y); ctx.quadraticCurveTo(120, 129 + y, 128, 131 + y); edge(ctx, 1.8);
+  ctx.strokeStyle = '#e0565c';
+  ctx.lineWidth = 2;
+  for (const c of [[92, 122], [150, 121]]) {
+    for (let k = 0; k < 3; k++) {
+      ctx.beginPath(); ctx.moveTo(c[0] + k * 5, c[1] + y + 3); ctx.lineTo(c[0] + k * 5 + 3, c[1] + y - 2); ctx.stroke();
+    }
+  }
+}
+
+function drawWuxiaGirl(ctx, t) {
+  const breathe = Math.sin(t / 650) * 1.2;
+  const sway = Math.sin(t / 700) * 4;
+  const blink = (t % 3900) < 130;
+  const y = breathe;
+  const C = {
+    skin: '#ffe4d2', hair: '#3a2630', robe: '#d9464f', robe2: '#f08a8f', inner: '#fff6ef', skirt: '#f6c1c9',
+    gold: '#e8b648', sash: '#f2c14b', shoe: '#b5343e',
+  };
+
+  ctx.fillStyle = 'rgba(40, 30, 30, 0.22)';
+  ctx.beginPath(); ctx.ellipse(122, 231, 50, 8, 0, 0, Math.PI * 2); ctx.fill();
+
+  // long hair behind the shoulders
+  cel(ctx, function () {
+    ctx.moveTo(74, 92 + y);
+    ctx.bezierCurveTo(60, 130 + y, 66, 168, 82 + sway * 0.4, 182);
+    ctx.lineTo(98, 160 + y);
+    ctx.lineTo(160, 160 + y);
+    ctx.lineTo(176 + sway * 0.4, 184);
+    ctx.bezierCurveTo(188, 160, 184, 124 + y, 172, 92 + y);
+    ctx.closePath();
+  }, C.hair, function () { ctx.rect(140, 90 + y, 60, 100); });
+
+  // ribbons with pearls hanging from the buns
+  for (const r of [[70, 44, -1], [174, 40, 1]]) {
+    band(ctx, function () { ctx.moveTo(r[0], r[1] + y); ctx.quadraticCurveTo(r[0] + r[2] * 10, r[1] + 26 + y, r[0] + r[2] * 6 + sway * 0.5, r[1] + 52 + y); }, 3.4, '#ef6b73');
+    for (const k of [0, 1]) {
+      ctx.beginPath(); ctx.arc(r[0] + r[2] * 6 + sway * 0.5, r[1] + 58 + k * 8 + y, 3.2, 0, Math.PI * 2); ctx.fillStyle = '#fff6ef'; ctx.fill(); edge(ctx, 1.4);
+    }
+  }
+
+  // small shoes under a long two-layer skirt
+  for (const s of [[96, 120], [128, 152]]) {
+    cel(ctx, function () { ctx.moveTo(s[0], 222); ctx.lineTo(s[1], 222); ctx.quadraticCurveTo(s[1], 232, s[0] + 4, 231); ctx.quadraticCurveTo(s[0] - 6, 230, s[0], 222); ctx.closePath(); }, C.shoe);
+  }
+  cel(ctx, function () {
+    ctx.moveTo(98, 182 + y); ctx.lineTo(150, 182 + y);
+    ctx.quadraticCurveTo(170, 204, 172, 224);
+    ctx.quadraticCurveTo(124, 230, 78, 224);
+    ctx.quadraticCurveTo(80, 204, 98, 182 + y);
+    ctx.closePath();
+  }, C.skirt, function () { ctx.rect(140, 180, 40, 50); });
+  cel(ctx, function () {
+    ctx.moveTo(100, 182 + y); ctx.lineTo(148, 182 + y);
+    ctx.quadraticCurveTo(162, 198, 160, 214);
+    ctx.quadraticCurveTo(124, 220, 88, 214);
+    ctx.quadraticCurveTo(88, 198, 100, 182 + y);
+    ctx.closePath();
+  }, C.robe, function () { ctx.rect(136, 180, 30, 40); });
+  band(ctx, function () { ctx.moveTo(90, 213); ctx.quadraticCurveTo(124, 219, 158, 213); }, 2, C.gold);
+
+  // back sleeve, wide and hanging
+  cel(ctx, function () { ctx.moveTo(150, 146 + y); ctx.quadraticCurveTo(176, 160 + y, 176, 192 + y); ctx.quadraticCurveTo(162, 198 + y, 152, 186 + y); ctx.closePath(); }, C.robe, function () { ctx.rect(160, 140, 30, 60); });
+
+  // bodice with layered crossed collar
+  cel(ctx, function () {
+    ctx.moveTo(102, 140 + y); ctx.lineTo(152, 140 + y);
+    ctx.quadraticCurveTo(158, 162 + y, 152, 184 + y);
+    ctx.lineTo(100, 184 + y);
+    ctx.quadraticCurveTo(94, 162 + y, 102, 140 + y);
+    ctx.closePath();
+  }, C.robe, function () { ctx.rect(138, 136 + y, 30, 60); });
+  cel(ctx, function () { ctx.moveTo(114, 140 + y); ctx.lineTo(127, 164 + y); ctx.lineTo(140, 140 + y); ctx.closePath(); }, C.inner);
+  band(ctx, function () { ctx.moveTo(110, 140 + y); ctx.lineTo(130, 172 + y); }, 5, C.robe2);
+  band(ctx, function () { ctx.moveTo(144, 140 + y); ctx.lineTo(126, 166 + y); }, 5, C.robe2);
+  band(ctx, function () { ctx.moveTo(107, 141 + y); ctx.lineTo(128, 175 + y); }, 1.4, C.gold);
+
+  // sash with a bow and two tails
+  cel(ctx, function () { ctx.roundRect(98, 176 + y, 56, 11, 4); }, C.sash);
+  cel(ctx, function () { ctx.moveTo(126, 181 + y); ctx.quadraticCurveTo(112, 168 + y, 108, 182 + y); ctx.quadraticCurveTo(112, 194 + y, 126, 181 + y); ctx.closePath(); }, C.sash);
+  cel(ctx, function () { ctx.moveTo(126, 181 + y); ctx.quadraticCurveTo(140, 168 + y, 144, 182 + y); ctx.quadraticCurveTo(140, 194 + y, 126, 181 + y); ctx.closePath(); }, C.sash);
+  band(ctx, function () { ctx.moveTo(122, 186 + y); ctx.quadraticCurveTo(118, 200 + y, 120 + sway * 0.3, 212 + y); }, 4, C.sash);
+  band(ctx, function () { ctx.moveTo(130, 186 + y); ctx.quadraticCurveTo(134, 200 + y, 134 + sway * 0.3, 210 + y); }, 4, C.sash);
+  ctx.beginPath(); ctx.arc(126, 181 + y, 4, 0, Math.PI * 2); ctx.fillStyle = '#ef6b73'; ctx.fill(); edge(ctx, 1.6);
+
+  // the fan, open in front, then the front sleeve and hand holding it
+  ctx.save();
+  ctx.translate(74, 176 + y);
+  ctx.rotate(-2.35 + Math.sin(t / 800) * 0.05);
+  ctx.scale(0.58, 0.58);
+  drawFan(ctx);
+  ctx.restore();
+  cel(ctx, function () {
+    ctx.moveTo(104, 146 + y);
+    ctx.quadraticCurveTo(84, 154 + y, 74, 180 + y);
+    ctx.quadraticCurveTo(84, 196 + y, 100, 188 + y);
+    ctx.quadraticCurveTo(100, 170 + y, 112, 160 + y);
+    ctx.closePath();
+  }, C.robe, function () { ctx.rect(70, 182 + y, 40, 20); });
+  band(ctx, function () { ctx.moveTo(76, 184 + y); ctx.quadraticCurveTo(86, 194 + y, 100, 189 + y); }, 1.6, C.gold);
+  ctx.beginPath(); ctx.arc(78, 172 + y, 8, 0, Math.PI * 2); ctx.fillStyle = C.skin; ctx.fill(); edge(ctx);
+
+  // neck and face
+  cel(ctx, function () { ctx.rect(116, 122 + y, 20, 22); }, C.skin, function () { ctx.rect(116, 122 + y, 20, 12); });
+  cel(ctx, function () {
+    ctx.moveTo(78, 80 + y);
+    ctx.bezierCurveTo(72, 108 + y, 94, 134 + y, 118, 140 + y);
+    ctx.bezierCurveTo(140, 138 + y, 162, 122 + y, 168, 96 + y);
+    ctx.bezierCurveTo(170, 84 + y, 168, 76 + y, 166, 70 + y);
+    ctx.closePath();
+  }, C.skin, function () {
+    ctx.moveTo(150, 132 + y); ctx.quadraticCurveTo(166, 116 + y, 170, 90 + y); ctx.lineTo(180, 90 + y); ctx.lineTo(180, 140 + y); ctx.closePath();
+    ctx.rect(70, 78 + y, 110, 10);
+  });
+
+  // 雙丫髻 with gold crescents, a flower on the far bun
+  for (const b of [[82, 32], [160, 28]]) {
+    cel(ctx, function () { ctx.arc(b[0], b[1] + y, 19, 0, Math.PI * 2); }, C.hair, function () { ctx.rect(b[0], b[1] - 20 + y, 22, 40); });
+    shine(ctx, function () { ctx.arc(b[0] - 3, b[1] - 3 + y, 12, Math.PI * 1.1, Math.PI * 1.55); }, 3, 0.35);
+    cel(ctx, function () {
+      ctx.arc(b[0], b[1] + y, 22, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.arc(b[0], b[1] + y, 16, Math.PI * 0.85, Math.PI * 0.15, true);
+      ctx.closePath();
+    }, C.gold);
+  }
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * Math.PI * 2;
+    ctx.beginPath(); ctx.arc(70 + Math.cos(a) * 6, 22 + y + Math.sin(a) * 6, 5.4, 0, Math.PI * 2); ctx.fillStyle = '#ef6b73'; ctx.fill(); edge(ctx, 1.6);
+  }
+  ctx.beginPath(); ctx.arc(70, 22 + y, 3.6, 0, Math.PI * 2); ctx.fillStyle = '#f9e2af'; ctx.fill(); edge(ctx, 1.4);
+
+  // hair: crown, soft pointed bangs, long side locks
+  cel(ctx, function () {
+    ctx.moveTo(68, 96 + y);
+    ctx.bezierCurveTo(60, 48 + y, 108, 16 + y, 150, 26 + y);
+    ctx.bezierCurveTo(178, 36 + y, 184, 64 + y, 178, 90 + y);
+    ctx.quadraticCurveTo(178, 120 + y, 172, 144 + y);
+    ctx.quadraticCurveTo(166, 118 + y, 160, 88 + y);
+    ctx.quadraticCurveTo(152, 90 + y, 146, 94 + y);
+    ctx.quadraticCurveTo(144, 84 + y, 136, 80 + y);
+    ctx.quadraticCurveTo(128, 90 + y, 118, 94 + y);
+    ctx.quadraticCurveTo(116, 84 + y, 108, 80 + y);
+    ctx.quadraticCurveTo(100, 89 + y, 90, 93 + y);
+    ctx.quadraticCurveTo(88, 86 + y, 84, 84 + y);
+    ctx.quadraticCurveTo(80, 118 + y, 76, 148 + y);
+    ctx.quadraticCurveTo(68, 122 + y, 68, 96 + y);
+    ctx.closePath();
+  }, C.hair, function () { ctx.rect(60, 60 + y, 130, 60); });
+  ctx.beginPath();
+  const gloss = [[82, 58], [94, 46], [102, 54], [114, 42], [124, 50], [136, 40], [148, 48], [152, 56], [138, 52], [128, 60], [116, 52], [106, 62], [96, 56], [86, 64]];
+  gloss.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1] + y); else ctx.moveTo(p[0], p[1] + y); });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(210, 160, 175, 0.4)';
+  ctx.fill();
+  band(ctx, function () { ctx.moveTo(150, 28 + y); ctx.lineTo(178, 14 + y); }, 3, C.gold);
+  ctx.beginPath(); ctx.arc(180, 13 + y, 3.4, 0, Math.PI * 2); ctx.fillStyle = '#6fbf8e'; ctx.fill(); edge(ctx, 1.4);
+
+  // big bright eyes with lashes, arched brows, a small smile, soft blush
+  animeEye(ctx, 102, 108 + y, 11.5, 14.5, ['#4a2438', '#b76a7e'], true, blink, true);
+  animeEye(ctx, 141, 108 + y, 12.5, 15, ['#4a2438', '#b76a7e'], true, blink, false);
+  band(ctx, function () { ctx.moveTo(91, 90 + y); ctx.quadraticCurveTo(102, 85 + y, 112, 89 + y); }, 2, LINE);
+  band(ctx, function () { ctx.moveTo(131, 89 + y); ctx.quadraticCurveTo(142, 84 + y, 154, 88 + y); }, 2, LINE);
+  ctx.beginPath(); ctx.moveTo(124, 120 + y); ctx.quadraticCurveTo(122, 123 + y, 124, 124 + y); edge(ctx, 1.4);
+  ctx.beginPath(); ctx.moveTo(115, 130 + y); ctx.quadraticCurveTo(121, 135 + y, 128, 130 + y); edge(ctx, 1.8);
+  ctx.fillStyle = 'rgba(239, 107, 115, 0.4)';
+  for (const c of [[96, 124], [152, 122]]) {
+    ctx.beginPath(); ctx.ellipse(c[0], c[1] + y, 8, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+// a character card: the hero on a patch of grass under maples
+function drawCharCard(canvas, gender, t) {
+  const ctx = setup(canvas, 240, 240);
+  const sky = ctx.createLinearGradient(0, 0, 0, 240);
+  sky.addColorStop(0, '#fbf3e2');
+  sky.addColorStop(1, '#efe0c4');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, 240, 240);
+  ctx.fillStyle = '#9dbb5f';
+  ctx.beginPath(); ctx.ellipse(120, 232, 112, 26, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = LW; ctx.strokeStyle = 'rgba(42, 29, 29, 0.35)'; ctx.stroke();
+  for (const p of [[40, 228], [204, 230], [176, 222]]) drawGrassTuft(ctx, p[0], p[1]);
+  ctx.save();
+  ctx.translate(16, 22);
+  ctx.scale(0.88, 0.88);
+  if (gender === 'girl') drawWuxiaGirl(ctx, t);
+  else drawWuxiaBoy(ctx, t);
+  ctx.restore();
+}
+// the same hero at the size the game's 俠客 card uses, on the grass scene
+function drawTile(canvas, gender, t) {
   const ctx = setup(canvas, 160, 120);
   const g = ctx.createLinearGradient(0, 0, 0, 120);
   g.addColorStop(0, '#9dbb5f'); g.addColorStop(1, '#6f9445');
   ctx.fillStyle = g; ctx.fillRect(0, 0, 160, 120);
-  ctx.fillStyle = 'rgba(77,107,44,0.25)';
-  for (const p of [[30, 70, 22], [120, 92, 26], [90, 40, 18]]) { ctx.beginPath(); ctx.ellipse(p[0], p[1], p[2], p[2] * 0.45, 0, 0, Math.PI * 2); ctx.fill(); }
-  for (const p of [[18, 98], [44, 112], [104, 104], [138, 76], [70, 30], [130, 34]]) drawGrassTuft(ctx, p[0], p[1]);
   for (let x = 4; x < 170; x += 22) drawMaple(ctx, x, 2 + (x % 3) * 2, 0.75);
-  drawLantern(ctx, 22, 58, 1);
-  drawHay(ctx, 140, 92, 0.95);
-  drawJar(ctx, 132, 52, 0.9);
-  drawJar(ctx, 146, 62, 0.75);
+  drawLantern(ctx, 20, 74, 0.9);
+  drawJar(ctx, 140, 84, 0.8);
   ctx.save();
-  ctx.translate(31, 22);
-  ctx.scale(0.82, 0.82);
-  drawKid(ctx, { gender: gender, t: t });
+  ctx.translate(30, 4);
+  ctx.scale(0.5, 0.5);
+  if (gender === 'girl') drawWuxiaGirl(ctx, t);
+  else drawWuxiaBoy(ctx, t);
   ctx.restore();
 }
 
@@ -640,21 +946,45 @@ function renderPack() {
       b.append(c);
       grid.append(b);
       drawIcon(c, g.id, false);
-      b.addEventListener('click', function () { selected = i; renderPack(); });
+      b.addEventListener('click', function () { selected = i; renderPack(); say(g.name); });
     } else {
-      if (g && g.mystery) b.innerHTML = '<span class="mystery">？？？</span>';
+      if (g && g.mystery) {
+        b.innerHTML = '<span class="mystery">？？？</span>';
+        b.addEventListener('click', function () { say('還沒解鎖'); });
+      }
       grid.append(b);
     }
   });
 }
 
+function say(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW';
+  u.rate = 0.8;
+  speechSynthesis.speak(u);
+}
+document.querySelectorAll('.tab, .btn').forEach(function (b) {
+  b.addEventListener('click', function () {
+    say(b.textContent.trim());
+    if (b.classList.contains('tab')) {
+      document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+    }
+  });
+});
+document.querySelectorAll('.row .slot').forEach(function (b) {
+  b.addEventListener('click', function () { say(b.parentElement.querySelector('.slot-label').textContent); });
+});
 drawIcon(document.getElementById('iconJian'), 'jian', false);
 drawIcon(document.getElementById('iconSpear'), 'spear', false);
 drawIcon(document.getElementById('iconFan'), 'fan', false);
 renderPack();
 function tick(now) {
-  drawScene(document.getElementById('sceneBoy'), 'boy', now);
-  drawScene(document.getElementById('sceneGirl'), 'girl', now + 900);
+  drawCharCard(document.getElementById('charBoy'), 'boy', now);
+  drawCharCard(document.getElementById('charGirl'), 'girl', now + 900);
+  drawTile(document.getElementById('tileBoy'), 'boy', now);
+  drawTile(document.getElementById('tileGirl'), 'girl', now + 900);
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
