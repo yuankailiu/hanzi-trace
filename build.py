@@ -1,4 +1,4 @@
-"""Wrap app.html (the Claude artifact page) into a standalone index.html for GitHub Pages.
+"""Wrap the Claude artifact pages into standalone pages for GitHub Pages (app.html → index.html, style-sample.html → sample.html).
 
 The standalone page adds what an installed web app needs: charset/viewport, the
 manifest and home-screen icons, and the small reset the artifact host provides.
@@ -36,6 +36,7 @@ TAIL = """
 """
 
 here = Path(__file__).parent
-fragment = (here / 'app.html').read_text(encoding='utf-8')
-(here / 'index.html').write_text(HEAD + fragment + TAIL, encoding='utf-8')
-print('wrote index.html')
+for source, target in [('app.html', 'index.html'), ('style-sample.html', 'sample.html')]:
+    fragment = (here / source).read_text(encoding='utf-8')
+    (here / target).write_text(HEAD + fragment + TAIL, encoding='utf-8')
+    print('wrote', target)

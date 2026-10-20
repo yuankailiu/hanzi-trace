@@ -281,7 +281,8 @@ function drawAura(ctx, titleIdx, cx, gy, frame) {
 }
 
 // gear: { weapon, head, waist, back, pet } item ids (pixel style draws the ones it has sprites for)
-function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
+function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi, gender) {
+  const girl = gender === 'girl';
   const look = TITLES[titleIdx];
   const p = POSES[poseName];
   const cx = AV_CX;
@@ -318,7 +319,8 @@ function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
 
   // robe, flared hem, belt, collar
   pxRect(ctx, cx - 4, gy - 18 + b, 8, 12 - b, look.robe);
-  pxRect(ctx, cx - 5, gy - 8, 10, 2, look.robe);
+  if (girl) pxRect(ctx, cx - 6, gy - 8, 12, 2, look.robe);
+  else pxRect(ctx, cx - 5, gy - 8, 10, 2, look.robe);
   pxRect(ctx, cx - 4, gy - 12 + b, 8, 1, look.belt);
   pxRect(ctx, cx - 1, gy - 18 + b, 1, 2, PX.collar);
   pxRect(ctx, cx, gy - 17 + b, 1, 1, PX.collar);
@@ -327,8 +329,18 @@ function drawAvatar(ctx, titleIdx, gear, poseName, frame, qi) {
   // head: face, hair, bun
   pxRect(ctx, cx - 4, ht + 1, 8, 8, PX.skin);
   pxRect(ctx, cx - 4, ht, 8, 3, PX.hair);
-  pxRect(ctx, cx - 4, ht + 3, 2, 3, PX.hair);
-  pxRect(ctx, cx - 3, ht - 2, 2, 2, PX.hair);
+  if (girl) {
+    // 雙丫髻: a bun on each side with pink ribbons, hair down to the shoulders, a lock by the face
+    pxRect(ctx, cx - 4, ht + 3, 2, 8, PX.hair);
+    pxRect(ctx, cx + 3, ht + 3, 1, 3, PX.hair);
+    pxRect(ctx, cx - 6, ht - 2, 3, 3, PX.hair);
+    pxRect(ctx, cx + 3, ht - 2, 3, 3, PX.hair);
+    pxRect(ctx, cx - 7, ht + 1, 1, 2 + f, '#EF6B73');
+    pxRect(ctx, cx + 6, ht + 1, 1, 2 + f, '#EF6B73');
+  } else {
+    pxRect(ctx, cx - 4, ht + 3, 2, 3, PX.hair);
+    pxRect(ctx, cx - 3, ht - 2, 2, 2, PX.hair);
+  }
   pxRect(ctx, cx, ht + 4, 1, 1, PX.hair);
   pxRect(ctx, cx + 2, ht + 4, 1, 1, PX.hair);
   pxRect(ctx, cx + 3, ht + 6, 1, 1, PX.blush);

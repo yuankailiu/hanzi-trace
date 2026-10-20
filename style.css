@@ -728,6 +728,33 @@ canvas.pixel {
 .opt-row .label { min-width: 4.5em; letter-spacing: 0.04em; color: var(--muted); font-size: 0.9rem; font-weight: 600; }
 .opt-row button { padding: 4px 12px; font-size: 0.9rem; font-weight: 400; box-shadow: inset 0 2px 0 var(--panel-hi), 0 3px 0 var(--btn-drop); }
 .opt-row button[aria-pressed="true"] { border-color: var(--primary-drop); background: var(--primary); color: var(--primary-ink); box-shadow: 0 3px 0 var(--primary-drop); }
+.volume-row input[type="range"] {
+  flex: 1 1 200px;
+  max-width: 320px;
+  height: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 2px solid var(--panel-edge);
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--post-cap), var(--hint));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+.volume-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid var(--panel-edge);
+  background: var(--primary);
+  box-shadow: 0 3px 0 var(--primary-drop);
+}
+.volume-row input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid var(--panel-edge);
+  background: var(--primary);
+}
 .credits { font-size: 0.78rem; color: var(--muted); line-height: 1.7; margin: 0; }
 .credits a { color: inherit; }
 

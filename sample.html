@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="描字本">
+<meta name="theme-color" content="#e6e9ef">
+<link rel="manifest" href="manifest.webmanifest?v=3">
+<link rel="icon" href="icons/favicon-32.png?v=3" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-16.png?v=3" sizes="16x16" type="image/png">
+<link rel="icon" href="icons/icon.svg?v=3" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=3">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box; height: 100%; }
+body { margin: 0; font: 14px system-ui, sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<title>俠客畫風樣本</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&display=swap">
+<style>
+/* Layout: a style sample for review — a scene card with the hero (boy and girl), three weapon icons in inventory slots,
+   and a backpack panel (tabs, item detail, slot grid). One outline/shade/highlight rule shared by every drawing:
+   outer outline 3.2 (ink), inner detail 1.4, flat base color + one shade + a white highlight. */
+:root {
+  --bg: #efe4cf;
+  --paper: #f8f2e3;
+  --ink: #1d1517;
+  --text: #3a2c22;
+  --muted: #7d6b5c;
+  --frame-1: #6a574a;
+  --frame-2: #2b221c;
+  --slot-1: #4b4a4f;
+  --slot-2: #1e1d22;
+  --tab-1: #fbf3dc;
+  --tab-2: #d9c79c;
+  --accent: #c73a35;
+  --accent-2: #8c2420;
+  --plate: #cfc3a0;
+  --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", serif;
+  --font-body: "Noto Serif TC", "Songti TC", serif;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 32px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  letter-spacing: 0.12em;
+}
+h1 small { display: block; font-family: var(--font-body); font-size: 0.85rem; letter-spacing: 0.02em; color: var(--muted); font-weight: 400; }
+h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.15rem; letter-spacing: 0.15em; color: var(--accent-2); }
+
+/* thick bevelled frame shared by every board */
+.frame {
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 4px var(--frame-1),
+    inset 0 0 0 6px var(--frame-2),
+    inset 0 9px 14px -6px rgba(0, 0, 0, 0.25),
+    0 5px 0 rgba(29, 21, 23, 0.35);
+  padding: 18px;
+}
+.row { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+
+/* scene cards */
+.scene { width: 360px; max-width: 100%; aspect-ratio: 4 / 3; display: block; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 4px 0 rgba(29, 21, 23, 0.35); background: #7c9b4a; }
+.caption { margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
+
+/* inventory slots */
+.slot {
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  border: 2.5px solid #0e0d10;
+  background: linear-gradient(var(--slot-1), var(--slot-2));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -3px 0 rgba(0, 0, 0, 0.45), 0 3px 0 rgba(29, 21, 23, 0.3);
+  position: relative;
+  padding: 0;
+  cursor: pointer;
+}
+.slot canvas { width: 100%; height: 100%; display: block; }
+.slot::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-bottom: 14px solid #b3261e;
+  border-radius: 0 0 4px 0;
+}
+.slot.empty::after { opacity: 0.5; }
+.slot[aria-pressed="true"] { border-color: #f2c14b; box-shadow: 0 0 0 3px #f2c14b, inset 0 2px 0 rgba(255, 255, 255, 0.25), 0 3px 0 rgba(29, 21, 23, 0.3); }
+.slot .mystery {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: #8f8c95;
+}
+.slot-label { text-align: center; font-family: var(--font-display); font-weight: 700; margin-top: 6px; }
+
+/* backpack panel */
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.tab {
+  font: 700 1.05rem var(--font-display);
+  letter-spacing: 0.1em;
+  color: #6b4a1a;
+  padding: 7px 16px 7px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px;
+  background: linear-gradient(var(--tab-1), var(--tab-2));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.8), 0 3px 0 rgba(29, 21, 23, 0.35);
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer;
+}
+.tab i { width: 14px; height: 14px; border: 2px solid var(--ink); border-radius: 3px; background: #c9a24a; display: inline-block; }
+.tab[aria-selected="true"] { box-shadow: 0 0 0 3px var(--accent), inset 0 2px 0 rgba(255, 255, 255, 0.8), 0 3px 0 rgba(29, 21, 23, 0.35); }
+.pack { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }
+@media (max-width: 680px) { .pack { grid-template-columns: minmax(0, 1fr); } }
+.detail {
+  position: relative;
+  background: #fbf7ec;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 3px #e3d6bb;
+  padding: 16px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.bubble {
+  position: relative;
+  justify-self: stretch;
+  text-align: center;
+  background: #2f2a2c;
+  color: #f8f2e3;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}
+.bubble::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  margin-top: -8px;
+  border-left: 16px solid #2f2a2c;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+#bigItem { width: 260px; height: 195px; max-width: 100%; display: block; background: #e2d8c4; border-radius: 10px; border: 2.5px solid #b9ab8c; }
+.plate {
+  justify-self: stretch;
+  background: var(--plate);
+  border: 2.5px solid #9d906f;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.name-zy { display: flex; gap: 4px; align-items: center; }
+.name-zy b { font: 700 2rem var(--font-display); color: var(--ink); }
+.zy-v { display: inline-flex; flex-direction: column; font: 700 0.8rem var(--font-display); line-height: 1; position: relative; margin-right: 0.6em; }
+.zy-v .tone { position: absolute; left: 100%; bottom: 0.3em; }
+.btn {
+  font: 700 1.1rem var(--font-display);
+  letter-spacing: 0.12em;
+  color: #fff8ee;
+  padding: 9px 26px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: linear-gradient(#e2564f, var(--accent));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 4px 0 var(--accent-2);
+  cursor: pointer;
+}
+.btn:active { transform: translateY(3px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 1px 0 var(--accent-2); }
+.btn.plain { color: var(--text); background: linear-gradient(var(--tab-1), var(--tab-2)); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.8), 0 4px 0 #9d8a62; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 96px);
+  gap: 12px;
+  padding: 14px;
+  background: #f4ecd9;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 3px #d9c9a6;
+}
+@media (max-width: 680px) { .grid { grid-template-columns: repeat(auto-fill, 80px); } .grid .slot { width: 80px; height: 80px; } }
+.rules { margin: 0; padding-left: 1.2em; font-size: 0.9rem; color: var(--muted); display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+  <h1>俠客畫風樣本<small>2000 年代 Flash 線上遊戲的 2D 卡通風：粗黑描邊、平塗色塊加一層陰影與高光、Q 版 1.6 頭身，武俠題材</small></h1>
+
+  <section class="frame">
+    <h2>角色</h2>
+    <div class="row">
+      <div><canvas class="scene" id="sceneBoy"></canvas><div class="caption">少俠（男）：紅頭巾、髮髻、紅纓槍</div></div>
+      <div><canvas class="scene" id="sceneGirl"></canvas><div class="caption">女俠：雙丫髻、緞帶、鐵扇</div></div>
+    </div>
+  </section>
+
+  <section class="frame">
+    <h2>武器圖示</h2>
+    <div class="row">
+      <div><button class="slot" type="button"><canvas id="iconJian"></canvas></button><div class="slot-label">青鋼劍</div></div>
+      <div><button class="slot" type="button"><canvas id="iconSpear"></canvas></button><div class="slot-label">紅纓槍</div></div>
+      <div><button class="slot" type="button"><canvas id="iconFan"></canvas></button><div class="slot-label">鐵扇</div></div>
+    </div>
+  </section>
+
+  <section class="frame">
+    <h2>背包</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab" type="button" role="tab" aria-selected="false"><i></i>字訣本</button>
+      <button class="tab" type="button" role="tab" aria-selected="true"><i></i>兵器</button>
+      <button class="tab" type="button" role="tab" aria-selected="false"><i></i>飾品</button>
+      <button class="tab" type="button" role="tab" aria-selected="false"><i></i>夥伴</button>
+    </div>
+    <div class="pack">
+      <div class="detail">
+        <div class="bubble">請選擇想裝備的兵器</div>
+        <canvas id="bigItem"></canvas>
+        <div class="plate" id="plate"></div>
+        <div class="row" style="justify-content:center;gap:12px">
+          <button class="btn" type="button">換上</button>
+          <button class="btn plain" type="button">收起</button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="frame">
+    <h2>共用規則</h2>
+    <ul class="rules">
+      <li>外輪廓 3.2 粗黑線，內部細節 1.4 細線；每種材質只用「底色＋一層陰影＋白色高光」。</li>
+      <li>人物 1.6 頭身：大圓頭、臉在頭的前下方、表情集中在眉毛和眼睛，鼻子省略、嘴巴一筆。</li>
+      <li>兵器斜放、頭部誇張放大，小尺寸也看得清楚；物品格是深色漸層方格加浮雕。</li>
+      <li>場景是斜俯視草地，甕、草堆、石燈籠、紅楓當擺設；人物比背景亮，靠描邊和陰影分開。</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const INK = '#1d1517';
+const OUT = 3.2;
+const IN = 1.4;
+
+function setup(canvas, lw, lh) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(canvas.clientWidth * dpr);
+  const h = Math.round(canvas.clientHeight * dpr);
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(w / lw, 0, 0, h / lh, 0, 0);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  return ctx;
+}
+function fs(ctx, fill, lw) {
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (lw !== 0) { ctx.lineWidth = lw || OUT; ctx.strokeStyle = INK; ctx.stroke(); }
+}
+function circle(ctx, x, y, r, fill, lw) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); fs(ctx, fill, lw); }
+function oval(ctx, x, y, rx, ry, rot, fill, lw) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); fs(ctx, fill, lw); }
+function highlight(ctx, draw, width, alpha) {
+  ctx.save();
+  ctx.beginPath();
+  draw();
+  ctx.strokeStyle = 'rgba(255,255,255,' + (alpha || 0.7) + ')';
+  ctx.lineWidth = width;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ---------- weapons, drawn along +x from the grip end; length ~100 ----------
+function drawJian(ctx) {
+  // blade
+  ctx.beginPath();
+  ctx.moveTo(30, -9); ctx.lineTo(84, -9); ctx.lineTo(104, 0); ctx.lineTo(84, 9); ctx.lineTo(30, 9); ctx.closePath();
+  const g = ctx.createLinearGradient(0, -9, 0, 9);
+  g.addColorStop(0, '#e9f4fb'); g.addColorStop(0.5, '#b9d4e4'); g.addColorStop(1, '#7fa3bb');
+  fs(ctx, g);
+  ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(96, 0); ctx.strokeStyle = '#5f8299'; ctx.lineWidth = IN; ctx.stroke();
+  highlight(ctx, function () { ctx.moveTo(34, -4.6); ctx.lineTo(82, -4.6); }, 2.6, 0.9);
+  // guard, grip, pommel, tassel
+  ctx.beginPath();
+  ctx.moveTo(22, -14); ctx.quadraticCurveTo(30, -8, 32, 0); ctx.quadraticCurveTo(30, 8, 22, 14); ctx.quadraticCurveTo(26, 0, 22, -14);
+  fs(ctx, '#f2c14b');
+  ctx.beginPath(); ctx.roundRect(4, -5, 19, 10, 3); fs(ctx, '#c0392b');
+  for (let x = 8; x < 22; x += 5) { ctx.beginPath(); ctx.moveTo(x, -5); ctx.lineTo(x + 3, 5); ctx.strokeStyle = '#7d1f17'; ctx.lineWidth = IN; ctx.stroke(); }
+  circle(ctx, 2, 0, 6, '#f2c14b');
+  highlight(ctx, function () { ctx.arc(1, -1.5, 3, Math.PI * 1.1, Math.PI * 1.7); }, 1.8, 0.9);
+  ctx.beginPath(); ctx.moveTo(-2, 4); ctx.quadraticCurveTo(-10, 14, -4, 24); ctx.strokeStyle = INK; ctx.lineWidth = 5.4; ctx.stroke();
+  ctx.strokeStyle = '#e84a3a'; ctx.lineWidth = 3; ctx.stroke();
+}
+function drawSpear(ctx) {
+  // shaft
+  ctx.beginPath(); ctx.roundRect(-6, -4, 78, 8, 4);
+  const g = ctx.createLinearGradient(0, -4, 0, 4);
+  g.addColorStop(0, '#d39a5c'); g.addColorStop(1, '#8e5a2e');
+  fs(ctx, g);
+  highlight(ctx, function () { ctx.moveTo(0, -1.6); ctx.lineTo(60, -1.6); }, 1.8, 0.6);
+  // bushy red tassel
+  const puffs = [[64, -9, 8], [58, 2, 9], [66, 9, 8], [56, -6, 7], [52, 8, 7]];
+  for (const p of puffs) circle(ctx, p[0], p[1], p[2] + 1.6, INK, 0);
+  for (const p of puffs) circle(ctx, p[0], p[1], p[2], '#e84a3a', 0);
+  for (const p of puffs) highlight(ctx, function () { ctx.arc(p[0] - 1.5, p[1] - 2, p[2] * 0.55, Math.PI * 1.1, Math.PI * 1.6); }, 1.6, 0.55);
+  // collar and leaf blade
+  ctx.beginPath(); ctx.roundRect(70, -6, 7, 12, 2); fs(ctx, '#f2c14b');
+  ctx.beginPath();
+  ctx.moveTo(76, -3); ctx.quadraticCurveTo(88, -15, 106, 0); ctx.quadraticCurveTo(88, 15, 76, 3); ctx.closePath();
+  const b = ctx.createLinearGradient(0, -12, 0, 12);
+  b.addColorStop(0, '#f2f6f9'); b.addColorStop(1, '#9fb0bc');
+  fs(ctx, b);
+  ctx.beginPath(); ctx.moveTo(79, 0); ctx.lineTo(102, 0); ctx.strokeStyle = '#6f8392'; ctx.lineWidth = IN; ctx.stroke();
+  highlight(ctx, function () { ctx.moveTo(82, -4.5); ctx.quadraticCurveTo(90, -8, 98, -3); }, 1.8, 0.95);
+}
+function drawFan(ctx) {
+  const spread = 0.82;
+  const r = 78;
+  // leaf
+  ctx.beginPath(); ctx.moveTo(4, 0); ctx.arc(4, 0, r, -spread, spread); ctx.closePath();
+  fs(ctx, '#eef1f4');
+  ctx.beginPath(); ctx.arc(4, 0, r, -spread, spread); ctx.arc(4, 0, r - 14, spread, -spread, true); ctx.closePath();
+  fs(ctx, '#3a3f4a', IN);
+  // painted sun and a brush wave
+  circle(ctx, 50, -14, 11, '#e84a3a', IN);
+  ctx.beginPath(); ctx.moveTo(22, 14); ctx.quadraticCurveTo(40, 2, 54, 16); ctx.quadraticCurveTo(64, 26, 70, 18);
+  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke();
+  // ribs
+  for (let i = -4; i <= 4; i++) {
+    const a = i / 4 * spread;
+    ctx.beginPath(); ctx.moveTo(4, 0); ctx.lineTo(4 + Math.cos(a) * (r - 14), Math.sin(a) * (r - 14));
+    ctx.strokeStyle = 'rgba(29,21,23,0.35)'; ctx.lineWidth = IN; ctx.stroke();
+  }
+  ctx.beginPath(); ctx.moveTo(4, 0); ctx.arc(4, 0, r, -spread, spread); ctx.closePath();
+  fs(ctx, null, OUT);
+  highlight(ctx, function () { ctx.arc(4, 0, r - 5, -spread + 0.12, -spread + 0.6); }, 2.2, 0.8);
+  circle(ctx, 4, 0, 6, '#f2c14b');
+}
+const WEAPONS = { jian: drawJian, spear: drawSpear, fan: drawFan };
+
+// an icon on the diagonal, head up-right, as in the reference inventory
+function drawIcon(canvas, id, burst) {
+  const ctx = setup(canvas, 100, 100);
+  ctx.clearRect(0, 0, 100, 100);
+  if (burst) {
+    ctx.beginPath();
+    for (let i = 0; i < 24; i++) {
+      const a = i / 24 * Math.PI * 2;
+      const rr = i % 2 ? 26 : 42;
+      ctx.lineTo(56 + Math.cos(a) * rr, 44 + Math.sin(a) * rr * 0.8);
+    }
+    ctx.closePath();
+    fs(ctx, '#f59ac2', 2);
+  }
+  ctx.save();
+  ctx.translate(id === 'fan' ? 24 : 16, id === 'fan' ? 76 : 84);
+  ctx.rotate(-Math.PI / 4);
+  const k = id === 'fan' ? 0.72 : (id === 'jian' ? 0.78 : 0.74);
+  ctx.scale(k, k);
+  WEAPONS[id](ctx);
+  ctx.restore();
+}
+
+// ---------- the hero, 1.6 heads tall, in a 120 x 120 frame ----------
+function drawKid(ctx, o) {
+  const t = o.t;
+  const girl = o.gender === 'girl';
+  const bob = Math.sin(t / 380) * 1.4;
+  const blink = (t % 3400) < 140;
+  const flutter = Math.sin(t / 200) * 3;
+  const robe = girl ? '#e8737a' : '#3f6fb0';
+  const robeShade = girl ? '#c85660' : '#2e5590';
+  const skin = '#ffdcbc';
+  const hair = '#2a2633';
+  const by = bob;
+
+  // shadow
+  ctx.fillStyle = 'rgba(29,21,23,0.28)';
+  ctx.beginPath(); ctx.ellipse(60, 113, 24, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+
+  // weapon held behind the body (spear or fan), tilted up-right
+  ctx.save();
+  if (girl) {
+    ctx.translate(82, 88 + by); ctx.rotate(-0.95 + Math.sin(t / 500) * 0.06); ctx.scale(0.42, 0.42); drawFan(ctx);
+  } else {
+    ctx.translate(70, 104 + by); ctx.rotate(-1.15 + Math.sin(t / 600) * 0.04); ctx.scale(0.86, 0.86); drawSpear(ctx);
+  }
+  ctx.restore();
+
+  // legs and boots
+  ctx.beginPath(); ctx.roundRect(47, 97 + by * 0.3, 11, 11, 3); fs(ctx, '#2d2a3a');
+  ctx.beginPath(); ctx.roundRect(62, 97 + by * 0.3, 11, 11, 3); fs(ctx, '#2d2a3a');
+  oval(ctx, 51, 109, 8, 4.6, 0, '#1f1a22');
+  oval(ctx, 69, 109, 8, 4.6, 0, '#1f1a22');
+  highlight(ctx, function () { ctx.ellipse(49, 107.5, 3.5, 1.4, 0, Math.PI, Math.PI * 1.9); }, 1.4, 0.5);
+  highlight(ctx, function () { ctx.ellipse(67, 107.5, 3.5, 1.4, 0, Math.PI, Math.PI * 1.9); }, 1.4, 0.5);
+
+  // robe: base, one shade on the far side, crossed white collar, sash
+  const hem = girl ? 25 : 21;
+  ctx.beginPath();
+  ctx.moveTo(45, 78 + by); ctx.lineTo(75, 78 + by);
+  ctx.quadraticCurveTo(60 + hem, 92 + by, 60 + hem, 101 + by);
+  ctx.quadraticCurveTo(60, 105 + by, 60 - hem, 101 + by);
+  ctx.quadraticCurveTo(60 - hem, 92 + by, 45, 78 + by);
+  ctx.closePath();
+  fs(ctx, robe);
+  ctx.save(); ctx.clip();
+  ctx.fillStyle = robeShade; ctx.fillRect(67, 70 + by, 30, 40);
+  ctx.restore();
+  ctx.beginPath();
+  ctx.moveTo(45, 78 + by); ctx.lineTo(75, 78 + by);
+  ctx.quadraticCurveTo(60 + hem, 92 + by, 60 + hem, 101 + by);
+  ctx.quadraticCurveTo(60, 105 + by, 60 - hem, 101 + by);
+  ctx.quadraticCurveTo(60 - hem, 92 + by, 45, 78 + by);
+  fs(ctx, null, OUT);
+  ctx.beginPath(); ctx.moveTo(52, 78 + by); ctx.lineTo(61, 90 + by); ctx.lineTo(69, 78 + by); ctx.closePath(); fs(ctx, '#fbf6ee', IN);
+  ctx.beginPath(); ctx.moveTo(57, 78 + by); ctx.lineTo(63, 86 + by); ctx.strokeStyle = INK; ctx.lineWidth = IN; ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(41, 90 + by, 38, 6, 2); fs(ctx, girl ? '#f2c14b' : '#d0473f', 2.4);
+  oval(ctx, 66, 93 + by, 3.4, 3, 0, girl ? '#f2c14b' : '#d0473f', 1.8);
+
+  // hands (mitts), the right one on the weapon
+  circle(ctx, 39, 90 + by, 5.6, skin, 2.6);
+  circle(ctx, girl ? 82 : 80, 87 + by, 5.6, skin, 2.6);
+
+  // back hair for the girl, buns
+  if (girl) {
+    for (const s of [-1, 1]) {
+      circle(ctx, 60 + s * 27, 22 + by, 11, hair);
+      highlight(ctx, function () { ctx.arc(60 + s * 27 - 2, 20 + by, 6, Math.PI * 1.1, Math.PI * 1.6); }, 2, 0.45);
+      // ribbon loops
+      oval(ctx, 60 + s * 35, 30 + by, 6, 3.6, s * 0.7 + flutter * 0.03, '#ef6b73', 2);
+      ctx.beginPath(); ctx.moveTo(60 + s * 34, 32 + by); ctx.quadraticCurveTo(60 + s * 40, 42 + by, 60 + s * 37 + flutter * 0.4, 50 + by);
+      ctx.strokeStyle = INK; ctx.lineWidth = 5.6; ctx.stroke(); ctx.strokeStyle = '#ef6b73'; ctx.lineWidth = 3; ctx.stroke();
+    }
+  } else {
+    circle(ctx, 48, 15 + by, 10.5, hair);
+    highlight(ctx, function () { ctx.arc(46, 13 + by, 5.5, Math.PI * 1.1, Math.PI * 1.6); }, 2, 0.45);
+    ctx.beginPath(); ctx.roundRect(42, 22 + by, 14, 5, 2); fs(ctx, '#d0473f', 2);
+  }
+
+  // head: a big round hair cap with the face set low and forward
+  circle(ctx, 60, 49 + by, 34, hair);
+  oval(ctx, 63, 59 + by, 24, 20, -0.05, skin, 1.6);
+  // fringe over the forehead
+  ctx.beginPath();
+  if (girl) {
+    ctx.moveTo(37, 60 + by);
+    ctx.quadraticCurveTo(40, 40 + by, 50, 50 + by);
+    ctx.quadraticCurveTo(56, 40 + by, 63, 50 + by);
+    ctx.quadraticCurveTo(70, 40 + by, 77, 50 + by);
+    ctx.quadraticCurveTo(86, 42 + by, 88, 60 + by);
+  } else {
+    ctx.moveTo(37, 60 + by);
+    ctx.lineTo(42, 42 + by); ctx.lineTo(50, 51 + by); ctx.lineTo(55, 39 + by); ctx.lineTo(63, 51 + by);
+    ctx.lineTo(70, 39 + by); ctx.lineTo(76, 50 + by); ctx.lineTo(86, 43 + by); ctx.lineTo(88, 60 + by);
+  }
+  ctx.lineTo(92, 40 + by);
+  ctx.quadraticCurveTo(60, 8 + by, 30, 40 + by);
+  ctx.closePath();
+  fs(ctx, hair, IN);
+  if (girl) {
+    oval(ctx, 39, 68 + by, 4.6, 11, 0.2, hair, 1.8);
+    oval(ctx, 88, 66 + by, 4.2, 10, -0.2, hair, 1.8);
+  }
+  // headband with flying tails (boy)
+  if (!girl) {
+    for (const off of [0, 6]) {
+      ctx.beginPath(); ctx.moveTo(30, 46 + by); ctx.quadraticCurveTo(16, 40 + off + flutter, 4, 48 + off - flutter);
+      ctx.strokeStyle = INK; ctx.lineWidth = 8.4; ctx.stroke(); ctx.strokeStyle = '#d0473f'; ctx.lineWidth = 5; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(28, 46 + by); ctx.quadraticCurveTo(60, 30 + by, 93, 41 + by);
+    ctx.strokeStyle = INK; ctx.lineWidth = 10; ctx.stroke(); ctx.strokeStyle = '#d0473f'; ctx.lineWidth = 6.4; ctx.stroke();
+    highlight(ctx, function () { ctx.moveTo(40, 40 + by); ctx.quadraticCurveTo(60, 32.5 + by, 78, 36 + by); }, 1.6, 0.6);
+  }
+  // the outer outline again, so every shape sits inside one clean silhouette
+  circle(ctx, 60, 49 + by, 34, null, OUT);
+  highlight(ctx, function () { ctx.arc(60, 49 + by, 29, Math.PI * 1.12, Math.PI * 1.42); }, 3.2, 0.5);
+
+  // face: eyebrows and eyes carry the expression
+  const ey = 62 + by;
+  if (blink) {
+    for (const x of [55, 73]) { ctx.beginPath(); ctx.arc(x, ey - 1, 5, Math.PI * 0.15, Math.PI * 0.85); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.stroke(); }
+  } else {
+    for (const x of [55, 73]) {
+      oval(ctx, x, ey, 5.8, 7.2, 0, '#ffffff', 1.8);
+      oval(ctx, x + 1.8, ey + 0.8, 3.6, 5, 0, INK, 0);
+      circle(ctx, x + 0.6, ey - 1.6, 1.5, '#ffffff', 0);
+    }
+    if (girl) {
+      for (const s of [-1, 1]) {
+        const x = s < 0 ? 49.5 : 78.5;
+        ctx.beginPath(); ctx.moveTo(x, ey - 4); ctx.lineTo(x + s * 3, ey - 6.5); ctx.strokeStyle = INK; ctx.lineWidth = 1.8; ctx.stroke();
+      }
+    }
+  }
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = girl ? 2.2 : 3.6;
+  ctx.beginPath();
+  if (girl) {
+    ctx.moveTo(49, 51 + by); ctx.quadraticCurveTo(54, 49 + by, 59, 51.5 + by);
+    ctx.moveTo(69, 51.5 + by); ctx.quadraticCurveTo(74, 49 + by, 79, 51 + by);
+  } else {
+    ctx.moveTo(48, 50 + by); ctx.lineTo(60, 54.5 + by);
+    ctx.moveTo(68, 54.5 + by); ctx.lineTo(80, 50 + by);
+  }
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(239,107,115,0.45)';
+  ctx.beginPath(); ctx.ellipse(48, 70 + by, 4, 2.4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(80, 69 + by, 4, 2.4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  if (girl) {
+    ctx.moveTo(61, 72 + by); ctx.quadraticCurveTo(65, 77 + by, 69, 72 + by); ctx.closePath();
+    fs(ctx, '#c0392b', 1.6);
+  } else {
+    ctx.moveTo(61, 73 + by); ctx.quadraticCurveTo(66, 75 + by, 71, 71.5 + by);
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke();
+  }
+}
+
+// ---------- scene: oblique grass ground, maple border, jars, hay, stone lantern ----------
+function drawJar(ctx, x, y, s) {
+  oval(ctx, x, y + 14 * s, 14 * s, 4 * s, 0, 'rgba(29,21,23,0.25)', 0);
+  ctx.beginPath();
+  ctx.moveTo(x - 8 * s, y - 10 * s);
+  ctx.quadraticCurveTo(x - 17 * s, y, x - 11 * s, y + 13 * s);
+  ctx.lineTo(x + 11 * s, y + 13 * s);
+  ctx.quadraticCurveTo(x + 17 * s, y, x + 8 * s, y - 10 * s);
+  ctx.closePath();
+  fs(ctx, '#3f6fbf');
+  oval(ctx, x, y - 10 * s, 9 * s, 3.6 * s, 0, '#e9f0f7', 2.2);
+  highlight(ctx, function () { ctx.moveTo(x - 9 * s, y - 4 * s); ctx.quadraticCurveTo(x - 11 * s, y + 3 * s, x - 8 * s, y + 9 * s); }, 2.4, 0.6);
+  ctx.beginPath(); ctx.moveTo(x - 12 * s, y); ctx.quadraticCurveTo(x, y + 3 * s, x + 12 * s, y); ctx.strokeStyle = '#e9f0f7'; ctx.lineWidth = 1.6; ctx.stroke();
+}
+function drawHay(ctx, x, y, s) {
+  oval(ctx, x, y + 12 * s, 15 * s, 4 * s, 0, 'rgba(29,21,23,0.25)', 0);
+  ctx.beginPath(); ctx.roundRect(x - 13 * s, y - 8 * s, 26 * s, 20 * s, 5 * s); fs(ctx, '#e3bf4f');
+  for (const k of [-6, 0, 6]) { ctx.beginPath(); ctx.moveTo(x + k * s, y - 7 * s); ctx.lineTo(x + k * s, y + 11 * s); ctx.strokeStyle = '#b48d2a'; ctx.lineWidth = IN; ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(x - 13 * s, y + 2 * s); ctx.lineTo(x + 13 * s, y + 2 * s); ctx.strokeStyle = '#8c5a2b'; ctx.lineWidth = 2.6; ctx.stroke();
+  oval(ctx, x, y - 8 * s, 13 * s, 4 * s, 0, '#f2d36f', 2);
+}
+function drawLantern(ctx, x, y, s) {
+  oval(ctx, x, y + 16 * s, 12 * s, 3.5 * s, 0, 'rgba(29,21,23,0.25)', 0);
+  ctx.beginPath(); ctx.roundRect(x - 4 * s, y - 2 * s, 8 * s, 18 * s, 2 * s); fs(ctx, '#8f8c95');
+  ctx.beginPath(); ctx.roundRect(x - 7 * s, y - 10 * s, 14 * s, 10 * s, 2 * s); fs(ctx, '#a7a3ad');
+  ctx.beginPath(); ctx.roundRect(x - 3.5 * s, y - 8 * s, 7 * s, 5 * s, 1 * s); fs(ctx, '#ffd36a', IN);
+  ctx.beginPath(); ctx.moveTo(x - 12 * s, y - 9 * s); ctx.lineTo(x, y - 19 * s); ctx.lineTo(x + 12 * s, y - 9 * s); ctx.closePath(); fs(ctx, '#5f5c66');
+}
+function drawMaple(ctx, x, y, s) {
+  const leaves = [[0, 0, 9], [-9, 4, 7], [9, 4, 7], [-4, -7, 7], [5, -7, 7]];
+  ctx.beginPath(); ctx.moveTo(x, y + 6 * s); ctx.lineTo(x, y + 16 * s); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke(); ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = 2.2; ctx.stroke();
+  for (const l of leaves) circle(ctx, x + l[0] * s, y + l[1] * s, l[2] * s + 1.4, INK, 0);
+  for (const l of leaves) circle(ctx, x + l[0] * s, y + l[1] * s, l[2] * s, '#c8392f', 0);
+  for (const l of leaves) highlight(ctx, function () { ctx.arc(x + l[0] * s - 1, y + l[1] * s - 1.5, l[2] * s * 0.5, Math.PI * 1.1, Math.PI * 1.6); }, 1.4, 0.45);
+}
+function drawGrassTuft(ctx, x, y) {
+  ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 2, y - 7); ctx.lineTo(x, y - 1); ctx.lineTo(x + 2, y - 8); ctx.lineTo(x + 4, y);
+  ctx.strokeStyle = '#4d6b2c'; ctx.lineWidth = 1.6; ctx.stroke();
+}
+function drawScene(canvas, gender, t) {
+  const ctx = setup(canvas, 160, 120);
+  const g = ctx.createLinearGradient(0, 0, 0, 120);
+  g.addColorStop(0, '#9dbb5f'); g.addColorStop(1, '#6f9445');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 160, 120);
+  ctx.fillStyle = 'rgba(77,107,44,0.25)';
+  for (const p of [[30, 70, 22], [120, 92, 26], [90, 40, 18]]) { ctx.beginPath(); ctx.ellipse(p[0], p[1], p[2], p[2] * 0.45, 0, 0, Math.PI * 2); ctx.fill(); }
+  for (const p of [[18, 98], [44, 112], [104, 104], [138, 76], [70, 30], [130, 34]]) drawGrassTuft(ctx, p[0], p[1]);
+  for (let x = 4; x < 170; x += 22) drawMaple(ctx, x, 2 + (x % 3) * 2, 0.75);
+  drawLantern(ctx, 22, 58, 1);
+  drawHay(ctx, 140, 92, 0.95);
+  drawJar(ctx, 132, 52, 0.9);
+  drawJar(ctx, 146, 62, 0.75);
+  ctx.save();
+  ctx.translate(31, 22);
+  ctx.scale(0.82, 0.82);
+  drawKid(ctx, { gender: gender, t: t });
+  ctx.restore();
+}
+
+// ---------- backpack ----------
+const GRID = [
+  { id: 'jian', name: '青鋼劍', zy: ['ㄑㄧㄥ', 'ㄍㄤ', 'ㄐㄧㄢˋ'] },
+  { id: 'spear', name: '紅纓槍', zy: ['ㄏㄨㄥˊ', 'ㄧㄥ', 'ㄑㄧㄤ'] },
+  { id: 'fan', name: '鐵扇', zy: ['ㄊㄧㄝˇ', 'ㄕㄢˋ'] },
+  { mystery: true }, null, null, null, null, null, null,
+];
+let selected = 1;
+function zhuyinHtml(zy) {
+  const tone = /[ˊˇˋ]$/.test(zy) ? zy.slice(-1) : '';
+  const body = tone ? zy.slice(0, -1) : zy;
+  let s = '<span class="zy-v">';
+  for (const c of Array.from(body)) s += '<span>' + c + '</span>';
+  if (tone) s += '<span class="tone">' + tone + '</span>';
+  return s + '</span>';
+}
+function renderPack() {
+  const it = GRID[selected];
+  drawIcon(document.getElementById('bigItem'), it.id, true);
+  let html = '';
+  Array.from(it.name).forEach(function (ch, i) {
+    html += '<span class="name-zy"><b>' + ch + '</b>' + zhuyinHtml(it.zy[i]) + '</span>';
+  });
+  document.getElementById('plate').innerHTML = html;
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  GRID.forEach(function (g, i) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'slot' + (g ? '' : ' empty');
+    b.setAttribute('aria-pressed', i === selected ? 'true' : 'false');
+    if (g && g.id) {
+      const c = document.createElement('canvas');
+      b.append(c);
+      grid.append(b);
+      drawIcon(c, g.id, false);
+      b.addEventListener('click', function () { selected = i; renderPack(); });
+    } else {
+      if (g && g.mystery) b.innerHTML = '<span class="mystery">？？？</span>';
+      grid.append(b);
+    }
+  });
+}
+
+drawIcon(document.getElementById('iconJian'), 'jian', false);
+drawIcon(document.getElementById('iconSpear'), 'spear', false);
+drawIcon(document.getElementById('iconFan'), 'fan', false);
+renderPack();
+function tick(now) {
+  drawScene(document.getElementById('sceneBoy'), 'boy', now);
+  drawScene(document.getElementById('sceneGirl'), 'girl', now + 900);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+
+</body>
+</html>

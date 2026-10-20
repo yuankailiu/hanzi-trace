@@ -87,11 +87,23 @@ function getAudio() {
   if (!state.sound) return null;
   return audioContext();
 }
+// the app's own volume (the device buttons still control the hardware volume)
+let masterGain = null;
+function audioOut() {
+  audioContext();
+  return masterGain;
+}
+function setVolume(v) {
+  if (masterGain) masterGain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+}
 function audioContext() {
   if (!audioCtx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     audioCtx = new AC();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = state.volume;
+    masterGain.connect(audioCtx.destination);
     noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
     const samples = noiseBuf.getChannelData(0);
     for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
@@ -129,7 +141,7 @@ function sfxSwish() {
   bp.frequency.setValueAtTime(4200, t);
   bp.frequency.exponentialRampToValueAtTime(700, t + 0.2);
   const g = envelope(ac, t, 0.35, 0.03, 0.2);
-  src.connect(bp).connect(g).connect(ac.destination);
+  src.connect(bp).connect(g).connect(audioOut());
   src.start(t, Math.random() * 0.5);
   src.stop(t + 0.26);
 
@@ -138,7 +150,7 @@ function sfxSwish() {
     o.type = 'sine';
     o.frequency.value = f;
     const og = envelope(ac, t + 0.05, 0.025, 0.01, 0.35);
-    o.connect(og).connect(ac.destination);
+    o.connect(og).connect(audioOut());
     o.start(t + 0.05);
     o.stop(t + 0.45);
   }
@@ -155,7 +167,7 @@ function sfxStamp() {
   o.frequency.setValueAtTime(150, t);
   o.frequency.exponentialRampToValueAtTime(48, t + 0.18);
   const g = envelope(ac, t, 0.9, 0.005, 0.28);
-  o.connect(g).connect(ac.destination);
+  o.connect(g).connect(audioOut());
   o.start(t);
   o.stop(t + 0.32);
 
@@ -164,7 +176,7 @@ function sfxStamp() {
   lp.type = 'lowpass';
   lp.frequency.value = 900;
   const ng = envelope(ac, t, 0.4, 0.003, 0.08);
-  src.connect(lp).connect(ng).connect(ac.destination);
+  src.connect(lp).connect(ng).connect(audioOut());
   src.start(t, Math.random() * 0.5);
   src.stop(t + 0.1);
 }
@@ -179,7 +191,7 @@ function sfxWood() {
   o.frequency.setValueAtTime(660, t);
   o.frequency.exponentialRampToValueAtTime(500, t + 0.06);
   const g = envelope(ac, t, 0.28, 0.004, 0.12);
-  o.connect(g).connect(ac.destination);
+  o.connect(g).connect(audioOut());
   o.start(t);
   o.stop(t + 0.16);
 }
@@ -191,7 +203,7 @@ function sfxGong(level) {
   const t = ac.currentTime;
   const master = ac.createGain();
   master.gain.value = 0.8 * (level || 1);
-  master.connect(ac.destination);
+  master.connect(audioOut());
 
   const base = 92;
   const ratios = [1, 1.52, 2.03, 2.61, 3.15, 3.76, 4.42];
@@ -230,7 +242,7 @@ function sfxCrackle() {
     hp.type = 'highpass';
     hp.frequency.value = 1800;
     const g = envelope(ac, at, rand(0.15, 0.4), 0.002, 0.03);
-    src.connect(hp).connect(g).connect(ac.destination);
+    src.connect(hp).connect(g).connect(audioOut());
     src.start(at, Math.random() * 0.5);
     src.stop(at + 0.05);
   }
@@ -245,7 +257,7 @@ function sfxTick(pitch) {
   o.type = 'sine';
   o.frequency.value = pitch || 2093;
   const g = envelope(ac, t, 0.07, 0.003, 0.18);
-  o.connect(g).connect(ac.destination);
+  o.connect(g).connect(audioOut());
   o.start(t);
   o.stop(t + 0.22);
 }
@@ -272,7 +284,7 @@ function musicGraph() {
   music.el.playsInline = true;
   music.gain = ac.createGain();
   music.gain.gain.value = 0;
-  ac.createMediaElementSource(music.el).connect(music.gain).connect(ac.destination);
+  ac.createMediaElementSource(music.el).connect(music.gain).connect(audioOut());
   music.el.addEventListener('timeupdate', function () {
     const el = music.el;
     if (!music.fadingOut && el.duration && el.duration - el.currentTime < MUSIC_FADE) {
@@ -370,6 +382,7 @@ function say(text) {
   const v = pickVoice();
   u.lang = v ? v.lang : 'zh-TW';
   u.rate = 0.75;
+  u.volume = state.volume;
   if (v) u.voice = v;
   duckMusic(true);
   u.onend = function () { duckMusic(false); };

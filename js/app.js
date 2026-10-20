@@ -41,6 +41,7 @@ const state = {
   // settings
   content: 'mix',
   music: 'xiangqi',
+  volume: 0.8,
   gender: 'boy',
   heroStyle: 'q',
   theme: 'light',
@@ -237,7 +238,7 @@ function serializeProfile() {
     v: 3,
     savedAt: Date.now(),
     settings: {
-      content: state.content, music: state.music, gender: state.gender, heroStyle: state.heroStyle, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, volume: state.volume, gender: state.gender, heroStyle: state.heroStyle, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -267,6 +268,7 @@ function applyProfile(source) {
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
       if (typeof p.settings[key] === 'boolean') state[key] = p.settings[key];
     }
+    if (typeof p.settings.volume === 'number') state.volume = p.settings.volume;
   }
   if (p.stars) state.stars = p.stars;
   if (p.myName) state.myName = p.myName;
@@ -679,7 +681,7 @@ function drawHeroOn(canvas, o) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, AV_W, AV_H);
     if (o.floor !== false) drawFloor(ctx);
-    drawAvatar(ctx, o.title, o.gear, o.pixelPose || PIXEL_POSE[o.action] || 'stand', o.frame || 0, o.qi);
+    drawAvatar(ctx, o.title, o.gear, o.pixelPose || PIXEL_POSE[o.action] || 'stand', o.frame || 0, o.qi, state.gender);
     return;
   }
   canvas.classList.remove('pixel');
@@ -1629,8 +1631,19 @@ function applyTheme() {
   if (state.theme === 'auto') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', state.theme);
 }
+const volumeRange = document.getElementById('volumeRange');
+volumeRange.addEventListener('input', function () {
+  state.volume = Number(volumeRange.value) / 100;
+  setVolume(state.volume);
+});
+volumeRange.addEventListener('change', function () {
+  save();
+  sfxTick(1568);
+});
 function renderOptions() {
   applyTheme();
+  volumeRange.value = Math.round(state.volume * 100);
+  setVolume(state.volume);
   box.classList.toggle('mi', state.grid === 'mi');
   keepBtn.setAttribute('aria-pressed', state.keep ? 'true' : 'false');
   document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
