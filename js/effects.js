@@ -271,7 +271,6 @@ const TRACKS = {
   chungum: 'audio/chungumgwan.mp3',
 };
 const MUSIC_VOLUME = 0.3;
-const MUSIC_DUCKED = 0.08;
 const MUSIC_FADE = 1.6;
 const music = { el: null, gain: null, track: '', fadingOut: false, started: false };
 
@@ -329,10 +328,6 @@ function stopMusic() {
   const el = music.el;
   setTimeout(function () { if (music.gain && music.gain.gain.value < 0.01) el.pause(); }, 900);
 }
-function duckMusic(on) {
-  if (!music.el || music.el.paused) return;
-  musicFade(on ? MUSIC_DUCKED : MUSIC_VOLUME, 0.35);
-}
 // start on the first touch, pause while the app is in the background
 document.addEventListener('pointerdown', function () {
   if (!music.started && state.music !== 'off') playMusic(state.music);
@@ -384,9 +379,6 @@ function say(text) {
   u.rate = 0.75;
   u.volume = state.volume;
   if (v) u.voice = v;
-  duckMusic(true);
-  u.onend = function () { duckMusic(false); };
-  u.onerror = function () { duckMusic(false); };
   window.speechSynthesis.speak(u);
 }
 if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
