@@ -252,7 +252,7 @@ function sfxTick(pitch) {
 
 // ---------- background music: loops one track, fading out at the end and back in at the start ----------
 const TRACKS = {
-  xiangqi: 'audio/xiangqi.m4a',
+  xiangqi: 'audio/xiangqi.mp4',
   arisan: 'audio/arisan.mp3',
   scions: 'audio/scions-village.mp3',
   eren: 'audio/eren-valley.mp3',
