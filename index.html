@@ -170,36 +170,98 @@ img { max-width: 100%; }
       <h2 id="customTitle">自己出題</h2>
       <button type="button" data-close>回去練功</button>
     </div>
-    <div class="field">
-      <label for="customInput">想練習的字（最多 12 個）</label>
-      <input id="customInput" maxlength="12" placeholder="例如：劉岱恬">
+    <div class="tabbed">
+    <div class="tabs" id="customTabs" role="tablist">
+      <button type="button" role="tab" data-pane="onePane" aria-selected="true">出一題</button>
+      <button type="button" role="tab" data-pane="listPane" aria-selected="false">生字本</button>
+      <button type="button" role="tab" data-pane="mySentPane" aria-selected="false">句子本</button>
     </div>
-    <div class="row">
-      <button type="submit" class="primary">上擂台</button>
-      <button type="button" id="useNameBtn">用我的名字</button>
-      <button type="button" id="saveNameBtn">設為我的名字</button>
+    <div class="tab-body">
+    <div class="pane" id="onePane">
+      <p class="pane-note">寫幾個字，馬上上擂台練一回。</p>
+      <div class="row ask-row">
+        <div class="field">
+          <label for="customInput">想練習的字（最多 12 個）</label>
+          <input id="customInput" maxlength="12" placeholder="例如：太陽">
+        </div>
+        <button type="submit" class="primary">上擂台</button>
+      </div>
+      <div class="name-card">
+        <span class="name-label">我的名字</span>
+        <b id="myNameText"></b>
+        <span class="name-btns">
+          <button type="button" id="useNameBtn">練寫我的名字</button>
+          <button type="button" id="editNameBtn">改名字</button>
+        </span>
+      </div>
+      <div class="row ask-row name-edit" id="nameEdit" hidden>
+        <div class="field">
+          <label for="nameInput">真實姓名（練寫用，和江湖名號不同）</label>
+          <input id="nameInput" maxlength="6" placeholder="例如：劉岱恬">
+        </div>
+        <button type="button" id="saveNameBtn">記住</button>
+      </div>
+      <div>
+        <h3>最近練過</h3>
+        <div class="recent" id="recentList"></div>
+      </div>
     </div>
-    <div class="field">
-      <label for="listInput">我的生字本：把這週課本的生字或語詞貼上，用空格或逗號分開</label>
-      <textarea id="listInput" rows="3" placeholder="例如：太陽 月亮 星星 雲"></textarea>
+    <div class="pane" id="listPane" hidden>
+      <p class="pane-note">一整份每天要練的字詞，例如這週課本的生字。存好後一個練完換下一個。</p>
+      <div class="field">
+        <label for="listInput">字詞之間用空格或逗號分開</label>
+        <textarea id="listInput" rows="4" placeholder="例如：太陽 月亮 星星 雲"></textarea>
+      </div>
+      <div class="row">
+        <button type="button" class="primary" id="saveListBtn">存起來，開始練</button>
+        <span class="quiet" id="listCount"></span>
+      </div>
     </div>
-    <div class="row">
-      <button type="button" id="saveListBtn">存成生字本並開始練</button>
-      <span class="quiet" id="listCount"></span>
+    <div class="pane" id="mySentPane" hidden>
+      <p class="pane-note">自己寫的句子，一行一句。要寫的字用［ ］框起來，沒框就整句都寫。</p>
+      <div class="field">
+        <label for="sentenceInput">我的句子</label>
+        <textarea id="sentenceInput" rows="4" placeholder="例如：媽媽［出］門［上］班。"></textarea>
+      </div>
+      <div class="row">
+        <button type="button" class="primary" id="saveSentencesBtn">存起來，開始練</button>
+        <span class="quiet" id="sentenceCount"></span>
+      </div>
     </div>
-    <div class="field">
-      <label for="sentenceInput">我的句子本：一行一句，要寫的字用［ ］框起來（沒框就整句都寫）</label>
-      <textarea id="sentenceInput" rows="3" placeholder="例如：媽媽［出］門［上］班。"></textarea>
     </div>
-    <div class="row">
-      <button type="button" id="saveSentencesBtn">存成句子本並開始練</button>
-      <span class="quiet" id="sentenceCount"></span>
-    </div>
-    <div>
-      <h3>最近練過</h3>
-      <div class="recent" id="recentList"></div>
     </div>
   </form>
+</div>
+
+<!-- 開場：敲一下銅鑼 -->
+<div class="opening" id="opening">
+  <div class="opening-title">
+    <h1>筆順描字本</h1>
+    <p>江湖練字，從一筆一畫開始</p>
+  </div>
+  <button type="button" class="gong-btn" id="gongBtn" aria-label="敲鑼開場" data-quiet>
+    <svg viewBox="0 0 140 150" aria-hidden="true">
+      <defs>
+        <radialGradient id="gongFace" cx="0.42" cy="0.38" r="0.7">
+          <stop offset="0" stop-color="#f6d77c"></stop>
+          <stop offset="0.55" stop-color="#c9922f"></stop>
+          <stop offset="1" stop-color="#8a5a1c"></stop>
+        </radialGradient>
+      </defs>
+      <rect x="10" y="10" width="12" height="134" rx="4" fill="#9b2f25" stroke="#4f2f1b" stroke-width="3"></rect>
+      <rect x="118" y="10" width="12" height="134" rx="4" fill="#9b2f25" stroke="#4f2f1b" stroke-width="3"></rect>
+      <rect x="2" y="6" width="136" height="14" rx="5" fill="#b8382c" stroke="#4f2f1b" stroke-width="3"></rect>
+      <path d="M2 13 h136" stroke="#e3b54f" stroke-width="1.5"></path>
+      <g class="gong-disc">
+        <path d="M52 20 L56 40 M88 20 L84 40" stroke="#4f2f1b" stroke-width="2.5"></path>
+        <circle cx="70" cy="84" r="46" fill="url(#gongFace)" stroke="#5c3a14" stroke-width="3.5"></circle>
+        <circle cx="70" cy="84" r="34" fill="none" stroke="#8a5a1c" stroke-width="2" opacity="0.7"></circle>
+        <circle cx="70" cy="84" r="13" fill="#e8bd55" stroke="#8a5a1c" stroke-width="2.5"></circle>
+        <path d="M44 62 a34 34 0 0 1 22 -12" stroke="#fff3c4" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"></path>
+      </g>
+    </svg>
+  </button>
+  <p class="opening-hint">敲一下銅鑼，開場</p>
 </div>
 
 <!-- 俠客帳號 -->
@@ -351,67 +413,96 @@ img { max-width: 100%; }
       <h2 id="settingsTitle">設定</h2>
       <button type="button" data-close>好了</button>
     </div>
-    <div class="opt-row volume-row">
-      <label class="label" for="volumeRange">音量</label>
-      <input type="range" id="volumeRange" min="0" max="100" step="5" value="80">
-    </div>
-    <div class="opt-row" data-opt="content">
-      <span class="label">練習內容</span>
-      <button type="button" data-val="mix">詞語＋單字</button>
-      <button type="button" data-val="words">只練詞語</button>
-      <button type="button" data-val="chars">只練單字</button>
-      <button type="button" data-val="list">我的生字本</button>
-      <button type="button" data-val="sentences">句子</button>
-      <button type="button" data-val="mysentences">我的句子本</button>
-    </div>
-    <p class="note">詞語與單字來自教育部《國小學童常用字詞調查報告書》，依字頻由淺到深，跟著俠客的名望慢慢變難。「我的生字本」在鉛筆圖示「自己出題」裡設定。</p>
-    <div class="opt-row" data-opt="music">
-      <span class="label">背景音樂</span>
-      <button type="button" data-val="xiangqi">象棋</button>
-      <button type="button" data-val="arisan">阿里山</button>
-      <button type="button" data-val="scions">江湖村莊</button>
-      <button type="button" data-val="eren">惡人谷</button>
-      <button type="button" data-val="chungum">清陰關</button>
-      <button type="button" data-val="rexue">熱血江湖</button>
-      <button type="button" data-val="off">關</button>
-    </div>
-    <div class="opt-row" data-opt="theme">
-      <span class="label">外觀</span>
-      <button type="button" data-val="light">淺色</button>
-      <button type="button" data-val="dark">深色</button>
-      <button type="button" data-val="auto">跟著裝置</button>
-    </div>
-    <div class="opt-row" data-opt="keep">
-      <span class="label">筆跡</span>
-      <button type="button" data-val="0">換成標準字</button>
-      <button type="button" data-val="1">保留我寫的</button>
-    </div>
-    <div class="opt-row" data-opt="sound">
-      <span class="label">音效</span>
-      <button type="button" data-val="1">開</button>
-      <button type="button" data-val="0">關</button>
-    </div>
-    <div class="opt-row" data-opt="radical">
-      <span class="label">部首上色</span>
-      <button type="button" data-val="1">開</button>
-      <button type="button" data-val="0">關</button>
-    </div>
-    <div class="opt-row" data-opt="grid">
-      <span class="label">格子</span>
-      <button type="button" data-val="tian">田字格</button>
-      <button type="button" data-val="mi">米字格</button>
-    </div>
-    <div class="opt-row" data-opt="lenient">
-      <span class="label">判定</span>
-      <button type="button" data-val="1">寬鬆（小朋友）</button>
-      <button type="button" data-val="0">標準</button>
-    </div>
-    <div class="opt-row" data-opt="slow">
-      <span class="label">播放速度</span>
-      <button type="button" data-val="1">慢</button>
-      <button type="button" data-val="0">正常</button>
-    </div>
-    <p class="note">像 App 一樣全螢幕使用：在 iPad / iPhone 的 Safari 點「分享」→「加入主畫面」，之後從主畫面的圖示打開。</p>
+    <section class="opt-group">
+      <h3>練功</h3>
+      <div class="opt-row" data-opt="content">
+        <span class="label">練習內容</span>
+        <div class="opt-choices">
+          <button type="button" data-val="mix">詞語＋單字</button>
+          <button type="button" data-val="words">只練詞語</button>
+          <button type="button" data-val="chars">只練單字</button>
+          <button type="button" data-val="sentences">句子</button>
+          <button type="button" data-val="list">我的生字本</button>
+          <button type="button" data-val="mysentences">我的句子本</button>
+        </div>
+      </div>
+      <p class="note">詞語、單字與句子依字頻由淺到深，跟著俠客的名望慢慢變難。「我的生字本」「我的句子本」在鉛筆圖示「自己出題」裡設定。</p>
+      <div class="opt-row" data-opt="lenient">
+        <span class="label">判定</span>
+        <div class="opt-choices">
+          <button type="button" data-val="1">寬鬆</button>
+          <button type="button" data-val="0">標準</button>
+        </div>
+      </div>
+      <div class="opt-row" data-opt="slow">
+        <span class="label">示範速度</span>
+        <div class="opt-choices">
+          <button type="button" data-val="1">慢</button>
+          <button type="button" data-val="0">正常</button>
+        </div>
+      </div>
+      <div class="opt-row" data-opt="keep">
+        <span class="label">筆跡</span>
+        <div class="opt-choices">
+          <button type="button" data-val="0">換成標準字</button>
+          <button type="button" data-val="1">保留我寫的</button>
+        </div>
+      </div>
+      <div class="opt-row" data-opt="grid">
+        <span class="label">格子</span>
+        <div class="opt-choices">
+          <button type="button" data-val="tian">田字格</button>
+          <button type="button" data-val="mi">米字格</button>
+        </div>
+      </div>
+      <div class="opt-row" data-opt="radical">
+        <span class="label">部首上色</span>
+        <div class="opt-choices">
+          <button type="button" data-val="1">開</button>
+          <button type="button" data-val="0">關</button>
+        </div>
+      </div>
+    </section>
+    <section class="opt-group">
+      <h3>聲音</h3>
+      <div class="opt-row volume-row">
+        <label class="label" for="volumeRange">音量</label>
+        <div class="opt-choices">
+          <input type="range" id="volumeRange" min="0" max="100" step="5" value="80">
+        </div>
+      </div>
+      <div class="opt-row" data-opt="sound">
+        <span class="label">音效</span>
+        <div class="opt-choices">
+          <button type="button" data-val="1">開</button>
+          <button type="button" data-val="0">關</button>
+        </div>
+      </div>
+      <div class="opt-row" data-opt="music">
+        <span class="label">背景音樂</span>
+        <div class="opt-choices">
+          <button type="button" data-val="xiangqi">象棋</button>
+          <button type="button" data-val="arisan">阿里山</button>
+          <button type="button" data-val="scions">江湖村莊</button>
+          <button type="button" data-val="eren">惡人谷</button>
+          <button type="button" data-val="chungum">清陰關</button>
+          <button type="button" data-val="rexue">熱血江湖</button>
+          <button type="button" data-val="off">關</button>
+        </div>
+      </div>
+    </section>
+    <section class="opt-group">
+      <h3>畫面</h3>
+      <div class="opt-row" data-opt="theme">
+        <span class="label">外觀</span>
+        <div class="opt-choices">
+          <button type="button" data-val="light">淺色</button>
+          <button type="button" data-val="dark">深色</button>
+          <button type="button" data-val="auto">跟著裝置</button>
+        </div>
+      </div>
+      <p class="note">像 App 一樣全螢幕使用：在 iPad / iPhone 的 Safari 點「分享」→「加入主畫面」，之後從主畫面的圖示打開。</p>
+    </section>
     <p class="credits">
       字形與筆順依<a href="https://stroke-order.learningweb.moe.edu.tw/" target="_blank" rel="noopener">教育部國字標準字體筆順</a>（經 <a href="https://github.com/g0v/zh-stroke-data" target="_blank" rel="noopener">g0v zh-stroke-data</a>）；
       少數罕用字使用 <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noopener">Make Me a Hanzi</a>（Arphic Public License）。以 <a href="https://hanziwriter.org" target="_blank" rel="noopener">Hanzi Writer</a> 呈現。注音依教育部《重編國語辭典修訂本》；詞語依教育部《國小學童常用字詞調查報告書》。

@@ -851,21 +851,60 @@ canvas.pixel {
   padding-block: 16px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background: rgba(30, 20, 14, 0.45);
+  background: radial-gradient(120% 90% at 50% 45%, rgba(30, 20, 14, 0.38), rgba(18, 11, 7, 0.66));
+  -webkit-backdrop-filter: blur(2.5px);
+  backdrop-filter: blur(2.5px);
 }
+/* A sheet is a thick board like a bound book cover: a dark edge, a fine gold rule inside the border with
+   folded corner marks, a paper sheen at the top, its thickness below and a soft shadow on the table */
 .sheet-panel {
   width: min(560px, 100%);
   max-height: 88dvh;
   overflow: auto;
-  padding: 18px 20px 20px;
+  padding: 20px 22px 22px;
   display: grid;
   gap: 16px;
   -webkit-user-select: text;
   user-select: text;
+  border: 3px solid var(--panel-edge);
   border-radius: 18px;
+  background-color: var(--panel);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Cpath d='M1.5 17V1.5H17M6 13V6h7' fill='none' stroke='%23b58a35' stroke-width='1.5' stroke-opacity='0.8'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Cpath d='M16.5 17V1.5H1M12 13V6H5' fill='none' stroke='%23b58a35' stroke-width='1.5' stroke-opacity='0.8'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Cpath d='M1.5 1v15.5H17M6 5v7h7' fill='none' stroke='%23b58a35' stroke-width='1.5' stroke-opacity='0.8'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Cpath d='M16.5 1v15.5H1M12 5v7H5' fill='none' stroke='%23b58a35' stroke-width='1.5' stroke-opacity='0.8'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, var(--panel-hi), transparent 120px);
+  background-repeat: no-repeat;
+  background-position: left 9px top 9px, right 9px top 9px, left 9px bottom 9px, right 9px bottom 9px, 0 0;
+  box-shadow:
+    inset 0 0 0 4px var(--panel),
+    inset 0 0 0 5.5px var(--gold-line),
+    0 4px 0 var(--panel-drop),
+    0 7px 0 var(--panel-edge),
+    0 26px 44px -14px rgba(0, 0, 0, 0.55);
+}
+.sheet-head { padding-bottom: 10px; border-bottom: 1.5px solid var(--line); }
+/* a sheet comes up gently; the 群俠譜 after the gong turns up from below like a page */
+.sheet:not([hidden]) { animation: veil-in 0.22s ease-out; }
+.sheet:not([hidden]) > .sheet-panel:not(.item-detail) { animation: sheet-in 0.28s cubic-bezier(0.2, 1.25, 0.4, 1); }
+.sheet.rising:not([hidden]) > .sheet-panel {
+  transform-origin: 50% 100%;
+  animation: sheet-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes veil-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sheet-in {
+  from { transform: translateY(14px) scale(0.97); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes sheet-rise {
+  0% { transform: perspective(1100px) translateY(75vh) rotateX(58deg); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
 }
 .sheet-panel.wide { width: min(680px, 100%); }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sheet-head + .tabbed { margin-top: 2px; }
 .sheet h2, .sheet h3 {
   margin: 0;
   font-family: var(--font-display);
@@ -1128,7 +1167,8 @@ canvas.pixel {
   .arena.shake, .arena.thump, .seal.stamp, #writer.ink, #mine.ink, .purse.pulse b,
   .banner, .banner-name, .banner-sub, .toast, .seg button.nudge, .box.press, .ripple,
   .player.leveled, .lvup, .tap-ripple, .item-detail, .plaque.unroll .cloth, .plaque.unroll .roller,
-  .sentence .target .glyph, .dice-btn.rolling { animation: none; }
+  .sentence .target .glyph, .dice-btn.rolling, .sheet:not([hidden]), .sheet:not([hidden]) > .sheet-panel,
+  .gong-btn.struck .gong-disc, .opening.leaving { animation: none; }
   button { transition: none; }
 }
 
@@ -1570,3 +1610,102 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
   .dice-btn { width: 46px; height: 46px; right: 22px; }
   .plaque { max-width: calc(100% - 170px); }
 }
+
+/* 自己出題: three tabs; each page starts with one line on what it is for */
+.pane { display: grid; gap: 12px; }
+.pane[hidden], .name-edit[hidden], .name-btns button[hidden] { display: none; }
+.pane-note { margin: 0; font-size: 0.92rem; color: var(--muted); }
+.ask-row { align-items: flex-end; }
+.ask-row .field { flex: 1 1 200px; }
+.name-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+}
+.name-label { font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+#myNameText { font-family: var(--font-display); font-size: 1.35rem; letter-spacing: 0.12em; flex: 1 1 auto; }
+#myNameText.quiet { font-size: 1rem; font-weight: 400; }
+.name-btns { display: flex; gap: 8px; }
+.name-btns button { padding: 5px 12px; font-size: 0.9rem; }
+
+/* 設定: grouped boxes; every row has its name in a fixed column and its choices in an even grid */
+.opt-group {
+  display: grid;
+  padding: 4px 14px 6px;
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+.opt-group > h3 { margin: 10px 0 2px; color: var(--accent); font-size: 0.95rem; letter-spacing: 0.3em; }
+#settingsSheet .opt-row {
+  display: grid;
+  grid-template-columns: 5.4rem minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1.5px dashed var(--line);
+}
+#settingsSheet .opt-group > h3 + .opt-row { border-top: 0; }
+#settingsSheet .opt-row .label { min-width: 0; }
+.opt-choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.2em, 1fr)); gap: 8px; }
+.opt-choices button { padding: 6px 8px; white-space: nowrap; }
+.volume-row .opt-choices { display: flex; align-items: center; }
+#settingsSheet .opt-group > .note { padding: 0 0 10px calc(5.4rem + 12px); margin-top: -4px; }
+@media (max-width: 560px) {
+  #settingsSheet .opt-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .opt-choices { grid-template-columns: repeat(auto-fill, minmax(6.6em, 1fr)); }
+  #settingsSheet .opt-group > .note { padding-left: 0; }
+}
+
+/* 開場: the title and a gong on its stand; one strike and the 群俠譜 turns up */
+.opening {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 24px 16px;
+  background: var(--bg-glow), var(--bg-pattern), linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+  text-align: center;
+}
+.opening[hidden] { display: none; }
+.opening.leaving { animation: opening-out 0.5s ease-in forwards; pointer-events: none; }
+@keyframes opening-out { to { opacity: 0; transform: scale(1.04); } }
+.opening-title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-shadow: 0 3px 0 var(--panel-drop);
+}
+.opening-title p { margin: 6px 0 0; color: var(--muted); letter-spacing: 0.18em; }
+.gong-btn {
+  width: clamp(150px, 34vw, 210px);
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.3));
+}
+.gong-btn:active:not(:disabled) { transform: none; box-shadow: none; }
+.gong-btn:disabled { cursor: default; }
+.gong-btn svg { display: block; width: 100%; height: auto; overflow: visible; }
+.gong-disc { transform-origin: 70px 20px; animation: gong-idle 3.2s ease-in-out infinite; }
+.gong-btn.struck .gong-disc { animation: gong-struck 0.9s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes gong-idle { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+@keyframes gong-struck {
+  0% { transform: rotate(0) scale(1); }
+  12% { transform: rotate(6deg) scale(0.96); }
+  40% { transform: rotate(-4deg) scale(1.02); }
+  70% { transform: rotate(2deg); }
+  100% { transform: rotate(0); }
+}
+.opening-hint { margin: 0; color: var(--muted); font-size: 0.95rem; letter-spacing: 0.2em; animation: hint-breathe 2s ease-in-out infinite; }
+@keyframes hint-breathe { 50% { opacity: 0.45; } }

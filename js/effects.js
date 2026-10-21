@@ -264,6 +264,74 @@ function sfxGong(level) {
   src.stop(t + 0.1);
 }
 
+// 大鼓: two strokes on a big drum, the second the stronger (咚、咚)
+function sfxDrum() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const hits = [{ at: t, level: 0.65 }, { at: t + 0.34, level: 1 }];
+  for (const hit of hits) {
+    // the drum body: a low tone falling in pitch
+    const o = ac.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(112, hit.at);
+    o.frequency.exponentialRampToValueAtTime(50, hit.at + 0.4);
+    const g = envelope(ac, hit.at, 0.95 * hit.level, 0.004, 0.6);
+    o.connect(g).connect(audioOut());
+    o.start(hit.at);
+    o.stop(hit.at + 0.66);
+
+    // the stick on the drumhead
+    const src = noiseSource(ac);
+    const lp = ac.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 700;
+    const ng = envelope(ac, hit.at, 0.4 * hit.level, 0.002, 0.07);
+    src.connect(lp).connect(ng).connect(audioOut());
+    src.start(hit.at, Math.random() * 0.5);
+    src.stop(hit.at + 0.1);
+  }
+}
+
+// 翻頁: a sheet of paper swept up (a rising band of noise with a little crinkle), then laid flat
+function sfxPage() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+
+  const src = noiseSource(ac);
+  const bp = ac.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.Q.value = 0.9;
+  bp.frequency.setValueAtTime(900, t);
+  bp.frequency.exponentialRampToValueAtTime(3600, t + 0.32);
+  const g = envelope(ac, t, 0.3, 0.16, 0.3);
+  src.connect(bp).connect(g).connect(audioOut());
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + 0.5);
+
+  for (let i = 0; i < 6; i++) {
+    const at = t + 0.05 + Math.random() * 0.28;
+    const crinkle = noiseSource(ac);
+    const hp = ac.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 3000;
+    const cg = envelope(ac, at, rand(0.04, 0.09), 0.002, 0.02);
+    crinkle.connect(hp).connect(cg).connect(audioOut());
+    crinkle.start(at, Math.random() * 0.5);
+    crinkle.stop(at + 0.03);
+  }
+
+  const flap = noiseSource(ac);
+  const lp = ac.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 1400;
+  const fg = envelope(ac, t + 0.42, 0.26, 0.005, 0.09);
+  flap.connect(lp).connect(fg).connect(audioOut());
+  flap.start(t + 0.42, Math.random() * 0.5);
+  flap.stop(t + 0.55);
+}
+
 // 鞭炮: a cluster of short high-passed noise pops
 function sfxCrackle() {
   const ac = getAudio();
@@ -412,18 +480,30 @@ let sayToken = 0;
 // started after 1.5 s, cancel and try it once more.
 // spokenAs: the same words with 破音字 swapped for one-reading homophones, so the voice reads them as
 // the 注音 shows (他還敢來 as 他孩敢來); text is what the page shows
-function say(text, spokenAs) {
-  if (!('speechSynthesis' in window)) return;
+// done: called once when the words end, unless something else is said first; a voice that never
+// reports the end is given a generous guess of its length
+function say(text, spokenAs, done) {
+  if (!('speechSynthesis' in window)) {
+    if (done) done();
+    return;
+  }
   lastSaidAt = performance.now();
   const myToken = ++sayToken;
+  let finished = !done;
+  function finish() {
+    if (finished) return;
+    finished = true;
+    if (myToken === sayToken) done();
+  }
+  if (done) setTimeout(finish, 1500 + 380 * text.length);
   // cancel only what is playing: Safari can drop a speak() that follows a needless cancel()
   const synth = window.speechSynthesis;
   if (synth.speaking || synth.pending) synth.cancel();
-  speakOnce(spokenAs || text, myToken, true);
+  speakOnce(spokenAs || text, myToken, true, finish);
 }
 // words the system voices misread, spoken as homophones: 少俠 is ㄕㄠˋ ㄒㄧㄚˊ, not ㄕㄠˇ; 名宿 is ㄇㄧㄥˊ ㄙㄨˋ
 const SPEAK_AS = [['少俠', '紹俠'], ['名宿', '名素']];
-function speakOnce(text, myToken, retry) {
+function speakOnce(text, myToken, retry, finish) {
   const synth = window.speechSynthesis;
   let spoken = text;
   for (const pair of SPEAK_AS) spoken = spoken.split(pair[0]).join(pair[1]);
@@ -435,13 +515,14 @@ function speakOnce(text, myToken, retry) {
   if (v) u.voice = v;
   let started = false;
   u.onstart = function () { started = true; };
+  u.onend = function () { if (started) finish(); };
   synth.resume();
   synth.speak(u);
   if (!retry) return;
   setTimeout(function () {
     if (started || myToken !== sayToken) return;
     synth.cancel();
-    speakOnce(text, myToken, false);
+    speakOnce(text, myToken, false, finish);
   }, 1500);
 }
 if ('speechSynthesis' in window) window.speechSynthesis.getVoices();

@@ -2201,6 +2201,7 @@ document.getElementById('settingsBtn').addEventListener('click', function () {
 function renderRecent() {
   const list = document.getElementById('recentList');
   list.innerHTML = '';
+  list.parentElement.hidden = state.recent.length === 0;
   for (const t of state.recent) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -2256,19 +2257,47 @@ document.getElementById('saveSentencesBtn').addEventListener('click', function (
 function renderSentenceCount() {
   document.getElementById('sentenceCount').textContent = state.slist.length ? '目前 ' + state.slist.length + ' 句' : '';
 }
+// 自己出題: 出一題 (a few characters now, and 我的名字), 生字本, 句子本
+function showCustomPane(id) {
+  document.querySelectorAll('#customTabs button').forEach(function (b) {
+    b.setAttribute('aria-selected', b.dataset.pane === id ? 'true' : 'false');
+  });
+  for (const pane of ['onePane', 'listPane', 'mySentPane']) {
+    document.getElementById(pane).hidden = id !== pane;
+  }
+}
+document.querySelectorAll('#customTabs button').forEach(function (b) {
+  b.addEventListener('click', function () { showCustomPane(b.dataset.pane); });
+});
+// 我的名字 is the child's real name to practise writing; the 江湖 name of the hero is separate
+function renderMyName() {
+  const has = Boolean(state.myName);
+  document.getElementById('myNameText').textContent = has ? state.myName : '還沒寫';
+  document.getElementById('myNameText').classList.toggle('quiet', !has);
+  document.getElementById('useNameBtn').hidden = !has;
+  document.getElementById('editNameBtn').textContent = has ? '改名字' : '寫上名字';
+  document.getElementById('nameEdit').hidden = true;
+}
 document.getElementById('customBtn').addEventListener('click', function () {
-  const input = document.getElementById('customInput');
   document.getElementById('listInput').value = state.list.join(' ');
   document.getElementById('sentenceInput').value = state.slist.join('\n');
+  document.getElementById('customInput').value = '';
   renderSentenceCount();
   renderListCount();
-  input.value = '';
-  input.placeholder = state.myName ? '例如：' + state.myName : '例如：劉岱恬';
+  renderMyName();
   renderRecent();
+  let pane = 'onePane';
+  if (state.content === 'list') pane = 'listPane';
+  else if (state.content === 'mysentences') pane = 'mySentPane';
+  showCustomPane(pane);
   openSheet(document.getElementById('customSheet'));
 });
 document.getElementById('customForm').addEventListener('submit', function (e) {
   e.preventDefault();
+  if (document.activeElement && document.activeElement.id === 'nameInput') {
+    saveMyName();
+    return;
+  }
   const text = document.getElementById('customInput').value;
   if (parseText(text).length === 0) {
     toast('請輸入中文字');
@@ -2278,23 +2307,27 @@ document.getElementById('customForm').addEventListener('submit', function (e) {
   closeSheet(document.getElementById('customSheet'));
 });
 document.getElementById('useNameBtn').addEventListener('click', function () {
-  if (!state.myName) {
-    toast('先輸入名字，再按「設為我的名字」');
-    return;
-  }
   loadText(state.myName, true);
   closeSheet(document.getElementById('customSheet'));
 });
-document.getElementById('saveNameBtn').addEventListener('click', function () {
-  const chars = parseText(document.getElementById('customInput').value);
+document.getElementById('editNameBtn').addEventListener('click', function () {
+  const input = document.getElementById('nameInput');
+  document.getElementById('nameEdit').hidden = false;
+  input.value = state.myName;
+  input.focus();
+});
+function saveMyName() {
+  const chars = parseText(document.getElementById('nameInput').value);
   if (chars.length === 0) {
-    toast('先輸入名字');
+    toast('先寫上名字');
     return;
   }
   state.myName = chars.join('');
   save();
+  renderMyName();
   toast('記住了：' + state.myName);
-});
+}
+document.getElementById('saveNameBtn').addEventListener('click', saveMyName);
 
 function showProfilePane(id) {
   document.querySelectorAll('#profileTabs button').forEach(function (b) {
@@ -2331,8 +2364,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
   if (fromGate && profileSheet.hidden) {
     leaveGate();
     if (state.music !== 'off') playMusic(state.music);
-    if (state.sound && state.sentence) saySentence(state.sentence);
-    else if (state.sound && (state.text || state.myName)) say(state.text || state.myName);
+    announceEntry();
   }
 });
 document.getElementById('logoutBtn').addEventListener('click', function () {
@@ -2581,20 +2613,36 @@ function enterGame(alias) {
   if (alias !== account.alias) enterAs(alias);
   rememberHero(alias);
   if (state.music !== 'off') playMusic(state.music);
-  if (state.sound && state.sentence) saySentence(state.sentence);
-  else if (state.sound && (state.text || state.myName)) say(state.text || state.myName);
+  announceEntry();
 }
-// at start the 俠客 sheet opens on 群俠譜 and stays until someone is chosen, a guest included
+// entering the 擂台: first the hero's name and 名望 (a guest is 訪客), then two drum strokes, then the
+// first word or sentence; anything said in between (a tapped button) cancels the rest
+function announceEntry() {
+  if (!state.sound) return;
+  const who = account.alias ? account.alias + '，' + titleName(titleIndex(), state.gender) : '訪客';
+  say(who, '', function () {
+    const token = sayToken;
+    sfxDrum();
+    setTimeout(function () {
+      if (token !== sayToken) return;
+      if (state.sentence) saySentence(state.sentence);
+      else if (state.text || state.myName) say(state.text || state.myName);
+    }, 1100);
+  });
+}
+// at start the 俠客 sheet opens on 群俠譜 and stays until someone is chosen, a guest included;
+// rise: after the opening gong, the sheet comes up from below like a page turned up
 const profileSheet = document.getElementById('profileSheet');
-function openGate() {
+function openGate(rise) {
   profileSheet.classList.add('gate');
+  profileSheet.classList.toggle('rising', Boolean(rise));
   document.getElementById('profileTitle').textContent = '筆順描字本';
   showProfilePane('rosterPane');
   openSheet(profileSheet);
 }
 function leaveGate() {
   clearInterval(gate.timer);
-  profileSheet.classList.remove('gate');
+  profileSheet.classList.remove('gate', 'rising');
   document.getElementById('profileTitle').textContent = '俠客';
   closeSheet(profileSheet);
 }
@@ -2620,7 +2668,25 @@ function enterAs(alias) {
   });
 }
 document.getElementById('guestStart').addEventListener('click', function () { enterGame(''); });
-openGate();
+
+// 開場: strike the gong (the first tap also lets the page make sound), then the 群俠譜 turns up
+const opening = document.getElementById('opening');
+const gongBtn = document.getElementById('gongBtn');
+gongBtn.addEventListener('click', function () {
+  if (gongBtn.disabled) return;
+  gongBtn.disabled = true;
+  audioContext();
+  if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+  sfxGong(1.1);
+  restartAnimation(gongBtn, 'struck');
+  const wait = reducedMotion() ? 200 : 900;
+  setTimeout(function () {
+    opening.classList.add('leaving');
+    sfxPage();
+    openGate(true);
+  }, wait);
+  setTimeout(function () { opening.hidden = true; }, wait + 500);
+});
 
 // 裝束: the arrows step through the 名望 outfits reached so far, from the first to the current one
 function markOutfitEnds() {
