@@ -43,7 +43,6 @@ const state = {
   music: 'xiangqi',
   volume: 0.8,
   gender: 'boy',
-  heroStyle: 'pixel',
   theme: 'light',
   voice: '',
   grid: 'tian',
@@ -238,7 +237,7 @@ function serializeProfile() {
     v: 4,
     savedAt: Date.now(),
     settings: {
-      content: state.content, music: state.music, volume: state.volume, gender: state.gender, heroStyle: state.heroStyle, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, volume: state.volume, gender: state.gender, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -265,8 +264,6 @@ function applyProfile(source) {
     for (const key of ['content', 'music', 'gender', 'theme', 'voice', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
-    // profiles before v4 saved Q版 only because it was the default; the pixel style is the default now
-    if (p.v >= 4 && typeof p.settings.heroStyle === 'string') state.heroStyle = p.settings.heroStyle;
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
       if (typeof p.settings[key] === 'boolean') state[key] = p.settings[key];
     }
@@ -632,18 +629,11 @@ function inkBleed() {
   restartAnimation(writerEl, 'ink');
   if (writer) writer.updateColor('strokeColor', token('--ink'), { duration: 1400 });
 }
-// the child's own strokes, kept in place of the standard ones
-function addMine(points) {
-  const size = builtSize;
-  let attr = '';
-  for (const p of points) {
-    const s = toScreen(p.x, p.y, size);
-    attr += s.x.toFixed(1) + ',' + s.y.toFixed(1) + ' ';
-  }
-  const line = document.createElementNS(SVG_NS, 'polyline');
-  line.setAttribute('points', attr.trim());
-  line.setAttribute('stroke-width', String(Math.round(drawingWidth(size) * 1.25)));
-  mineEl.append(line);
+// the child's own stroke, kept in place of the standard one, in the brush shape it was written with
+function addMine() {
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', brushPath(brush.points, builtSize, true));
+  mineEl.append(path);
 }
 
 // ---------- rewards, level-ups, celebrations ----------
@@ -655,45 +645,22 @@ function queueCelebration(delay, fn) {
   celebrationFreeAt = at + 5200;
   setTimeout(fn, at - now);
 }
-// the hero in the chosen style; size: [css width, css height] for canvases not laid out yet
-const PIXEL_POSE = { cheer: 'jump', attack: 'thrust', hurt: 'hurt' };
-function heroCtx(canvas, size) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const cssW = size ? size[0] : canvas.clientWidth;
-  const cssH = size ? size[1] : canvas.clientHeight;
-  const w = Math.max(1, Math.round(cssW * dpr));
-  const h = Math.max(1, Math.round(cssH * dpr));
-  if (canvas.width !== w || canvas.height !== h) {
-    canvas.width = w;
-    canvas.height = h;
+// the pixel hero on a 48 x 36 canvas, shown scaled up
+function drawHeroOn(canvas, o) {
+  canvas.classList.add('pixel');
+  if (canvas.width !== AV_W || canvas.height !== AV_H) {
+    canvas.width = AV_W;
+    canvas.height = AV_H;
   }
   const ctx = canvas.getContext('2d');
-  ctx.setTransform(w / HERO_W, 0, 0, h / HERO_H, 0, 0);
-  ctx.clearRect(0, 0, HERO_W, HERO_H);
-  return ctx;
-}
-function drawHeroOn(canvas, o) {
-  if (state.heroStyle === 'pixel') {
-    canvas.classList.add('pixel');
-    if (canvas.width !== AV_W || canvas.height !== AV_H) {
-      canvas.width = AV_W;
-      canvas.height = AV_H;
-    }
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, AV_W, AV_H);
-    if (o.floor !== false) drawFloor(ctx);
-    drawAvatar(ctx, o.title, o.gear, o.pixelPose || PIXEL_POSE[o.action] || 'stand', o.frame || 0, o.qi, state.gender);
-    return;
-  }
-  canvas.classList.remove('pixel');
-  const ctx = heroCtx(canvas, o.size);
-  if (o.floor !== false) drawFloorVec(ctx);
-  drawHeroVec(ctx, { title: o.title, gear: o.gear, gender: state.gender, action: o.action, elapsed: o.elapsed, t: o.t, qi: o.qi });
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, AV_W, AV_H);
+  if (o.floor !== false) drawFloor(ctx);
+  drawAvatar(ctx, o.title, o.gear, o.pose || 'stand', o.frame || 0, o.qi, state.gender);
 }
 function titleCanvas(idx) {
   const c = document.createElement('canvas');
-  drawHeroOn(c, { title: idx, gear: purse.gear, action: 'cheer', elapsed: 250, t: 1000, qi: qiColor(), size: [320, 240] });
+  drawHeroOn(c, { title: idx, gear: purse.gear, pose: 'jump', qi: qiColor() });
   return c;
 }
 function showLevelUp(level) {
@@ -787,7 +754,7 @@ function renderHero() {
     : '再 ' + (info.need - info.into) + ' 經驗升到 Lv ' + (info.level + 1);
   document.getElementById('heroTaels').textContent = purse.taels;
   document.getElementById('heroIngots').textContent = purse.ingots;
-  drawHeroOn(document.getElementById('heroAvatar'), { title: tIdx, gear: purse.gear, t: 1000, qi: qiColor(), size: [192, 144] });
+  drawHeroOn(document.getElementById('heroAvatar'), { title: tIdx, gear: purse.gear, qi: qiColor() });
 
   // titles reached so far, the current one framed, the next one as a black silhouette
   const ladder = document.getElementById('ladder');
@@ -796,7 +763,7 @@ function renderHero() {
     const item = document.createElement('div');
     item.className = 'ladder-item';
     const c = document.createElement('canvas');
-    drawHeroOn(c, { title: i, gear: {}, t: 1000, size: [72, 54] });
+    drawHeroOn(c, { title: i, gear: {} });
     const label = document.createElement('span');
     if (i === tIdx) {
       item.classList.add('now');
@@ -1028,38 +995,25 @@ function equip(place, id) {
 }
 
 // ---------- the 俠客 on the main screen ----------
-const avatar = { canvas: null, queue: [], idle: 0, frame: 0, last: 0, action: '', start: 0 };
+const avatar = { canvas: null, queue: [], idle: 0, frame: 0, last: 0 };
 function avatarPlay(name) {
   avatar.queue = ACTIONS[name].slice();
-  avatar.action = name;
-  avatar.start = performance.now();
   if (reducedMotion()) avatarRender(performance.now());
 }
 function avatarRender(now) {
-  if (state.heroStyle === 'pixel') {
-    let pose;
-    if (avatar.queue.length) {
-      pose = avatar.queue.shift();
-    } else {
-      pose = IDLE_SEQ[avatar.idle % IDLE_SEQ.length];
-      avatar.idle += 1;
-    }
-    avatar.frame += 1;
-    drawHeroOn(avatar.canvas, { title: titleIndex(), gear: purse.gear, pixelPose: pose, frame: avatar.frame, qi: qiColor() });
-    return;
+  let pose;
+  if (avatar.queue.length) {
+    pose = avatar.queue.shift();
+  } else {
+    pose = IDLE_SEQ[avatar.idle % IDLE_SEQ.length];
+    avatar.idle += 1;
   }
-  let action = avatar.action;
-  const elapsed = now - avatar.start;
-  if (action && elapsed > HERO_ACTION_MS[action]) {
-    avatar.action = '';
-    action = '';
-  }
-  drawHeroOn(avatar.canvas, { title: titleIndex(), gear: purse.gear, action: action, elapsed: elapsed, t: now, qi: qiColor() });
+  avatar.frame += 1;
+  drawHeroOn(avatar.canvas, { title: titleIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() });
 }
-// Q版 redraws smoothly at ~30 fps; the pixel style steps like a sprite
+// the pixel hero steps like a sprite, faster during an action
 function avatarTick(now) {
-  let wait = 33;
-  if (state.heroStyle === 'pixel') wait = avatar.queue.length ? 95 : 170;
+  const wait = avatar.queue.length ? 95 : 170;
   if (now - avatar.last >= wait) {
     avatar.last = now;
     avatarRender(now);
@@ -1177,6 +1131,8 @@ async function build() {
   const myToken = ++buildToken;
   const ch = currentChar();
   resultEl.hidden = true;
+  hideNextHint();
+  brush.live = false;
   hideSeal();
   writerEl.classList.remove('ink');
   mineEl.classList.remove('ink');
@@ -1206,6 +1162,7 @@ async function build() {
   mineEl.setAttribute('height', size);
   mineEl.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
   setupFx(document.getElementById('fx'), size);
+  setupBrush(size);
   renderInfo(data);
   document.getElementById('plaque').textContent = '第' + NUMERALS[state.idx] + '回合';
 
@@ -1227,7 +1184,7 @@ async function build() {
     showOutline: state.mode !== 'write',
     strokeColor: colors.strokeColor,
     outlineColor: colors.outlineColor,
-    drawingColor: colors.drawingColor,
+    drawingColor: TRANSPARENT,
     highlightColor: colors.highlightColor,
     radicalColor: colors.radicalColor,
     drawingWidth: drawingWidth(size),
@@ -1251,6 +1208,9 @@ function showMissing(msg) {
 
 function startMode(myToken) {
   stepNum = 0;
+  watchStep.busy = false;
+  watchStep.pending = 0;
+  brush.color = writerColors().drawingColor;
   hintText.textContent = '點格子：下一筆';
   resultEl.hidden = true;
   watchActions.hidden = state.mode !== 'watch';
@@ -1280,6 +1240,7 @@ function startMode(myToken) {
   const hintAfter = state.mode === 'trace' ? 2 : 3;
   if (state.mode === 'write') writer.hideOutline();
   else writer.showOutline();
+  brush.live = true;
 
   writer.quiz({
     leniency: state.lenient ? 1.5 : 1.0,
@@ -1287,7 +1248,7 @@ function startMode(myToken) {
     highlightOnComplete: false,
     onCorrectStroke: function (d) {
       if (keepMode()) {
-        addMine(d.drawnPath.points);
+        addMine();
         swordQi(d.drawnPath.points, qiColor());
       } else {
         const median = [];
@@ -1297,10 +1258,12 @@ function startMode(myToken) {
       sfxSwish();
       avatarPlay('attack');
     },
-    onMistake: function () {
+    onMistake: function (d) {
       sfxWood();
       restartAnimation(arena, 'shake');
       avatarPlay('hurt');
+      // the hint stroke is showing: also mark where the brush goes down
+      if (d.mistakesOnStroke >= hintAfter) strokeRipple(d.strokeNum, true);
     },
     onComplete: function (d) {
       finish(d.totalMistakes);
@@ -1308,32 +1271,226 @@ function startMode(myToken) {
   });
 }
 
-// 看筆順: each tap on the box shows the next stroke, with a press + ripple at the finger
-function stepStroke(e) {
+// a ripple at the starting point (起筆) of a stroke; hint: pulses twice
+function strokeRipple(strokeNum, hint) {
+  if (!charData || reducedMotion()) return;
+  const start = charData.medians[strokeNum][0];
+  const s = toScreen(start[0], start[1], builtSize);
+  const ring = document.createElement('span');
+  ring.className = hint ? 'ripple start hint' : 'ripple start';
+  ring.style.left = s.x + 'px';
+  ring.style.top = s.y + 'px';
+  box.append(ring);
+  setTimeout(function () { ring.remove(); }, hint ? 1250 : 620);
+}
+
+// 看筆順: each tap on the box shows the next stroke. A tap during a stroke waits for it to finish,
+// so no stroke is left half drawn; while taps are waiting the strokes play faster to catch up.
+const watchStep = { busy: false, pending: 0 };
+function strokeSpeed() {
+  return state.slow ? 0.6 : 1.2;
+}
+function stepStroke() {
   if (state.mode !== 'watch' || !writer) return;
+  restartAnimation(box, 'press');
+  sfxTick(1318);
+  if (watchStep.busy) {
+    const left = strokeCount[currentChar()] - stepNum;
+    watchStep.pending = Math.min(watchStep.pending + 1, Math.max(left, 0));
+    return;
+  }
+  playStep();
+}
+function playStep() {
   const total = strokeCount[currentChar()];
   if (stepNum === 0 || stepNum >= total) {
     writer.hideCharacter();
     stepNum = 0;
   }
-  writer.animateStroke(stepNum);
+  const n = stepNum;
   stepNum += 1;
   hintText.textContent = stepNum + ' / ' + total;
+  strokeRipple(n, false);
 
-  const rect = box.getBoundingClientRect();
-  const ring = document.createElement('span');
-  ring.className = 'ripple';
-  ring.style.left = (e.clientX - rect.left) + 'px';
-  ring.style.top = (e.clientY - rect.top) + 'px';
-  box.append(ring);
-  setTimeout(function () { ring.remove(); }, 520);
-  restartAnimation(box, 'press');
-  sfxTick(1318);
+  // Hanzi Writer reads the speed from its options each time a stroke starts
+  writer._options.strokeAnimationSpeed = watchStep.pending > 0 ? strokeSpeed() * 2.5 : strokeSpeed();
+  watchStep.busy = true;
+  const myWriter = writer;
+  writer.animateStroke(n, {
+    onComplete: function () {
+      if (writer !== myWriter) return;
+      writer._options.strokeAnimationSpeed = strokeSpeed();
+      watchStep.busy = false;
+      if (watchStep.pending > 0 && state.mode === 'watch') {
+        watchStep.pending -= 1;
+        playStep();
+      }
+    },
+  });
 }
 box.addEventListener('pointerdown', stepStroke);
 
+// ---------- brush ----------
+// The child's stroke drawn like a brush: wide where the finger moves slowly or an Apple Pencil
+// presses hard, narrow where it moves fast. The start presses down (頓筆); a quick lift tapers
+// the end to a point (出鋒). The shape is a chain of circles joined by trapezoids, one SVG path.
+const brushEl = document.getElementById('brush');
+const brush = { live: false, id: null, points: [], color: '' };
+
+function setupBrush(size) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  brushEl.width = Math.round(size * dpr);
+  brushEl.height = Math.round(size * dpr);
+  const ctx = brushEl.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  brush.points = [];
+}
+
+// width at each point, in px
+function brushWidths(points, size, finished) {
+  const base = size * 0.052;
+  const widths = [];
+  let w = base * 1.15;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    let target = base;
+    if (i > 0) {
+      // speed in box widths per second, over the last few points so event timing jitter averages out
+      const q = points[Math.max(0, i - 3)];
+      const dt = Math.max(1, p.t - q.t);
+      const speed = Math.hypot(p.x - q.x, p.y - q.y) / dt / size * 1000;
+      target = base * Math.min(1.2, Math.max(0.45, 1.25 - 0.3 * speed));
+    }
+    if (p.pen) target = target * (0.35 + 1.1 * p.pressure);
+    w = 0.85 * w + 0.15 * target;
+    widths.push(w);
+  }
+  // 頓筆: the first points press down
+  for (let i = 0; i < Math.min(3, widths.length); i++) {
+    widths[i] = Math.max(widths[i], base * 1.1);
+  }
+  // 出鋒: a quick lift tapers the last part of the stroke
+  const n = points.length;
+  if (finished && n > 5) {
+    const a = points[n - 4];
+    const b = points[n - 1];
+    const endSpeed = Math.hypot(b.x - a.x, b.y - a.y) / Math.max(1, b.t - a.t) / size * 1000;
+    if (endSpeed > 1.0) {
+      const tail = Math.max(3, Math.round(n * 0.25));
+      for (let k = 0; k < tail; k++) {
+        const i = n - tail + k;
+        const f = 1 - 0.8 * ((k + 1) / tail);
+        widths[i] = widths[i] * f;
+      }
+    }
+  }
+  return widths;
+}
+
+// polygon as path data, wound clockwise so overlapping pieces never cancel under the nonzero rule
+function brushPolygon(pts) {
+  let area = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const q = pts[(i + 1) % pts.length];
+    area += p[0] * q[1] - q[0] * p[1];
+  }
+  if (area < 0) pts.reverse();
+  let d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+  for (let i = 1; i < pts.length; i++) d += 'L' + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1);
+  return d + 'Z';
+}
+function brushCircle(x, y, r) {
+  const left = (x - r).toFixed(1) + ' ' + y.toFixed(1);
+  const right = (x + r).toFixed(1) + ' ' + y.toFixed(1);
+  const rr = r.toFixed(1);
+  return 'M' + left + 'A' + rr + ' ' + rr + ' 0 1 1 ' + right + 'A' + rr + ' ' + rr + ' 0 1 1 ' + left + 'Z';
+}
+function brushPath(points, size, finished) {
+  if (!points.length) return '';
+  const widths = brushWidths(points, size, finished);
+  let d = '';
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    d += brushCircle(p.x, p.y, widths[i] / 2);
+    if (i === 0) continue;
+    const q = points[i - 1];
+    const len = Math.hypot(p.x - q.x, p.y - q.y);
+    if (len < 0.5) continue;
+    const nx = -(p.y - q.y) / len;
+    const ny = (p.x - q.x) / len;
+    const hq = widths[i - 1] / 2;
+    const hp = widths[i] / 2;
+    d += brushPolygon([
+      [q.x + nx * hq, q.y + ny * hq],
+      [p.x + nx * hp, p.y + ny * hp],
+      [p.x - nx * hp, p.y - ny * hp],
+      [q.x - nx * hq, q.y - ny * hq],
+    ]);
+  }
+  return d;
+}
+function drawBrush(finished) {
+  const ctx = brushEl.getContext('2d');
+  ctx.clearRect(0, 0, builtSize, builtSize);
+  const d = brushPath(brush.points, builtSize, finished);
+  if (!d) return;
+  ctx.fillStyle = brush.color;
+  ctx.fill(new Path2D(d));
+}
+function brushPoint(e) {
+  const rect = box.getBoundingClientRect();
+  const k = builtSize / rect.width;
+  return {
+    x: (e.clientX - rect.left) * k,
+    y: (e.clientY - rect.top) * k,
+    t: e.timeStamp,
+    pen: e.pointerType === 'pen' && e.pressure > 0,
+    pressure: e.pressure,
+  };
+}
+box.addEventListener('pointerdown', function (e) {
+  if (!brush.live || brush.id !== null) return;
+  brush.id = e.pointerId;
+  brush.points = [brushPoint(e)];
+  brushEl.classList.remove('fade');
+  drawBrush(false);
+});
+window.addEventListener('pointermove', function (e) {
+  if (e.pointerId !== brush.id) return;
+  const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  for (const ev of events.length ? events : [e]) {
+    const p = brushPoint(ev);
+    const last = brush.points[brush.points.length - 1];
+    if (Math.hypot(p.x - last.x, p.y - last.y) >= 1.5) brush.points.push(p);
+  }
+  drawBrush(false);
+});
+function endBrush(e) {
+  if (e.pointerId !== brush.id) return;
+  brush.id = null;
+  drawBrush(true);
+  brushEl.classList.add('fade');
+}
+window.addEventListener('pointerup', endBrush);
+window.addEventListener('pointercancel', endBrush);
+
+// after a character is done, a tap anywhere on the box does what the next button does
+let finishedAt = 0;
+const nextHint = document.getElementById('nextHint');
+function hideNextHint() {
+  finishedAt = 0;
+  nextHint.hidden = true;
+}
+box.addEventListener('pointerdown', function () {
+  if (!finishedAt || state.mode === 'watch') return;
+  if (performance.now() - finishedAt < 800) return;
+  document.getElementById('nextBtn').click();
+});
+
 function finish(mistakes) {
   const myToken = buildToken;
+  brush.live = false;
   const ch = currentChar();
   const grade = gradeFor(mistakes);
   if (!state.stars[ch]) state.stars[ch] = {};
@@ -1427,6 +1584,13 @@ function finish(mistakes) {
   nextBtn.setAttribute('aria-label', label);
   nextBtn.title = label;
   resultEl.hidden = false;
+
+  finishedAt = performance.now();
+  setTimeout(function () {
+    if (myToken !== buildToken || !finishedAt) return;
+    nextHint.textContent = '點格子：' + label;
+    nextHint.hidden = false;
+  }, 800);
 }
 
 // ---------- controls ----------
@@ -1468,6 +1632,24 @@ document.addEventListener('pointerdown', function (e) {
   el.append(dot);
   setTimeout(function () { dot.remove(); }, 480);
 });
+// every button with Chinese on it reads its name aloud (its aria-label, else its words), unless its
+// own handler already spoke. A one- or two-character choice such as 開 / 關 is read with its row's
+// label: 「音效 開」.
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('button');
+  if (!el || el.disabled || !state.sound) return;
+  const found = (el.getAttribute('aria-label') || el.textContent).match(/\p{Script=Han}+/gu);
+  if (!found) return;
+  let text = found.join(' ');
+  const label = el.closest('.opt-row') ? el.closest('.opt-row').querySelector('.label') : null;
+  if (label && text.length <= 2) text = label.textContent.trim() + ' ' + text;
+  const clickedAt = performance.now();
+  setTimeout(function () {
+    if (lastSaidAt >= clickedAt) return;
+    say(text);
+  }, 0);
+});
+
 // iOS Safari applies :active only when the page listens for touches
 document.addEventListener('touchstart', function () {}, { passive: true });
 
@@ -1651,7 +1833,7 @@ function renderOptions() {
   document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
-    if (['grid', 'theme', 'content', 'music', 'gender', 'heroStyle'].indexOf(opt) >= 0) current = state[opt];
+    if (['grid', 'theme', 'content', 'music', 'gender'].indexOf(opt) >= 0) current = state[opt];
     else current = state[opt] ? '1' : '0';
     row.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
@@ -1681,7 +1863,7 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
       playMusic(state.music);
       return;
     }
-    if (opt === 'gender' || opt === 'heroStyle') {
+    if (opt === 'gender') {
       state[opt] = b.dataset.val;
       renderOptions();
       save();

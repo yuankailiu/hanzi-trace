@@ -479,10 +479,33 @@ canvas.pixel {
   touch-action: none;
   overflow: hidden;
 }
-.box svg.grid, #writer, #mine, #fx { position: absolute; inset: 0; }
+.box svg.grid, #writer, #mine, #brush, #fx { position: absolute; inset: 0; }
 .box svg.grid { width: 100%; height: 100%; }
-#mine, #fx { pointer-events: none; }
-#mine polyline { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; }
+#mine, #brush, #fx { pointer-events: none; }
+#mine path { fill: var(--ink); }
+/* the stroke being written; it fades when the finger lifts, like Hanzi Writer's own */
+#brush { width: 100%; height: 100%; }
+#brush.fade { opacity: 0; transition: opacity 0.3s ease-out; }
+/* after a character is done, a tap on the box goes on */
+.next-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 2px solid var(--panel-edge);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: hint-in 0.4s ease-out;
+}
+@keyframes hint-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+}
 .grid .frame { fill: none; stroke: var(--frame); stroke-width: 2.5; }
 .grid .guide { stroke: var(--grid); stroke-width: 1.2; stroke-dasharray: 6 6; }
 .grid .diag { display: none; }
@@ -511,6 +534,9 @@ canvas.pixel {
   from { transform: scale(0.4); opacity: 0.9; }
   to { transform: scale(5); opacity: 0; }
 }
+/* the ripple at the stroke's starting point (起筆), with a solid dot where the brush goes down */
+.ripple.start { border-width: 3px; background: radial-gradient(circle, var(--accent) 0 30%, transparent 32%); }
+.ripple.hint { animation: ripple 0.6s ease-out 2; }
 .arena.shake { animation: shake 0.32s ease; }
 @keyframes shake {
   25% { transform: translateX(-6px); }

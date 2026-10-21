@@ -370,8 +370,11 @@ function pickVoice() {
   }
   return voices[0] || null;
 }
+// when speech last started, so a generic button handler can tell a specific one already spoke
+let lastSaidAt = 0;
 function say(text) {
   if (!('speechSynthesis' in window)) return;
+  lastSaidAt = performance.now();
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice();
