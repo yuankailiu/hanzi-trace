@@ -4,7 +4,6 @@ const N_CHUNKS = 128;
 const TRANSPARENT = 'rgba(0,0,0,0)';
 const COMPARE_RED = 'rgba(210,15,57,0.35)';
 const ARENA_PAD = 18;   // arena padding + its border + the paper border
-const NUMERALS = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
 const TAELS_FOR_GRADE = { 3: 10, 2: 6, 1: 3 };
 const RECENT_MAX = 15;
@@ -122,8 +121,9 @@ function parseText(text) {
   return out.slice(0, 12);
 }
 function boxSize() {
+  const plaqueH = parseFloat(getComputedStyle(arena).getPropertyValue('--plaque-h')) || 0;
   const w = stage.clientWidth - 2 * ARENA_PAD;
-  const h = stage.clientHeight - 2 * ARENA_PAD - 14;
+  const h = stage.clientHeight - 2 * ARENA_PAD - plaqueH;
   return Math.floor(Math.max(200, Math.min(w, h, 760)));
 }
 function boxPadding(size) {
@@ -1103,19 +1103,7 @@ function renderChips() {
       g.className = 'text-glyph';
       g.textContent = ch;
     }
-
-    const meta = document.createElement('span');
-    meta.className = 'meta';
-    if (strokeCount[ch] === 0) {
-      meta.textContent = '沒有資料';
-    } else if (state.mode === 'watch') {
-      if (strokeCount[ch]) meta.textContent = strokeCount[ch] + ' 筆';
-    } else {
-      const best = (state.stars[ch] && state.stars[ch][state.mode]) || 0;
-      meta.innerHTML = '<span class="marks">' + marksHtml(best) + '</span>';
-    }
-
-    b.append(g, meta);
+    b.append(g);
     b.addEventListener('click', function () {
       state.idx = i;
       if (state.sound) say(ch);
@@ -1124,6 +1112,23 @@ function renderChips() {
     });
     chipsEl.append(b);
   });
+  renderBoxMeta();
+}
+// the current character's stroke count, and its best marks in 描字 / 自己寫
+function renderBoxMeta() {
+  const el = document.getElementById('boxMeta');
+  const ch = currentChar();
+  el.classList.toggle('missing', strokeCount[ch] === 0);
+  if (!ch || strokeCount[ch] === undefined) {
+    el.innerHTML = '';
+  } else if (strokeCount[ch] === 0) {
+    el.textContent = '沒有資料';
+  } else if (state.mode === 'watch') {
+    el.textContent = strokeCount[ch] + ' 筆';
+  } else {
+    const best = (state.stars[ch] && state.stars[ch][state.mode]) || 0;
+    el.innerHTML = '<span>' + strokeCount[ch] + ' 筆</span><span class="marks">' + marksHtml(best) + '</span>';
+  }
 }
 
 // ---------- writer ----------
@@ -1164,7 +1169,6 @@ async function build() {
   setupFx(document.getElementById('fx'), size);
   setupBrush(size);
   renderInfo(data);
-  document.getElementById('plaque').textContent = '第' + NUMERALS[state.idx] + '回合';
 
   if (!data) {
     strokeCount[ch] = 0;
@@ -1263,7 +1267,7 @@ function startMode(myToken) {
       restartAnimation(arena, 'shake');
       avatarPlay('hurt');
       // the hint stroke is showing: also mark where the brush goes down
-      if (d.mistakesOnStroke >= hintAfter) strokeRipple(d.strokeNum, true);
+      if (d.mistakesOnStroke >= hintAfter) strokeRipple(d.strokeNum);
     },
     onComplete: function (d) {
       finish(d.totalMistakes);
@@ -1271,17 +1275,17 @@ function startMode(myToken) {
   });
 }
 
-// a ripple at the starting point (起筆) of a stroke; hint: pulses twice
-function strokeRipple(strokeNum, hint) {
+// a ripple at the starting point (起筆) of a stroke
+function strokeRipple(strokeNum) {
   if (!charData || reducedMotion()) return;
   const start = charData.medians[strokeNum][0];
   const s = toScreen(start[0], start[1], builtSize);
   const ring = document.createElement('span');
-  ring.className = hint ? 'ripple start hint' : 'ripple start';
+  ring.className = 'ripple';
   ring.style.left = s.x + 'px';
   ring.style.top = s.y + 'px';
   box.append(ring);
-  setTimeout(function () { ring.remove(); }, hint ? 1250 : 620);
+  setTimeout(function () { ring.remove(); }, 520);
 }
 
 // 看筆順: each tap on the box shows the next stroke. A tap during a stroke waits for it to finish,
@@ -1310,7 +1314,7 @@ function playStep() {
   const n = stepNum;
   stepNum += 1;
   hintText.textContent = stepNum + ' / ' + total;
-  strokeRipple(n, false);
+  strokeRipple(n);
 
   // Hanzi Writer reads the speed from its options each time a stroke starts
   writer._options.strokeAnimationSpeed = watchStep.pending > 0 ? strokeSpeed() * 2.5 : strokeSpeed();
@@ -1348,9 +1352,9 @@ function setupBrush(size) {
 
 // width at each point, in px
 function brushWidths(points, size, finished) {
-  const base = size * 0.052;
+  const base = size * 0.036;
   const widths = [];
-  let w = base * 1.15;
+  let w = base * 1.05;
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
     let target = base;
@@ -1359,7 +1363,7 @@ function brushWidths(points, size, finished) {
       const q = points[Math.max(0, i - 3)];
       const dt = Math.max(1, p.t - q.t);
       const speed = Math.hypot(p.x - q.x, p.y - q.y) / dt / size * 1000;
-      target = base * Math.min(1.2, Math.max(0.45, 1.25 - 0.3 * speed));
+      target = base * Math.min(1.15, Math.max(0.45, 1.25 - 0.3 * speed));
     }
     if (p.pen) target = target * (0.35 + 1.1 * p.pressure);
     w = 0.85 * w + 0.15 * target;
@@ -1367,7 +1371,7 @@ function brushWidths(points, size, finished) {
   }
   // 頓筆: the first points press down
   for (let i = 0; i < Math.min(3, widths.length); i++) {
-    widths[i] = Math.max(widths[i], base * 1.1);
+    widths[i] = Math.max(widths[i], base * 1.05);
   }
   // 出鋒: a quick lift tapers the last part of the stroke
   const n = points.length;
@@ -1485,6 +1489,8 @@ function hideNextHint() {
 box.addEventListener('pointerdown', function () {
   if (!finishedAt || state.mode === 'watch') return;
   if (performance.now() - finishedAt < 800) return;
+  restartAnimation(box, 'press');
+  sfxTick(1318);
   document.getElementById('nextBtn').click();
 });
 
@@ -1633,21 +1639,21 @@ document.addEventListener('pointerdown', function (e) {
   setTimeout(function () { dot.remove(); }, 480);
 });
 // every button with Chinese on it reads its name aloud (its aria-label, else its words), unless its
-// own handler already spoke. A one- or two-character choice such as 開 / 關 is read with its row's
-// label: 「音效 開」.
+// own handler already spoke or it is marked data-quiet. A one- or two-character choice such as
+// 開 / 關 is read with its row's label: 「音效 開」. This runs last in the same click, so the
+// speech still counts as started by the tap (iOS plays nothing that starts later).
+let clickStartedAt = 0;
+document.addEventListener('click', function () { clickStartedAt = performance.now(); }, true);
 document.addEventListener('click', function (e) {
   const el = e.target.closest('button');
-  if (!el || el.disabled || !state.sound) return;
+  if (!el || el.disabled || !state.sound || el.hasAttribute('data-quiet')) return;
+  if (lastSaidAt >= clickStartedAt) return;
   const found = (el.getAttribute('aria-label') || el.textContent).match(/\p{Script=Han}+/gu);
   if (!found) return;
   let text = found.join(' ');
   const label = el.closest('.opt-row') ? el.closest('.opt-row').querySelector('.label') : null;
   if (label && text.length <= 2) text = label.textContent.trim() + ' ' + text;
-  const clickedAt = performance.now();
-  setTimeout(function () {
-    if (lastSaidAt >= clickedAt) return;
-    say(text);
-  }, 0);
+  say(text);
 });
 
 // iOS Safari applies :active only when the page listens for touches
@@ -1679,14 +1685,19 @@ document.getElementById('nextBtn').addEventListener('click', function (e) {
     state.idx += 1;
     renderChips();
     build();
+    if (state.sound) say(currentChar());
   } else if (action === 'to-write') {
     state.idx = 0;
     setMode('write');
+    if (state.sound) say(currentChar());
   } else {
     nextWord(true);
   }
 });
-document.getElementById('diceBtn').addEventListener('click', function () { nextWord(true); });
+document.getElementById('diceBtn').addEventListener('click', function () {
+  sfxDice();
+  nextWord(true);
+});
 document.getElementById('banner').addEventListener('click', function (e) { e.currentTarget.hidden = true; });
 
 // ---------- sheets ----------

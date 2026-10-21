@@ -14,6 +14,7 @@
   /* boards and buttons */
   --panel: #fbf4e8;
   --panel-edge: #7a5638;
+  --plaque-1: #5b3423; --plaque-2: #351d12; --plaque-gold: #d9ac4a; --plaque-gold-dim: #8c6a2c; --plaque-ink: #f6d684; --plaque-dim: #c09a5a;
   --panel-drop: #cdb08c;
   --panel-hi: rgba(255, 255, 255, 0.7);
   --btn: #fff8ec;
@@ -62,6 +63,7 @@
     --bg-pattern: radial-gradient(1.2px 1.2px at 18px 26px, rgba(255, 255, 255, 0.55), transparent), radial-gradient(1px 1px at 92px 70px, rgba(255, 255, 255, 0.4), transparent), radial-gradient(1.5px 1.5px at 140px 20px, rgba(249, 226, 175, 0.55), transparent), radial-gradient(1px 1px at 60px 130px, rgba(255, 255, 255, 0.35), transparent);
     --bg-glow: radial-gradient(28% 22% at 88% 4%, rgba(249, 226, 175, 0.22), transparent 70%);
     --panel: #2a2738; --panel-edge: #b8955a; --panel-drop: #0f0d18; --panel-hi: rgba(249, 226, 175, 0.08);
+    --plaque-1: #6e2722; --plaque-2: #44130f; --plaque-gold: #e0b957; --plaque-gold-dim: #94702e; --plaque-ink: #f9dc8c; --plaque-dim: #c4a062;
     --btn: #34304a; --btn-drop: #120f1c; --primary: #eb6f73; --primary-drop: #8f2f3b; --primary-ink: #1e1e2e;
     --plank-1: #5b2a2a; --plank-2: #3a1a1c; --plank-line: rgba(249, 226, 175, 0.12); --post: #2b1415; --post-cap: #e0b957;
     --paper: #232032; --ink: #e9e3f2; --ink-wet: #b9b2cc; --ink-halo: rgba(233, 227, 242, 0.2);
@@ -77,6 +79,7 @@
   --bg-pattern: radial-gradient(1.2px 1.2px at 18px 26px, rgba(255, 255, 255, 0.55), transparent), radial-gradient(1px 1px at 92px 70px, rgba(255, 255, 255, 0.4), transparent), radial-gradient(1.5px 1.5px at 140px 20px, rgba(249, 226, 175, 0.55), transparent), radial-gradient(1px 1px at 60px 130px, rgba(255, 255, 255, 0.35), transparent);
   --bg-glow: radial-gradient(28% 22% at 88% 4%, rgba(249, 226, 175, 0.22), transparent 70%);
   --panel: #2a2738; --panel-edge: #b8955a; --panel-drop: #0f0d18; --panel-hi: rgba(249, 226, 175, 0.08);
+    --plaque-1: #6e2722; --plaque-2: #44130f; --plaque-gold: #e0b957; --plaque-gold-dim: #94702e; --plaque-ink: #f9dc8c; --plaque-dim: #c4a062;
   --btn: #34304a; --btn-drop: #120f1c; --primary: #eb6f73; --primary-drop: #8f2f3b; --primary-ink: #1e1e2e;
   --plank-1: #5b2a2a; --plank-2: #3a1a1c; --plank-line: rgba(249, 226, 175, 0.12); --post: #2b1415; --post-cap: #e0b957;
   --paper: #232032; --ink: #e9e3f2; --ink-wet: #b9b2cc; --ink-halo: rgba(233, 227, 242, 0.2);
@@ -249,46 +252,10 @@ button[aria-pressed="true"].toggle {
 .topbar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   min-width: 0;
 }
-.chips {
-  display: flex;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
-  overflow-x: auto;
-  padding-bottom: 5px;
-  scrollbar-width: none;
-}
-.chips::-webkit-scrollbar { display: none; }
-.chip {
-  flex: none;
-  display: grid;
-  justify-items: center;
-  gap: 1px;
-  padding: 5px 9px 3px;
-  border-radius: 12px;
-  font-weight: 400;
-}
-.chip .glyph-svg { width: 40px; height: 40px; color: var(--ink); }
-.chip .text-glyph { font-family: var(--font-display); font-size: 2rem; line-height: 40px; }
-.chip .meta {
-  font-family: var(--font-body);
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.06em;
-  min-height: 1.1em;
-  line-height: 1.1;
-}
-.chip[aria-current="true"] {
-  border-color: var(--primary-drop);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 2px var(--accent), 0 4px 0 var(--primary-drop);
-}
-.chip.missing .meta { color: var(--accent); }
 .marks { letter-spacing: 0.15em; }
 .marks .on { color: var(--accent); }
 .marks .off { color: var(--line); }
@@ -449,23 +416,107 @@ canvas.pixel {
 }
 .arena::before { left: -9px; }
 .arena::after { right: -9px; }
+/* 牌匾: a lacquered signboard in a gold frame hangs on the 擂台's top edge; the word's characters
+   are written on it in gold, the one being practiced glowing with a red mark under it */
+.arena {
+  --plaque-h: 66px;
+  margin-top: calc(var(--plaque-h) / 2);
+  padding-top: calc(var(--plaque-h) / 2 + 8px);
+}
 .plaque {
   position: absolute;
-  top: -15px;
+  top: calc(var(--plaque-h) / -2 - 2px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
-  padding: 2px 12px 2px 18px;
-  background: var(--primary);
-  color: var(--primary-ink);
+  box-sizing: border-box;
+  height: var(--plaque-h);
+  max-width: calc(100% - 56px);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.08) 22px 23px),
+    linear-gradient(180deg, var(--plaque-1), var(--plaque-2));
+  border: 3px solid var(--plaque-gold);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 2.5px var(--panel-edge),
+    inset 0 0 0 2px var(--plaque-2),
+    inset 0 0 0 3.5px var(--plaque-gold-dim),
+    0 6px 0 2px var(--panel-drop);
+}
+/* gold end pieces, like the scroll ends of a hanging board */
+.plaque::before, .plaque::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: calc(var(--plaque-h) * 0.55);
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, var(--plaque-gold), var(--plaque-gold-dim));
   border: 2.5px solid var(--panel-edge);
+  border-radius: 6px;
+}
+.plaque::before { left: -16px; }
+.plaque::after { right: -16px; }
+.chips {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none;
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 2px 6px 6px;
+  background: none;
+  border: 0;
   border-radius: 8px;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 3px 0 var(--primary-drop);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 0.3em;
-  white-space: nowrap;
+  box-shadow: none;
+  color: var(--plaque-dim);
+}
+.chip:active { transform: translateY(1px); }
+.chip .glyph-svg { width: calc(var(--plaque-h) - 24px); height: calc(var(--plaque-h) - 24px); color: inherit; }
+.chip .text-glyph { font-family: var(--font-display); font-size: calc(var(--plaque-h) - 30px); line-height: calc(var(--plaque-h) - 24px); }
+.chip[aria-current="true"] {
+  color: var(--plaque-ink);
+  filter: drop-shadow(0 0 5px rgba(255, 214, 120, 0.55));
+}
+.chip[aria-current="true"]::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  bottom: 1px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.chip.missing { color: var(--accent); }
+/* stroke count and best marks of the character, in the box's lower left corner */
+.box-meta {
+  position: absolute;
+  left: 10px;
+  bottom: 7px;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.box-meta.missing { color: var(--accent); }
+@media (max-width: 560px), (max-height: 500px) {
+  .arena { --plaque-h: 50px; }
 }
 .box {
   position: relative;
@@ -485,7 +536,7 @@ canvas.pixel {
 #mine path { fill: var(--ink); }
 /* the stroke being written; it fades when the finger lifts, like Hanzi Writer's own */
 #brush { width: 100%; height: 100%; }
-#brush.fade { opacity: 0; transition: opacity 0.3s ease-out; }
+#brush.fade { opacity: 0; transition: opacity 0.2s ease-out; }
 /* after a character is done, a tap on the box goes on */
 .next-hint {
   position: absolute;
@@ -534,9 +585,6 @@ canvas.pixel {
   from { transform: scale(0.4); opacity: 0.9; }
   to { transform: scale(5); opacity: 0; }
 }
-/* the ripple at the stroke's starting point (起筆), with a solid dot where the brush goes down */
-.ripple.start { border-width: 3px; background: radial-gradient(circle, var(--accent) 0 30%, transparent 32%); }
-.ripple.hint { animation: ripple 0.6s ease-out 2; }
 .arena.shake { animation: shake 0.32s ease; }
 @keyframes shake {
   25% { transform: translateX(-6px); }

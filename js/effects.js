@@ -182,6 +182,24 @@ function sfxStamp() {
 }
 
 // 木魚: a gentle wooden knock for a wrong stroke
+// 擲骰子: a few quick wooden clacks
+function sfxDice() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const hits = [0, 0.055, 0.1, 0.17];
+  for (let i = 0; i < hits.length; i++) {
+    const at = t + hits[i];
+    const o = ac.createOscillator();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(rand(900, 1300), at);
+    o.frequency.exponentialRampToValueAtTime(rand(500, 700), at + 0.03);
+    const g = envelope(ac, at, 0.22 - i * 0.03, 0.002, 0.045);
+    o.connect(g).connect(audioOut());
+    o.start(at);
+    o.stop(at + 0.06);
+  }
+}
 function sfxWood() {
   const ac = getAudio();
   if (!ac) return;
@@ -375,7 +393,10 @@ let lastSaidAt = 0;
 function say(text) {
   if (!('speechSynthesis' in window)) return;
   lastSaidAt = performance.now();
-  window.speechSynthesis.cancel();
+  // cancel only what is playing: Safari can drop a speak() that follows a needless cancel()
+  const synth = window.speechSynthesis;
+  if (synth.speaking || synth.pending) synth.cancel();
+  synth.resume();
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice();
   u.lang = v ? v.lang : 'zh-TW';
