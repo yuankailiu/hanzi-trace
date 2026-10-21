@@ -50,8 +50,9 @@ img { max-width: 100%; }
 <div class="start-gate" id="startGate">
   <div class="start-card card">
     <h1>筆順描字本</h1>
-    <p id="startWho">少俠，準備好了嗎？</p>
-    <button type="button" class="start-btn" id="startBtn" data-quiet>開始練功</button>
+    <p>哪一位俠客要練功？</p>
+    <div class="recent-heroes" id="recentHeroes"></div>
+    <button type="button" class="start-btn" id="guestStart" data-quiet>以訪客身分進入</button>
   </div>
 </div>
 
@@ -199,6 +200,11 @@ img { max-width: 100%; }
       <h2 id="profileTitle">俠客帳號</h2>
       <button type="button" data-close>關閉</button>
     </div>
+    <div class="tabs" id="profileTabs" role="tablist">
+      <button type="button" role="tab" data-pane="accountPane" aria-selected="true">帳號</button>
+      <button type="button" role="tab" data-pane="newsPane" aria-selected="false">包打聽</button>
+    </div>
+    <div id="accountPane">
     <p class="status-line" id="profileStatus"></p>
     <div class="row">
       <div class="field">
@@ -210,12 +216,75 @@ img { max-width: 100%; }
         <input id="passInput" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••">
       </div>
     </div>
+    <div class="opt-row" id="newGenderRow">
+      <span class="label">新俠客</span>
+      <button type="button" data-g="boy">男生</button>
+      <button type="button" data-g="girl">女生</button>
+      <button type="button" data-g="any">雌雄難辨</button>
+    </div>
+    <p class="note">建立新俠客時選一次，選好就固定了；雌雄難辨可以隨時換，還能在包打聽幫別人改。</p>
     <div class="row">
       <button type="submit" class="primary">登入／建立</button>
       <button type="button" id="logoutBtn">換回訪客</button>
     </div>
     <p class="note" id="profileNote"></p>
+    </div>
+    <div id="newsPane" hidden>
+      <p class="note" id="newsNote"></p>
+      <div class="hero-cards" id="heroCards"></div>
+      <div class="hero-detail" id="heroDetail" hidden>
+        <button type="button" id="newsBack">回列表</button>
+        <div class="detail-hero">
+          <canvas id="giftAvatar"></canvas>
+          <div>
+            <b class="gift-name" id="giftName"></b>
+            <div class="quiet" id="giftRank"></div>
+            <div class="quiet" id="giftMoney"></div>
+          </div>
+        </div>
+        <div class="opt-row gift-row">
+          <span class="label">送銀兩</span>
+          <button type="button" data-taels="10">＋10</button>
+          <button type="button" data-taels="50">＋50</button>
+          <button type="button" data-taels="100">＋100</button>
+          <button type="button" data-taels="0">清除</button>
+          <span class="quiet" id="giftTaels"></span>
+        </div>
+        <div class="opt-row gift-row">
+          <span class="label">送元寶</span>
+          <button type="button" data-ingots="1">＋1</button>
+          <button type="button" data-ingots="0">清除</button>
+          <span class="quiet" id="giftIngots"></span>
+        </div>
+        <div class="label">送東西（點一下選取）</div>
+        <div class="gift-items" id="giftItems"></div>
+        <div class="opt-row gift-row" id="giftGenderRow" hidden>
+          <span class="label">改性別</span>
+          <button type="button" data-gender="">不改</button>
+          <button type="button" data-gender="boy">男生</button>
+          <button type="button" data-gender="girl">女生</button>
+          <button type="button" data-gender="any">雌雄難辨</button>
+        </div>
+        <div class="field">
+          <label for="letterText">捎信</label>
+          <textarea id="letterText" maxlength="100" rows="2" placeholder="想說的話"></textarea>
+        </div>
+        <div class="row"><button type="button" class="primary" id="giftSend">捎信送出</button></div>
+        <p class="note" id="giftNote"></p>
+      </div>
+    </div>
   </form>
+</div>
+
+<!-- 江湖來信: letters and gifts from other 俠客 -->
+<div class="sheet" id="letterSheet" hidden role="dialog" aria-modal="true" aria-labelledby="letterTitle">
+  <div class="sheet-panel card">
+    <div class="sheet-head">
+      <h2 id="letterTitle">江湖來信</h2>
+      <button type="button" data-close>關閉</button>
+    </div>
+    <div class="letters" id="letterList"></div>
+  </div>
 </div>
 
 <!-- 設定 -->
@@ -294,13 +363,13 @@ img { max-width: 100%; }
 <div class="sheet" id="heroSheet" hidden role="dialog" aria-modal="true" aria-labelledby="heroTitle">
   <div class="sheet-panel card wide">
     <div class="sheet-head">
-      <h2 id="heroTitle">我的俠客</h2>
+      <h2><button type="button" class="plain-btn" id="heroTitle">我的俠客</button></h2>
       <button type="button" data-close>關閉</button>
     </div>
     <section class="hero">
       <canvas id="heroAvatar" width="48" height="36"></canvas>
       <div class="hero-info">
-        <div class="title-row"><span class="rank-tag big" id="heroRank"></span><span class="lv" id="heroLv"></span></div>
+        <div class="title-row"><button type="button" class="plain-btn rank-tag big" id="heroRank"></button><span class="lv" id="heroLv"></span></div>
         <div class="xp wide"><i id="heroXp" style="width:0%"></i></div>
         <div class="quiet" id="heroNext"></div>
         <div class="purse-row">

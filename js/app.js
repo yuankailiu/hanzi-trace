@@ -42,6 +42,7 @@ const state = {
   music: 'xiangqi',
   volume: 0.8,
   gender: 'boy',
+  genderLock: '',
   theme: 'light',
   grid: 'tian',
   lenient: true,
@@ -236,7 +237,7 @@ function serializeProfile() {
     v: 4,
     savedAt: Date.now(),
     settings: {
-      content: state.content, music: state.music, volume: state.volume, gender: state.gender, theme: state.theme, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, volume: state.volume, gender: state.gender, genderLock: state.genderLock, theme: state.theme, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -259,8 +260,9 @@ function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
   const p = JSON.parse(JSON.stringify(source));
   resetProgress();
+  state.genderLock = '';
   if (p.settings) {
-    for (const key of ['content', 'music', 'gender', 'theme', 'grid']) {
+    for (const key of ['content', 'music', 'gender', 'genderLock', 'theme', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
@@ -268,6 +270,9 @@ function applyProfile(source) {
     }
     if (typeof p.settings.volume === 'number') state.volume = p.settings.volume;
   }
+  // accounts made before the gender was chosen at sign-up keep the one they had
+  if (account.alias && !state.genderLock) state.genderLock = state.gender;
+  if (state.genderLock === 'boy' || state.genderLock === 'girl') state.gender = state.genderLock;
   if (p.stars) state.stars = p.stars;
   if (p.myName) state.myName = p.myName;
   if (p.recent) state.recent = p.recent;
@@ -351,6 +356,7 @@ async function rpc(fn, body) {
   if (!r.ok) {
     const err = new Error(text);
     err.wrongPass = text.indexOf('wrong passcode') >= 0;
+    err.notFound = r.status === 404;
     throw err;
   }
   return text ? JSON.parse(text) : null;
@@ -373,8 +379,10 @@ async function cloudSave() {
 // on start, before anything is saved locally: take the cloud copy if another device saved more recently
 async function cloudRefresh() {
   if (!cloudEnabled() || !account.alias || !account.pass) return;
+  const alias = account.alias;
   try {
-    const res = await rpc('profile_load', { p_alias: account.alias, p_pass: account.pass });
+    const res = await rpc('profile_load', { p_alias: alias, p_pass: account.pass });
+    if (account.alias !== alias) return false;
     account.sync = 'cloud';
     const local = loadLocalProfile(account.alias);
     const localAt = local && local.savedAt ? local.savedAt : 0;
@@ -398,6 +406,7 @@ document.addEventListener('visibilitychange', function () {
   if (document.hidden) return;
   cloudRefresh().then(function (changed) {
     if (changed) startText();
+    checkInbox();
   });
 });
 // waits for the cloud at most a few seconds, so a slow network never blocks practice
@@ -429,6 +438,8 @@ function switchTo(alias, pass, data) {
   save();
   renderAll();
   startText();
+  rememberHero(alias);
+  checkInbox();
 }
 
 async function login(alias, pass) {
@@ -454,8 +465,13 @@ async function login(alias, pass) {
       note.textContent = e.wrongPass ? '密碼不對喔，再試一次。' : '連不上雲端，請稍後再試。';
       return;
     }
-    const data = res ? res.data : carry;
+    let data = res ? res.data : carry;
     if (!res) {
+      if (!newGender) {
+        note.textContent = '新俠客要先選：男生、女生，還是雌雄難辨。';
+        return;
+      }
+      data = withGender(data, newGender);
       try {
         await rpc('profile_save', { p_alias: alias, p_pass: pass, p_data: data || {} });
         toast('建立新俠客「' + alias + '」');
@@ -484,13 +500,35 @@ async function login(alias, pass) {
   if (data) {
     toast('歡迎回來，' + alias);
   } else {
-    data = carry;
+    if (!newGender) {
+      note.textContent = '新俠客要先選：男生、女生，還是雌雄難辨。';
+      return;
+    }
+    data = withGender(carry, newGender);
     toast('建立新俠客「' + alias + '」');
   }
   note.textContent = '';
   switchTo(alias, pass, data);
   closeSheet(document.getElementById('profileSheet'));
 }
+
+// the profile a new 俠客 starts from, with the gender picked at sign-up
+let newGender = '';
+function withGender(data, g) {
+  const out = JSON.parse(JSON.stringify(data || {}));
+  out.settings = out.settings || {};
+  out.settings.genderLock = g;
+  if (g !== 'any') out.settings.gender = g;
+  return out;
+}
+document.querySelectorAll('#newGenderRow button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    newGender = b.dataset.g;
+    document.querySelectorAll('#newGenderRow button').forEach(function (x) {
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+    });
+  });
+});
 
 function renderProfileStatus() {
   const status = document.getElementById('profileStatus');
@@ -656,7 +694,7 @@ function drawHeroOn(canvas, o) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, AV_W, AV_H);
   if (o.floor !== false) drawFloor(ctx);
-  drawAvatar(ctx, o.title, o.gear, o.pose || 'stand', o.frame || 0, o.qi, state.gender);
+  drawAvatar(ctx, o.title, o.gear, o.pose || 'stand', o.frame || 0, o.qi, o.gender || state.gender);
 }
 function titleCanvas(idx) {
   const c = document.createElement('canvas');
@@ -745,7 +783,8 @@ function itemKnown(it, owned, tIdx) {
 function renderHero() {
   const info = levelInfo(purse.xp);
   const tIdx = titleIndexFor(info.level);
-  document.getElementById('heroTitle').textContent = account.alias ? account.alias + ' 的俠客' : '我的俠客';
+  document.getElementById('heroTitle').textContent = account.alias || '我的俠客';
+  document.querySelector('#heroSheet .opt-row[data-opt="gender"]').hidden = state.genderLock === 'boy' || state.genderLock === 'girl';
   document.getElementById('heroRank').textContent = TITLES[tIdx].name;
   document.getElementById('heroLv').textContent = 'Lv ' + info.level;
   document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
@@ -760,8 +799,9 @@ function renderHero() {
   const ladder = document.getElementById('ladder');
   ladder.innerHTML = '';
   for (let i = 0; i <= Math.min(tIdx + 1, TITLES.length - 1); i++) {
-    const item = document.createElement('div');
-    item.className = 'ladder-item';
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'ladder-item plain-btn';
     const c = document.createElement('canvas');
     drawHeroOn(c, { title: i, gear: {} });
     const label = document.createElement('span');
@@ -772,6 +812,7 @@ function renderHero() {
       item.classList.add('next');
       silhouette(c, '#1e1a26');
       label.textContent = '？？？';
+      item.setAttribute('aria-label', '還沒解鎖');
     } else {
       label.textContent = TITLES[i].name;
     }
@@ -1810,7 +1851,21 @@ document.getElementById('saveNameBtn').addEventListener('click', function () {
   toast('記住了：' + state.myName);
 });
 
+function showProfilePane(id) {
+  document.querySelectorAll('#profileTabs button').forEach(function (b) {
+    b.setAttribute('aria-selected', b.dataset.pane === id ? 'true' : 'false');
+  });
+  document.getElementById('accountPane').hidden = id !== 'accountPane';
+  document.getElementById('newsPane').hidden = id !== 'newsPane';
+  if (id === 'newsPane') renderNews();
+}
+document.querySelectorAll('#profileTabs button').forEach(function (b) {
+  b.addEventListener('click', function () { showProfilePane(b.dataset.pane); });
+});
 document.getElementById('profileBtn').addEventListener('click', function () {
+  showProfilePane('accountPane');
+  newGender = '';
+  document.querySelectorAll('#newGenderRow button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
   document.getElementById('profileNote').textContent = '';
   document.getElementById('aliasInput').value = account.alias;
   document.getElementById('passInput').value = '';
@@ -1881,6 +1936,7 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
       return;
     }
     if (opt === 'gender') {
+      if (state.genderLock === 'boy' || state.genderLock === 'girl') return;
       state[opt] = b.dataset.val;
       renderOptions();
       save();
@@ -1938,6 +1994,7 @@ sealEl.style.webkitMaskImage = sealMaskUrl;
 sealEl.style.maskImage = sealMaskUrl;
 
 
+let bootAlias = '';
 (async function boot() {
   let alias = '';
   try {
@@ -1945,6 +2002,7 @@ sealEl.style.maskImage = sealMaskUrl;
     account.pass = alias ? localStorage.getItem(PASS_PREFIX + alias) || '' : '';
   } catch (e) {}
   account.alias = alias;
+  bootAlias = alias;
   account.sync = cloudEnabled() && alias ? 'cloud' : 'local';
   const data = loadLocalProfile(alias);
   if (data) applyProfile(data);
@@ -1959,16 +2017,357 @@ sealEl.style.maskImage = sealMaskUrl;
     if (charData) renderInfo(charData);
   }, function () {});
   await cloudRefreshWithin(4000);
+  if (account.alias !== bootAlias) return;
   if (state.text || state.myName) startText();
+  checkInbox();
   await wordsReady;
   if (!state.chars.length) startText();
 })();
 
-// 開始練功: the first tap starts the music and reads the word
-document.getElementById('startWho').textContent = account.alias ? account.alias + '，準備好了嗎？' : '少俠，準備好了嗎？';
-document.getElementById('startBtn').addEventListener('click', function () {
+// what a 俠客 looks like, from experience, worn gear and gender
+function lookFor(xp, gear, gender) {
+  const level = levelInfo(xp || 0).level;
+  return { title: titleIndexFor(level), level: level, gear: gear || {}, gender: gender || 'boy' };
+}
+
+// ---------- 開始: one of the recent 俠客 on this device, or a guest ----------
+// The tap that enters also starts the music and reads the word (browsers play sound only after a tap).
+const RECENT_HEROES_KEY = 'bishun.recentHeroes';
+function recentHeroes() {
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem(RECENT_HEROES_KEY) || '[]');
+  } catch (e) {}
+  if (!list.length && bootAlias) list = [bootAlias];
+  return list.slice(0, 3);
+}
+function rememberHero(alias) {
+  if (!alias) return;
+  const list = recentHeroes().filter(function (a) { return a !== alias; });
+  list.unshift(alias);
+  try {
+    localStorage.setItem(RECENT_HEROES_KEY, JSON.stringify(list.slice(0, 3)));
+  } catch (e) {}
+}
+
+const gate = { timer: 0, frame: 0, slots: [] };
+function renderGate() {
+  const el = document.getElementById('recentHeroes');
+  el.innerHTML = '';
+  gate.slots = [];
+  const list = recentHeroes();
+  for (let i = 0; i < 3; i++) {
+    const alias = list[i];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hero-slot';
+    el.append(b);
+    if (!alias) {
+      b.classList.add('empty');
+      b.disabled = true;
+      continue;
+    }
+    const p = loadLocalProfile(alias) || {};
+    const pp = p.purse || {};
+    const look = lookFor(pp.xp, pp.gear, p.settings ? p.settings.gender : '');
+    const c = document.createElement('canvas');
+    const name = document.createElement('b');
+    name.textContent = alias;
+    const rank = document.createElement('span');
+    rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
+    b.append(c, name, rank);
+    b.setAttribute('data-quiet', '');
+    b.addEventListener('click', function () { enterGame(alias); });
+    gate.slots.push({ canvas: c, look: look, phase: i * 5 });
+  }
+  drawGate();
+  if (!reducedMotion()) gate.timer = setInterval(drawGate, 170);
+}
+function drawGate() {
+  gate.frame += 1;
+  for (const s of gate.slots) {
+    const pose = IDLE_SEQ[(gate.frame + s.phase) % IDLE_SEQ.length];
+    drawHeroOn(s.canvas, { title: s.look.title, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame });
+  }
+}
+function enterGame(alias) {
+  clearInterval(gate.timer);
   document.getElementById('startGate').hidden = true;
   audioContext();
+  if (alias !== account.alias) enterAs(alias);
+  rememberHero(alias);
   if (state.music !== 'off') playMusic(state.music);
-  if (state.sound && state.text) say(state.text);
+  const text = state.text || state.myName;
+  if (state.sound && text) say(text);
+}
+// switch without saving first, so a newer copy in the cloud is still taken
+function enterAs(alias) {
+  let pass = '';
+  try {
+    pass = alias ? localStorage.getItem(PASS_PREFIX + alias) || '' : '';
+    localStorage.setItem(CURRENT_KEY, alias);
+  } catch (e) {}
+  account.alias = alias;
+  account.pass = pass;
+  account.sync = cloudEnabled() && alias ? 'cloud' : 'local';
+  const data = loadLocalProfile(alias);
+  if (data) applyProfile(data);
+  else resetProgress();
+  renderAll();
+  cloudRefreshWithin(4000).then(function () {
+    if (account.alias !== alias) return;
+    startText();
+    checkInbox();
+  });
+}
+document.getElementById('guestStart').addEventListener('click', function () { enterGame(''); });
+renderGate();
+
+// ---------- 我的俠客: tap the hero and it moves ----------
+const SHEET_ACTIONS = ['attack', 'cheer', 'hurt'];
+const sheetHero = { timer: 0, next: 0 };
+document.getElementById('heroAvatar').addEventListener('click', function (e) {
+  const canvas = e.currentTarget;
+  const name = SHEET_ACTIONS[sheetHero.next % SHEET_ACTIONS.length];
+  sheetHero.next += 1;
+  if (name === 'attack') sfxSwish();
+  else if (name === 'cheer') sfxTick(1568);
+  else sfxWood();
+  const queue = ACTIONS[name].slice();
+  let frame = 0;
+  clearInterval(sheetHero.timer);
+  sheetHero.timer = setInterval(function () {
+    const pose = queue.length ? queue.shift() : 'stand';
+    frame += 1;
+    drawHeroOn(canvas, { title: titleIndex(), gear: purse.gear, pose: pose, frame: frame, qi: qiColor() });
+    if (!queue.length) clearInterval(sheetHero.timer);
+  }, 110);
+});
+
+// ---------- 江湖來信: letters and gifts, collected on login and when the app comes back ----------
+async function checkInbox() {
+  if (!cloudEnabled() || !account.alias || !account.pass) return;
+  const alias = account.alias;
+  let letters = [];
+  try {
+    letters = await rpc('letter_inbox', { p_alias: alias, p_pass: account.pass });
+  } catch (e) {
+    return;
+  }
+  if (account.alias !== alias || !letters || !letters.length) return;
+  for (const letter of letters) receiveGifts(letter.body || {});
+  shown.taels = purse.taels;
+  shown.ingots = purse.ingots;
+  save();
+  renderAll();
+  showLetters(letters);
+}
+function wholeNumber(v) {
+  return Math.max(0, Math.floor(Number(v) || 0));
+}
+function receiveGifts(body) {
+  purse.taels += wholeNumber(body.taels);
+  purse.ingots += wholeNumber(body.ingots);
+  for (const id of body.items || []) {
+    if (itemById(id) && purse.owned.indexOf(id) < 0) purse.owned.push(id);
+  }
+  // a 雌雄難辨 俠客 may set another's gender
+  if (body.gender === 'any') {
+    state.genderLock = 'any';
+  } else if (body.gender === 'boy' || body.gender === 'girl') {
+    state.genderLock = body.gender;
+    state.gender = body.gender;
+  }
+}
+function giftText(body) {
+  const parts = [];
+  if (wholeNumber(body.taels)) parts.push('銀兩 ' + wholeNumber(body.taels));
+  if (wholeNumber(body.ingots)) parts.push('元寶 ' + wholeNumber(body.ingots));
+  for (const id of body.items || []) {
+    const it = itemById(id);
+    if (it) parts.push(it.name);
+  }
+  if (body.gender === 'boy') parts.push('變成男生');
+  if (body.gender === 'girl') parts.push('變成女生');
+  if (body.gender === 'any') parts.push('變成雌雄難辨');
+  return parts.join('、');
+}
+function showLetters(letters) {
+  const list = document.getElementById('letterList');
+  list.innerHTML = '';
+  for (const letter of letters) {
+    const body = letter.body || {};
+    const card = document.createElement('article');
+    card.className = 'letter';
+    const head = document.createElement('h3');
+    head.textContent = '來自「' + letter.from + '」';
+    card.append(head);
+    if (body.text) {
+      const p = document.createElement('p');
+      p.textContent = body.text;
+      card.append(p);
+    }
+    const gifts = giftText(body);
+    if (gifts) {
+      const g = document.createElement('p');
+      g.className = 'gifts';
+      g.textContent = '附上：' + gifts;
+      card.append(g);
+    }
+    const read = document.createElement('button');
+    read.type = 'button';
+    read.textContent = '念出來';
+    read.addEventListener('click', function () {
+      say(letter.from + ' 說：' + (body.text || '') + (gifts ? '。送你' + gifts : ''));
+    });
+    card.append(read);
+    list.append(card);
+  }
+  openSheet(document.getElementById('letterSheet'));
+  sfxGong(0.25);
+}
+
+// ---------- 包打聽: every 俠客, and a letter with gifts to one of them ----------
+async function renderNews() {
+  const note = document.getElementById('newsNote');
+  const cards = document.getElementById('heroCards');
+  document.getElementById('heroDetail').hidden = true;
+  cards.hidden = false;
+  cards.innerHTML = '';
+  if (!cloudEnabled() || !account.alias) {
+    note.textContent = '登入俠客帳號後，才能打聽江湖消息。';
+    return;
+  }
+  note.textContent = '打聽中…';
+  let heroes = [];
+  try {
+    heroes = await rpc('hero_list', { p_alias: account.alias, p_pass: account.pass }) || [];
+  } catch (e) {
+    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '連不上雲端，請稍後再試。';
+    return;
+  }
+  note.textContent = '江湖上有 ' + heroes.length + ' 位俠客。點一位，可以送東西、捎信給他。';
+  for (const h of heroes) {
+    const look = lookFor(h.xp, h.gear, h.gender);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hero-card';
+    b.setAttribute('aria-label', h.alias);
+    const c = document.createElement('canvas');
+    const name = document.createElement('b');
+    name.textContent = h.alias === account.alias ? h.alias + '（你）' : h.alias;
+    const rank = document.createElement('span');
+    rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
+    const money = document.createElement('span');
+    money.textContent = '銀 ' + (h.taels || 0) + '　元寶 ' + (h.ingots || 0);
+    b.append(c, name, rank, money);
+    cards.append(b);
+    drawHeroOn(c, { title: look.title, gear: look.gear, gender: look.gender });
+    if (h.alias === account.alias) b.classList.add('me');
+    else b.addEventListener('click', function () { openGift(h); });
+  }
+}
+
+let gift = { to: null, taels: 0, ingots: 0, items: [], gender: '' };
+function openGift(h) {
+  gift = { to: h, taels: 0, ingots: 0, items: [], gender: '' };
+  document.getElementById('heroCards').hidden = true;
+  document.getElementById('heroDetail').hidden = false;
+  document.getElementById('letterText').value = '';
+  document.getElementById('giftNote').textContent = '';
+  const look = lookFor(h.xp, h.gear, h.gender);
+  drawHeroOn(document.getElementById('giftAvatar'), { title: look.title, gear: look.gear, gender: look.gender });
+  document.getElementById('giftName').textContent = h.alias;
+  document.getElementById('giftRank').textContent = TITLES[look.title].name + ' Lv ' + look.level;
+  document.getElementById('giftMoney').textContent = '銀兩 ' + (h.taels || 0) + '　元寶 ' + (h.ingots || 0);
+  document.getElementById('giftGenderRow').hidden = state.genderLock !== 'any';
+
+  // what this 俠客 owns and could give away
+  const grid = document.getElementById('giftItems');
+  grid.innerHTML = '';
+  if (!purse.owned.length) {
+    const none = document.createElement('span');
+    none.className = 'quiet';
+    none.textContent = '還沒有東西可以送';
+    grid.append(none);
+  }
+  for (const id of purse.owned) {
+    const it = itemById(id);
+    if (!it) continue;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', it.name);
+    b.setAttribute('aria-pressed', 'false');
+    const c = document.createElement('canvas');
+    b.append(c);
+    grid.append(b);
+    drawItemIcon(c, it);
+    b.addEventListener('click', function () {
+      const at = gift.items.indexOf(id);
+      if (at >= 0) gift.items.splice(at, 1);
+      else gift.items.push(id);
+      b.setAttribute('aria-pressed', at >= 0 ? 'false' : 'true');
+    });
+  }
+  renderGiftAmounts();
+}
+function renderGiftAmounts() {
+  document.getElementById('giftTaels').textContent = '送 ' + gift.taels + ' 兩（你有 ' + purse.taels + ' 兩）';
+  document.getElementById('giftIngots').textContent = '送 ' + gift.ingots + ' 個（你有 ' + purse.ingots + ' 個）';
+  document.querySelectorAll('#giftGenderRow button').forEach(function (b) {
+    b.setAttribute('aria-pressed', b.dataset.gender === gift.gender ? 'true' : 'false');
+  });
+}
+document.querySelectorAll('#heroDetail [data-taels]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    const n = Number(b.dataset.taels);
+    gift.taels = n ? Math.min(purse.taels, gift.taels + n) : 0;
+    renderGiftAmounts();
+  });
+});
+document.querySelectorAll('#heroDetail [data-ingots]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    const n = Number(b.dataset.ingots);
+    gift.ingots = n ? Math.min(purse.ingots, gift.ingots + n) : 0;
+    renderGiftAmounts();
+  });
+});
+document.querySelectorAll('#giftGenderRow button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    gift.gender = b.dataset.gender;
+    renderGiftAmounts();
+  });
+});
+document.getElementById('newsBack').addEventListener('click', renderNews);
+document.getElementById('giftSend').addEventListener('click', async function () {
+  const note = document.getElementById('giftNote');
+  const text = document.getElementById('letterText').value.trim();
+  if (!text && !gift.taels && !gift.ingots && !gift.items.length && !gift.gender) {
+    note.textContent = '寫幾句話，或選要送的東西。';
+    return;
+  }
+  const body = { text: text, taels: gift.taels, ingots: gift.ingots, items: gift.items.slice() };
+  if (gift.gender) body.gender = gift.gender;
+  note.textContent = '飛鴿傳書中…';
+  try {
+    await rpc('letter_send', { p_alias: account.alias, p_pass: account.pass, p_to: gift.to.alias, p_body: body });
+  } catch (e) {
+    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '沒送出去，請稍後再試。';
+    return;
+  }
+  // the gifts leave this 俠客's purse, and come off if worn
+  purse.taels -= gift.taels;
+  purse.ingots -= gift.ingots;
+  for (const id of gift.items) {
+    purse.owned.splice(purse.owned.indexOf(id), 1);
+    for (const slot in purse.gear) {
+      if (purse.gear[slot] === id) purse.gear[slot] = '';
+    }
+  }
+  shown.taels = purse.taels;
+  shown.ingots = purse.ingots;
+  save();
+  renderAll();
+  toast('信已經送到「' + gift.to.alias + '」');
+  renderNews();
 });

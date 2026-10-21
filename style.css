@@ -1106,3 +1106,49 @@ canvas.pixel {
   .player.leveled, .lvup, .tap-ripple, .item-detail, .plaque.unroll .cloth, .plaque.unroll .roller { animation: none; }
   button { transition: none; }
 }
+
+/* text that reads itself aloud when tapped, without looking like a button */
+.plain-btn { background: none; border: 0; box-shadow: none; padding: 0; border-radius: 6px; letter-spacing: inherit; }
+.plain-btn:active:not(:disabled) { box-shadow: none; transform: translateY(1px); }
+h2 .plain-btn { font-size: inherit; color: inherit; }
+#heroAvatar { cursor: pointer; }
+.ladder-item.plain-btn { font-weight: inherit; }
+
+/* 開始: the recent 俠客 on this device */
+.recent-heroes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: min(460px, 82vw); }
+.hero-slot {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 6px;
+  min-height: 130px;
+}
+.hero-slot canvas { width: 100%; max-width: 128px; aspect-ratio: 4 / 3; background: var(--tile); border: 2px solid var(--panel-edge); border-radius: 10px; }
+.hero-slot b { font-size: 1.05rem; }
+.hero-slot span { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.hero-slot.empty { background: none; border: 2px dashed var(--line); box-shadow: none; }
+
+/* 包打聽 */
+.hero-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.hero-card { display: grid; justify-items: center; gap: 2px; padding: 8px 6px; }
+.hero-card canvas { width: 108px; height: 81px; background: var(--tile); border: 2px solid var(--panel-edge); border-radius: 10px; }
+.hero-card b { font-size: 1rem; }
+.hero-card span { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.hero-card.me { opacity: 0.75; }
+.hero-detail { display: grid; gap: 10px; justify-items: start; }
+.detail-hero { display: flex; gap: 14px; align-items: center; }
+.detail-hero canvas { width: 144px; height: 108px; background: var(--tile); border: 2px solid var(--panel-edge); border-radius: 12px; }
+.gift-name { font-family: var(--font-display); font-size: 1.4rem; }
+.gift-row { flex-wrap: wrap; }
+.gift-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.gift-items button { padding: 4px; }
+.gift-items button canvas { display: block; width: 64px; height: 48px; }
+.gift-items button[aria-pressed="true"] { border-color: var(--accent-strong); box-shadow: inset 0 0 0 2px var(--accent-strong), 0 4px 0 var(--btn-drop); }
+.hero-detail .field { width: 100%; }
+
+/* 江湖來信 */
+.letters { display: grid; gap: 12px; }
+.letter { padding: 12px 14px; border: 2px solid var(--panel-edge); border-radius: 12px; background: var(--paper); }
+.letter h3 { margin: 0 0 6px; font-family: var(--font-display); }
+.letter p { margin: 4px 0; }
+.letter .gifts { color: var(--accent-strong); font-weight: 600; }
