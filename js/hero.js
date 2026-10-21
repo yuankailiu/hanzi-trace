@@ -18,17 +18,17 @@ const TITLES = [
   { name: '義士', robe: '#4C6A3A', belt: '#C9A03A', gear: 'hat', cape: '#6E4A2E' },
   { name: '大俠', robe: '#E9E4D8', belt: '#2F5D7C', gear: 'hat', cape: '#B8322A' },
   // 三・名動江湖
-  { name: '豪傑', robe: '#2F4A6E', belt: '#C5CCD2', gear: 'hat', cape: '#A8322A' },
-  { name: '武林高手', robe: '#8E2F2A', belt: '#E0B957', gear: 'topknot', cape: '#3A3A44' },
-  { name: '一方掌門', robe: '#6E2A3A', belt: '#E0B957', gear: 'topknot', cape: '#C9A03A' },
-  { name: '武林前輩', robe: '#5E5A7A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
+  { name: '一流高手', robe: '#2F4A6E', belt: '#C5CCD2', gear: 'hat', cape: '#A8322A' },
+  { name: '豪傑', robe: '#8E2F2A', belt: '#E0B957', gear: 'topknot', cape: '#3A3A44' },
+  { name: '名家', robe: '#6E2A3A', belt: '#E0B957', gear: 'topknot', cape: '#C9A03A' },
+  { name: '名宿', robe: '#5E5A7A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
   // 四・開宗
   { name: '宗師', robe: '#6B4C9A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
   { name: '開山祖師', robe: '#2F5A4A', belt: '#E0B957', gear: 'goldBand', cape: '#C9A03A' },
   { name: '大宗師', robe: '#F2EEE4', belt: '#C9A03A', gear: 'goldBand', cape: '#C9A03A' },
   { name: '武林盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
   // 五・傳世
-  { name: '武林至尊', robe: '#1F3A5A', belt: '#E0B957', gear: 'jadeCrown', cape: '#B8322A' },
+  { name: '武林泰斗', robe: '#1F3A5A', belt: '#E0B957', gear: 'jadeCrown', cape: '#B8322A' },
   { name: '武聖', robe: '#7A1F2A', belt: '#E0B957', gear: 'jadeCrown', cape: '#E0B957' },
   { name: '天下第一', robe: '#E0B957', belt: '#B8322A', gear: 'crown', cape: '#B8322A' },
   { name: '一代傳奇', robe: '#F4F0FF', belt: '#C9A03A', gear: 'crown', cape: '#6B4C9A' },

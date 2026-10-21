@@ -419,8 +419,8 @@ function say(text) {
   if (synth.speaking || synth.pending) synth.cancel();
   speakOnce(text, myToken, true);
 }
-// words the system voices misread, spoken as homophones: 少俠 is ㄕㄠˋ ㄒㄧㄚˊ, not ㄕㄠˇ
-const SPEAK_AS = [['少俠', '紹俠']];
+// words the system voices misread, spoken as homophones: 少俠 is ㄕㄠˋ ㄒㄧㄚˊ, not ㄕㄠˇ; 名宿 is ㄇㄧㄥˊ ㄙㄨˋ
+const SPEAK_AS = [['少俠', '紹俠'], ['名宿', '名素']];
 function speakOnce(text, myToken, retry) {
   const synth = window.speechSynthesis;
   let spoken = text;
