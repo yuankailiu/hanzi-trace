@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Iansui&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -329,15 +329,19 @@
             <button type="button" data-gender="girl">女俠</button>
           </div>
           <div class="field">
-            <label for="giftHonor">賜稱號（最多 6 個字）</label>
-            <input id="giftHonor" maxlength="6" placeholder="例如：小書法家">
+            <label for="giftHonor">賜稱號（最多 12 個字，符號也算）</label>
+            <input id="giftHonor" maxlength="12" placeholder="例如：小書法家">
+          </div>
+          <div class="decor" id="giftDecor"></div>
+          <div class="opt-row gift-row plaque-row" id="giftPlaques">
+            <span class="label">匾牌</span>
           </div>
         </div>
         <div class="field">
           <label for="letterText">信上寫</label>
           <textarea id="letterText" maxlength="100" rows="2" placeholder="想說的話"></textarea>
         </div>
-        <div class="row"><button type="button" class="primary" id="giftSend">託包打聽捎信</button></div>
+        <div class="row"><button type="button" class="primary" id="giftSend">捎一封信</button></div>
         <label class="slide-confirm" id="giftRemove" hidden>
           <span class="slide-fill" aria-hidden="true"></span>
           <span class="slide-text">滑到底：逐出江湖</span>

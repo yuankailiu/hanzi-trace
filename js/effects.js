@@ -54,6 +54,8 @@ function paperTexture() {
   }
   return c.toDataURL();
 }
+// An old seal never prints whole: bites out of the edge, a chipped corner, specks where the paste
+// missed, and a patch or two printed faint. Each call is a different impression.
 function sealMask() {
   const c = document.createElement('canvas');
   c.width = 128;
@@ -62,20 +64,68 @@ function sealMask() {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, 128, 128);
   ctx.globalCompositeOperation = 'destination-out';
-  for (let i = 0; i < 160; i++) {
-    const edge = Math.random() < 0.6;
+
+  // faint patches: thin paste
+  const patches = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < patches; i++) {
+    const x = rand(20, 108);
+    const y = rand(20, 108);
+    const r = rand(16, 32);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(0, 0, 0, ' + rand(0.45, 0.7) + ')');
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // one chipped corner
+  const cx = Math.random() < 0.5 ? 0 : 128;
+  const cy = Math.random() < 0.5 ? 0 : 128;
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(cx, cy, rand(7, 13), 0, Math.PI * 2);
+  ctx.fill();
+
+  // bites along the edge and specks inside
+  for (let i = 0; i < 220; i++) {
+    const edge = Math.random() < 0.55;
     let x = Math.random() * 128;
     let y = Math.random() * 128;
     if (edge) {
-      if (Math.random() < 0.5) x = Math.random() < 0.5 ? rand(0, 6) : rand(122, 128);
-      else y = Math.random() < 0.5 ? rand(0, 6) : rand(122, 128);
+      if (Math.random() < 0.5) x = Math.random() < 0.5 ? rand(0, 7) : rand(121, 128);
+      else y = Math.random() < 0.5 ? rand(0, 7) : rand(121, 128);
     }
-    ctx.globalAlpha = rand(0.3, 1);
+    ctx.globalAlpha = rand(0.35, 1);
     ctx.beginPath();
-    ctx.arc(x, y, rand(0.4, edge ? 2.6 : 1.4), 0, Math.PI * 2);
+    ctx.arc(x, y, rand(0.4, edge ? 4.5 : 1.8), 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // a scratch or two across the face
+  for (let i = 0; i < 2; i++) {
+    ctx.globalAlpha = rand(0.3, 0.7);
+    ctx.lineWidth = rand(0.6, 1.4);
+    ctx.strokeStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(rand(0, 128), rand(0, 128));
+    ctx.lineTo(rand(0, 128), rand(0, 128));
+    ctx.stroke();
+  }
   return c.toDataURL();
+}
+// a seal's tilt: never straight, a few degrees either way
+function sealTilt() {
+  const deg = rand(3, 11);
+  return (Math.random() < 0.7 ? -deg : deg).toFixed(1) + 'deg';
+}
+// a fresh impression on an element: its worn mask and its tilt
+function inkSeal(el) {
+  const url = 'url(' + sealMask() + ')';
+  el.style.webkitMaskImage = url;
+  el.style.maskImage = url;
+  el.style.setProperty('--tilt', sealTilt());
 }
 
 // ---------- sound (synthesized with Web Audio, no files) ----------

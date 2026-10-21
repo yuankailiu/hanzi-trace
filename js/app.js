@@ -1037,6 +1037,7 @@ function stampSeal(grade) {
   span.textContent = text;
   const scale = text.length === 1 ? 0.15 : 0.09;
   span.style.fontSize = Math.round(builtSize * scale) + 'px';
+  inkSeal(sealEl);
   sealEl.hidden = false;
   restartAnimation(sealEl, 'stamp');
   setTimeout(function () {
@@ -2491,9 +2492,8 @@ new MutationObserver(recolor).observe(document.documentElement, { attributes: tr
 
 // ---------- start ----------
 box.style.backgroundImage = 'url(' + paperTexture() + ')';
-const sealMaskUrl = 'url(' + sealMask() + ')';
-sealEl.style.webkitMaskImage = sealMaskUrl;
-sealEl.style.maskImage = sealMaskUrl;
+document.documentElement.style.setProperty('--paper-tex', 'url(' + paperTexture() + ')');
+inkSeal(sealEl);
 
 
 let bootAlias = '';
@@ -2800,12 +2800,15 @@ function receiveGifts(body) {
     state.gender = body.gender;
   }
   const honor = String(body.honor || '').trim();
-  if (honor && purse.granted.indexOf(honor) < 0) {
-    purse.granted.push(honor);
-    if (!purse.honor) purse.honor = 'g:' + honor;
+  const tier = GRANT_TIERS.indexOf(body.honorTier) >= 0 ? body.honorTier : 'gold';
+  const entry = tier === 'gold' ? honor : tier + '|' + honor;
+  if (honor && purse.granted.indexOf(entry) < 0) {
+    purse.granted.push(entry);
+    if (!purse.honor) purse.honor = 'g:' + entry;
   }
 }
-function giftText(body) {
+// voice: the 稱號 without its decorations, for reading aloud
+function giftText(body, voice) {
   const parts = [];
   if (wholeNumber(body.taels)) parts.push('銀兩 ' + wholeNumber(body.taels));
   if (wholeNumber(body.ingots)) parts.push('元寶 ' + wholeNumber(body.ingots));
@@ -2815,7 +2818,7 @@ function giftText(body) {
   }
   if (body.gender === 'boy') parts.push('變成少俠');
   if (body.gender === 'girl') parts.push('變成女俠');
-  if (body.honor) parts.push('稱號【' + body.honor + '】');
+  if (body.honor) parts.push('稱號' + (voice ? spokenHonor(body.honor) : framedHonor(body.honor)));
   return parts.join('、');
 }
 function showLetters(letters) {
@@ -2829,14 +2832,20 @@ function showLetters(letters) {
     const body = letter.body || {};
     const card = document.createElement('article');
     card.className = 'letter';
-    const head = document.createElement('h3');
-    head.textContent = '來自「' + letter.from + '」';
-    card.append(head);
+    const paper = document.createElement('div');
+    paper.className = 'letter-paper';
+    const head = document.createElement('p');
+    head.className = 'letter-to';
+    head.textContent = account.alias + '：';
+    paper.append(head);
     if (body.text) {
       const p = document.createElement('p');
+      p.className = 'letter-text';
       p.textContent = body.text;
-      card.append(p);
+      paper.append(p);
     }
+    paper.append(nameSeal(letter.from));
+    card.append(paper);
     const gifts = giftText(body);
     if (gifts) {
       const g = document.createElement('p');
@@ -2848,13 +2857,42 @@ function showLetters(letters) {
     read.type = 'button';
     read.textContent = '念給我聽';
     read.addEventListener('click', function () {
-      say(letter.from + ' 說：' + (body.text || '') + (gifts ? '。送你' + gifts : ''));
+      const text = body.text || '';
+      const pause = text && !/[。！？!?]$/.test(text) ? '。' : '';
+      say(letter.from + ' 說：' + text + (gifts ? pause + '送你' + giftText(body, true) : ''));
     });
     card.append(read);
     list.append(card);
   }
   openSheet(document.getElementById('letterSheet'));
-  sfxGong(0.25);
+  sfxPage();
+}
+// the sender's name seal: 白文 (red ground, the characters left blank), read top to bottom from the right;
+// up to three characters in one column, four to six in two
+function nameSeal(name) {
+  const chars = Array.from(name).slice(0, 6);
+  const seal = document.createElement('span');
+  seal.className = 'name-seal';
+  seal.style.setProperty('--rows', String(chars.length <= 3 ? chars.length : Math.ceil(chars.length / 2)));
+  seal.textContent = chars.join('');
+  seal.setAttribute('aria-label', name + ' 的印章');
+  inkSeal(seal);
+  return seal;
+}
+// 包打聽 on when a 俠客 was last seen in the 江湖
+function lastSeen(iso) {
+  const t = Date.parse(iso || '');
+  if (!t) return '';
+  const minutes = Math.floor((Date.now() - t) / 60000);
+  if (minutes < 5) return '剛剛還在';
+  if (minutes < 60) return minutes + ' 分鐘前';
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + ' 小時前';
+  const days = Math.floor(hours / 24);
+  if (days === 1) return '昨天';
+  if (days < 30) return days + ' 天前';
+  const d = new Date(t);
+  return (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
 }
 
 // ---------- 群俠譜: every 俠客, and a letter with gifts to one of them, all through 包打聽 the messenger ----------
@@ -2903,7 +2941,13 @@ async function renderNews() {
 
 let gift = { to: null, taels: 0, ingots: 0, items: [], gender: '' };
 function openGift(h) {
-  gift = { to: h, taels: 0, ingots: 0, items: [], gender: '' };
+  gift = { to: h, taels: 0, ingots: 0, items: [], gender: '', honorTier: 'gold' };
+  const seen = lastSeen(h.updated_at);
+  let news = '包打聽說：「' + h.alias + '最近沒什麼消息。」';
+  if (h.alias === account.alias) news = '包打聽說：「這不就是你嗎？」';
+  else if (seen === '剛剛還在') news = '包打聽說：「' + h.alias + '剛剛還在江湖上走動。」';
+  else if (seen) news = '包打聽說：「' + h.alias + '上次露面是' + (/^\d/.test(seen) ? ' ' : '') + seen + '。」';
+  document.getElementById('newsNote').textContent = news;
   document.getElementById('heroCards').hidden = true;
   document.getElementById('heroDetail').hidden = false;
   document.getElementById('letterText').value = '';
@@ -2916,6 +2960,7 @@ function openGift(h) {
   document.getElementById('giftAdmin').hidden = !account.admin;
   document.getElementById('giftRemove').hidden = !account.admin;
   document.getElementById('giftHonor').value = '';
+  renderPlaques();
 
   // what this 俠客 owns and could give away; the 管理員 can give anything
   const grid = document.getElementById('giftItems');
@@ -2991,7 +3036,10 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   }
   const body = { text: text, taels: gift.taels, ingots: gift.ingots, items: gift.items.slice() };
   if (gift.gender) body.gender = gift.gender;
-  if (honor) body.honor = honor;
+  if (honor) {
+    body.honor = honor;
+    body.honorTier = gift.honorTier;
+  }
   note.textContent = '包打聽拿著信跑出去了……';
   try {
     await rpc('letter_send', { p_alias: account.alias, p_pass: account.pass, p_to: gift.to.alias, p_body: body });
@@ -3020,10 +3068,40 @@ document.getElementById('giftSend').addEventListener('click', async function () 
 
 // ---------- 稱號 ----------
 // the worn 稱號: an earned or granted one in its tier's frame, a typed one as plain words
+// the plaques the 管理員 can grant a 稱號 on
+const GRANT_TIERS = ['gold', 'jade', 'ink', 'bronze', 'legend', 'plain'];
+const TIER_NAMES = { gold: '金匾', jade: '玉牌', ink: '墨匾', bronze: '竹牌', legend: '紫光', plain: '素字' };
+// 中二 decorations: pairs to wrap a 稱號 in, and single marks to add anywhere
+const DECOR_PAIRS = [
+  ['【', '】'], ['乂', '卍'], ['↖☆', '☆↘'], ['☆㊣↙', '↗㊣☆'], ['★彡', '彡★'], ['♛', '♛'],
+  ['亗', '亗'], ['『', '』'], ['〖', '〗'], ['✧', '✧'], ['o', 'o'], ['一', '一'], ['ღ', 'ღ'], ['━╋', '╋━'],
+];
+const DECOR_MARKS = ['☆', '★', '㊣', '♛', '亗', 'ツ', '乂', '卍', '↖', '↗', '↘', '↙', '彡', '♪', '♥', '✿', '❀', '✦', 'ღ', '☠', '∞', '煞氣a'];
+const DECOR_CHARS = new Set(Array.from('【】乂卍↖↗↘↙☆★㊣♛亗ツ☠彡♪♥✿❀✦✧ღ∞『』〖〗o一━╋'));
+// a granted entry: 'jade|名字', or a bare name on a gold plaque
+function grantedInfo(entry) {
+  const bar = entry.indexOf('|');
+  if (bar > 0 && GRANT_TIERS.indexOf(entry.slice(0, bar)) >= 0) return { name: entry.slice(bar + 1), tier: entry.slice(0, bar) };
+  return { name: entry, tier: 'gold' };
+}
+// a 稱號 that starts and ends with decorations brings its own frame; the rest are shown in 【】
+function framedHonor(name) {
+  const chars = Array.from(name);
+  if (chars.length > 1 && DECOR_CHARS.has(chars[0]) && DECOR_CHARS.has(chars[chars.length - 1])) return name;
+  return '【' + name + '】';
+}
+// for the voice: the words only (乂 and 卍 are characters too, but not words)
+function spokenHonor(name) {
+  let out = '';
+  for (const ch of Array.from(name)) {
+    if (!DECOR_CHARS.has(ch) && /[\p{Script=Han}\p{L}\p{N}]/u.test(ch)) out += ch;
+  }
+  return out;
+}
 function honorInfo(value, custom) {
   if (!value) return null;
   if (value === 'custom') return custom ? { name: custom, tier: 'plain' } : null;
-  if (value.indexOf('g:') === 0) return { name: value.slice(2), tier: 'gold' };
+  if (value.indexOf('g:') === 0) return grantedInfo(value.slice(2));
   const h = honorById(value);
   return h ? { name: h.name, tier: h.tier } : null;
 }
@@ -3032,9 +3110,87 @@ function honorBadge(value, custom) {
   if (!info) return null;
   const el = document.createElement('span');
   el.className = 'honor ' + info.tier;
-  el.textContent = '【' + info.name + '】';
+  el.textContent = framedHonor(info.name);
   return el;
 }
+// the decoration buttons under a 稱號 input: 包起來 replaces the frame, 加符號 adds at the cursor
+function stripFrame(text) {
+  let chars = Array.from(text.trim());
+  while (chars.length && DECOR_CHARS.has(chars[0]) && chars[0] !== '一' && chars[0] !== 'o') chars.shift();
+  while (chars.length && DECOR_CHARS.has(chars[chars.length - 1]) && chars[chars.length - 1] !== '一' && chars[chars.length - 1] !== 'o') chars.pop();
+  return chars.join('');
+}
+function buildDecor(box, input, onChange) {
+  box.innerHTML = '';
+  const wrapRow = document.createElement('div');
+  wrapRow.className = 'decor-row';
+  const wrapLabel = document.createElement('span');
+  wrapLabel.className = 'label';
+  wrapLabel.textContent = '包起來';
+  wrapRow.append(wrapLabel);
+  for (const pair of DECOR_PAIRS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('data-quiet', '');
+    b.textContent = pair[0] + '…' + pair[1];
+    b.addEventListener('click', function () {
+      const core = stripFrame(input.value);
+      input.value = pair[0] === '【' ? core : pair[0] + core + pair[1];
+      sfxTick(1568);
+      onChange();
+    });
+    wrapRow.append(b);
+  }
+  const markRow = document.createElement('div');
+  markRow.className = 'decor-row';
+  const markLabel = document.createElement('span');
+  markLabel.className = 'label';
+  markLabel.textContent = '加符號';
+  markRow.append(markLabel);
+  for (const mark of DECOR_MARKS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('data-quiet', '');
+    b.textContent = mark;
+    b.addEventListener('click', function () {
+      const at = input.selectionStart === null ? input.value.length : input.selectionStart;
+      const end = input.selectionEnd === null ? at : input.selectionEnd;
+      input.value = input.value.slice(0, at) + mark + input.value.slice(end);
+      input.focus();
+      input.setSelectionRange(at + mark.length, at + mark.length);
+      sfxTick(2093);
+      onChange();
+    });
+    markRow.append(b);
+  }
+  box.append(wrapRow, markRow);
+}
+// the plaque buttons for a granted 稱號, each showing the typed name on it
+function renderPlaques() {
+  const row = document.getElementById('giftPlaques');
+  row.querySelectorAll('button').forEach(function (b) { b.remove(); });
+  const name = document.getElementById('giftHonor').value.trim() || '稱號';
+  for (const tier of GRANT_TIERS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'plaque-pick';
+    b.setAttribute('aria-pressed', gift.honorTier === tier ? 'true' : 'false');
+    b.setAttribute('aria-label', TIER_NAMES[tier]);
+    const badge = document.createElement('span');
+    badge.className = 'honor ' + tier;
+    badge.textContent = framedHonor(name);
+    const caption = document.createElement('small');
+    caption.textContent = TIER_NAMES[tier];
+    b.append(badge, caption);
+    b.addEventListener('click', function () {
+      gift.honorTier = tier;
+      renderPlaques();
+    });
+    row.append(b);
+  }
+}
+buildDecor(document.getElementById('giftDecor'), document.getElementById('giftHonor'), renderPlaques);
+document.getElementById('giftHonor').addEventListener('input', renderPlaques);
 function wearHonor(value) {
   purse.honor = value;
   save();
@@ -3054,7 +3210,8 @@ function renderHonors(grid) {
     entries.push({ value: h.id, name: h.name, tier: h.tier, hint: h.hint, won: won });
   }
   for (const g of purse.granted) {
-    entries.push({ value: 'g:' + g, name: g, tier: 'gold', hint: '管理員賜的稱號', won: true });
+    const info = grantedInfo(g);
+    entries.push({ value: 'g:' + g, name: info.name, tier: info.tier, hint: '管理員賜的稱號', won: true });
   }
   for (const e of entries) {
     const b = document.createElement('button');
@@ -3062,7 +3219,7 @@ function renderHonors(grid) {
     b.className = 'honor-card';
     const badge = document.createElement('span');
     badge.className = 'honor ' + (e.won ? e.tier : 'shadow');
-    badge.textContent = '【' + (e.won ? e.name : '？？？') + '】';
+    badge.textContent = e.won ? framedHonor(e.name) : '【？？？】';
     const hint = document.createElement('span');
     hint.className = 'quiet';
     hint.textContent = e.hint;
@@ -3070,7 +3227,7 @@ function renderHonors(grid) {
     if (e.won) {
       const wearing = purse.honor === e.value;
       b.setAttribute('aria-pressed', wearing ? 'true' : 'false');
-      b.setAttribute('aria-label', e.name);
+      b.setAttribute('aria-label', spokenHonor(e.name) || '稱號');
       b.addEventListener('click', function () { wearHonor(wearing ? '' : e.value); });
     } else {
       // tapping a shadow reads how to win it
@@ -3082,7 +3239,7 @@ function renderHonors(grid) {
   const own = document.createElement('div');
   own.className = 'row honor-own';
   const input = document.createElement('input');
-  input.maxLength = 6;
+  input.maxLength = 12;
   input.placeholder = '自己取一個稱號';
   input.value = purse.customHonor;
   const wear = document.createElement('button');
@@ -3091,14 +3248,17 @@ function renderHonors(grid) {
   wear.addEventListener('click', function () {
     purse.customHonor = input.value.trim();
     wearHonor(purse.customHonor ? 'custom' : '');
-    if (purse.customHonor && state.sound) say('自稱，' + purse.customHonor);
+    if (purse.customHonor && state.sound) say('自稱，' + spokenHonor(purse.customHonor));
   });
   const off = document.createElement('button');
   off.type = 'button';
   off.textContent = '摘下稱號';
   off.addEventListener('click', function () { wearHonor(''); });
   own.append(input, wear, off);
-  grid.append(list, own);
+  const decor = document.createElement('div');
+  decor.className = 'decor';
+  buildDecor(decor, input, function () {});
+  grid.append(list, own, decor);
 }
 
 // 稱號 won with the character just finished, each shown as a token after the stamp
@@ -3134,7 +3294,7 @@ function checkHonors(mistakes) {
 }
 const honorPop = document.getElementById('honorPop');
 function showHonor(name, tier) {
-  document.getElementById('honorPopName').textContent = '【' + name + '】';
+  document.getElementById('honorPopName').textContent = framedHonor(name);
   honorPop.className = 'honor-pop ' + tier;
   honorPop.hidden = false;
   sfxGong(0.4);

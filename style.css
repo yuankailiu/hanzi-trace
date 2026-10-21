@@ -722,7 +722,7 @@ canvas.pixel {
   line-height: 1;
   mix-blend-mode: var(--seal-blend);
   opacity: 0.92;
-  transform: rotate(-8deg);
+  transform: rotate(var(--tilt, -8deg));
   pointer-events: none;
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
@@ -730,9 +730,9 @@ canvas.pixel {
 .seal span { writing-mode: vertical-rl; letter-spacing: 0.05em; }
 .seal.stamp { animation: stamp 0.38s cubic-bezier(0.3, 1.4, 0.6, 1); }
 @keyframes stamp {
-  0% { transform: scale(2.4) rotate(-18deg); opacity: 0; }
-  60% { transform: scale(0.92) rotate(-7deg); opacity: 0.95; }
-  100% { transform: scale(1) rotate(-8deg); opacity: 0.92; }
+  0% { transform: scale(2.4) rotate(calc(var(--tilt, -8deg) - 10deg)); opacity: 0; }
+  60% { transform: scale(0.92) rotate(calc(var(--tilt, -8deg) + 1deg)); opacity: 0.95; }
+  100% { transform: scale(1) rotate(var(--tilt, -8deg)); opacity: 0.92; }
 }
 
 /* Character card: model glyph, large vertical 注音, large speak button */
@@ -1222,11 +1222,61 @@ h2 .plain-btn { font-size: inherit; color: inherit; }
 .hero-detail .field { width: 100%; }
 
 /* 江湖來信 */
-.letters { display: grid; gap: 12px; }
-.letter { padding: 12px 14px; border: 2px solid var(--panel-edge); border-radius: 12px; background: var(--paper); }
-.letter h3 { margin: 0 0 6px; font-family: var(--font-display); }
-.letter p { margin: 4px 0; }
-.letter .gifts { color: var(--accent-strong); font-weight: 600; }
+.letters { display: grid; gap: 16px; }
+.letter { display: grid; gap: 8px; justify-items: start; }
+.letter .gifts { margin: 0; color: var(--accent-strong); font-weight: 600; }
+/* 信箋: cream paper with red rules, written top to bottom from the right in a hand-written face;
+   the reader's name at the head, the sender's seal at the end */
+.letter-paper {
+  --rule: rgba(190, 52, 42, 0.42);
+  justify-self: stretch;
+  writing-mode: vertical-rl;
+  height: 17.5em;
+  max-height: 52dvh;
+  overflow-x: auto;
+  padding: 1.1em 1.2em;
+  font-family: "Iansui", var(--font-display);
+  font-size: 1.3rem;
+  line-height: 2;
+  letter-spacing: 0.08em;
+  color: #2f2a26;
+  background-color: #f7eedb;
+  background-image:
+    repeating-linear-gradient(to left, transparent 0 calc(2em - 1px), var(--rule) calc(2em - 1px) 2em),
+    var(--paper-tex, none);
+  background-position: right 1.2em top 0, 0 0;
+  border: 1px solid #d9c6a3;
+  border-radius: 4px;
+  box-shadow: 0 2px 0 #e2d2b2, 0 3px 0 #cdb895, 0 10px 18px -10px rgba(0, 0, 0, 0.35);
+}
+.letter-paper p { margin: 0; }
+.letter-to { font-weight: 400; }
+.letter-text { padding-top: 2em; white-space: pre-wrap; }
+/* the name seal at the end of the letter, at the foot of its own column */
+.name-seal {
+  --rows: 2;
+  display: inline-block;
+  align-self: end;
+  margin-right: 0.6em;
+  writing-mode: vertical-rl;
+  height: calc(var(--rows) * 1.05em + 0.5em);
+  padding: 0.25em 0.2em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.55rem;
+  line-height: 1.05;
+  letter-spacing: 0;
+  color: #f7eedb;
+  background: #c8322a;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 2px #c8322a, inset 0 0 0 3.5px #f7eedb;
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+  transform: rotate(var(--tilt, -6deg));
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+.letter-paper { display: flex; flex-direction: column; flex-wrap: nowrap; }
 
 /* 稱號: earned ones in their tier's frame (bronze 竹簡, gold 令牌, legend 紫電), a typed one plain */
 .honor { display: inline-block; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; line-height: 1.3; }
@@ -1264,6 +1314,22 @@ h2 .plain-btn { font-size: inherit; color: inherit; }
 @keyframes legend-shine {
   from { background-position: 0% 0, 0 0; }
   to { background-position: 200% 0, 0 0; }
+}
+.honor.jade {
+  padding: 0 7px;
+  color: #f4fff6;
+  background: linear-gradient(180deg, #5fae86, #2f7556);
+  border: 1.5px solid #cfead9;
+  border-radius: 10px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.honor.ink {
+  padding: 0 7px;
+  color: #e9c46a;
+  background: linear-gradient(180deg, #2b2522, #151110);
+  border: 1.5px solid #9c7630;
+  border-radius: 3px;
 }
 .honor.shadow { padding: 0 6px; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 4px; }
 .honor-line { min-height: 0; }
@@ -1709,3 +1775,14 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 }
 .opening-hint { margin: 0; color: var(--muted); font-size: 0.95rem; letter-spacing: 0.2em; animation: hint-breathe 2s ease-in-out infinite; }
 @keyframes hint-breathe { 50% { opacity: 0.45; } }
+
+/* 稱號 decorations and the plaque picker */
+.decor { display: grid; gap: 6px; }
+.decor-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.decor-row .label { min-width: 3.6em; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.decor-row button { padding: 2px 8px; font-size: 0.95rem; font-weight: 400; letter-spacing: 0; box-shadow: inset 0 2px 0 var(--panel-hi), 0 2px 0 var(--btn-drop); }
+.plaque-row { align-items: stretch; }
+.plaque-pick { display: grid; justify-items: center; gap: 2px; padding: 6px 8px; font-weight: 400; }
+.plaque-pick small { font-size: 0.75rem; color: var(--muted); }
+#giftPlaques .plaque-pick[aria-pressed="true"] { background: var(--btn); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 var(--btn-drop); }
+#giftPlaques .plaque-pick[aria-pressed="true"] small { color: var(--accent); font-weight: 700; }
