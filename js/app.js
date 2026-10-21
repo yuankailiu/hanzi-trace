@@ -2139,7 +2139,31 @@ document.getElementById('nextBtn').addEventListener('click', function (e) {
     nextWord(true);
   }
 });
-document.getElementById('diceBtn').addEventListener('click', function () {
+// 擲骰換題: an ivory Chinese die, its one and four pips in red; it tumbles and lands on a new face
+const diceBtn = document.getElementById('diceBtn');
+const DIE_PIPS = {
+  1: [[30, 30]],
+  2: [[19, 19], [41, 41]],
+  3: [[18, 18], [30, 30], [42, 42]],
+  4: [[19, 19], [41, 19], [19, 41], [41, 41]],
+  5: [[18, 18], [42, 18], [30, 30], [18, 42], [42, 42]],
+  6: [[19, 16], [41, 16], [19, 30], [41, 30], [19, 44], [41, 44]],
+};
+function drawDie(n) {
+  const red = n === 1 || n === 4;
+  let pips = '';
+  for (const p of DIE_PIPS[n]) {
+    pips += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (n === 1 ? 8 : 5) + '" fill="' + (red ? '#c8352a' : '#2b2522') + '"></circle>';
+  }
+  diceBtn.innerHTML = '<svg viewBox="0 0 60 60" aria-hidden="true">' +
+    '<defs><linearGradient id="dieFace" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffaf0"></stop><stop offset="1" stop-color="#e6d8bd"></stop></linearGradient></defs>' +
+    '<rect x="3" y="3" width="54" height="54" rx="13" fill="url(#dieFace)" stroke="#7a5638" stroke-width="3"></rect>' +
+    '<path d="M12 9 h36" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.7"></path>' + pips + '</svg>';
+}
+drawDie(4);
+diceBtn.addEventListener('click', function () {
+  restartAnimation(diceBtn, 'rolling');
+  setTimeout(function () { drawDie(1 + Math.floor(Math.random() * 6)); }, 260);
   sfxDice();
   nextWord(true);
 });

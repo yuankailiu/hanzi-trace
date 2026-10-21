@@ -17,7 +17,6 @@
   <symbol id="i-brush" viewBox="0 0 24 24"><path class="i-line" d="M20.5 3.5 11.8 12.2"></path><path class="i-fill" d="M11.4 11.6c-2.7-.5-5.2 1.4-5.7 4.2-.3 1.7-1.1 2.7-2.7 3.5 3.7.7 7.3-.3 8.8-3 .9-1.6.9-3.4-.4-4.7z"></path></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path class="i-line" d="M4.5 12h15M13.5 6l6 6-6 6"></path></symbol>
   <symbol id="i-compare" viewBox="0 0 24 24"><rect class="i-line" x="3" y="3" width="12" height="12" rx="1.5"></rect><rect class="i-line" x="9" y="9" width="12" height="12" rx="1.5"></rect></symbol>
-  <symbol id="i-dice" viewBox="0 0 24 24"><rect class="i-line" x="3.5" y="3.5" width="17" height="17" rx="3"></rect><circle class="i-fill" cx="8.5" cy="8.5" r="1.6"></circle><circle class="i-fill" cx="15.5" cy="8.5" r="1.6"></circle><circle class="i-fill" cx="12" cy="12" r="1.6"></circle><circle class="i-fill" cx="8.5" cy="15.5" r="1.6"></circle><circle class="i-fill" cx="15.5" cy="15.5" r="1.6"></circle></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle class="i-line" cx="12" cy="8.5" r="4"></circle><path class="i-line" d="M4.5 20.5c1.2-3.8 4-5.6 7.5-5.6s6.3 1.8 7.5 5.6"></path></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><circle class="i-line" cx="12" cy="12" r="3"></circle><path class="i-line" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></symbol>
   <symbol id="i-tap" viewBox="0 0 24 24"><circle class="i-fill" cx="12" cy="12" r="3"></circle><circle class="i-line" cx="12" cy="12" r="7"></circle><circle class="i-line" cx="12" cy="12" r="10.5" opacity="0.45"></circle></symbol>
@@ -34,9 +33,6 @@
 <div class="app" id="app">
   <header class="topbar">
     <div class="top-actions">
-      <button type="button" class="icon-btn small" id="diceBtn" aria-label="擲骰換題" title="擲骰換題" data-quiet>
-        <svg aria-hidden="true"><use href="#i-dice"></use></svg>
-      </button>
       <button type="button" class="icon-btn small" id="customBtn" aria-label="自己出題" title="自己出題">
         <svg aria-hidden="true"><use href="#i-pencil"></use></svg>
       </button>
@@ -51,6 +47,7 @@
 
   <section class="stage" id="stage">
     <div class="arena" id="arena">
+      <button type="button" class="dice-btn" id="diceBtn" aria-label="擲骰換題" title="擲骰換題" data-quiet></button>
       <div class="plaque" id="plaque">
         <span class="roller left" aria-hidden="true"><i class="tassel"></i></span>
         <div class="cloth"><nav class="chips" id="chips" aria-label="這個詞的字"></nav></div>

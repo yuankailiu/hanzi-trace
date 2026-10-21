@@ -467,7 +467,8 @@ canvas.pixel {
   transform: translateX(-50%);
   z-index: 2;
   height: var(--plaque-h);
-  max-width: calc(100% - 40px);
+  /* leaves room for the die at the top right */
+  max-width: calc(100% - 200px);
   display: flex;
   align-items: center;
   filter: drop-shadow(0 5px 0 var(--panel-drop));
@@ -1127,7 +1128,7 @@ canvas.pixel {
   .arena.shake, .arena.thump, .seal.stamp, #writer.ink, #mine.ink, .purse.pulse b,
   .banner, .banner-name, .banner-sub, .toast, .seg button.nudge, .box.press, .ripple,
   .player.leveled, .lvup, .tap-ripple, .item-detail, .plaque.unroll .cloth, .plaque.unroll .roller,
-  .sentence .target .glyph { animation: none; }
+  .sentence .target .glyph, .dice-btn.rolling { animation: none; }
   button { transition: none; }
 }
 
@@ -1541,3 +1542,31 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .sentence-pick[aria-pressed="true"] { color: var(--accent); }
 .sentence-pick[aria-pressed="true"] svg { filter: drop-shadow(0 0 4px rgba(230, 69, 83, 0.6)); }
 .sentence.picking .cell:not(.target) .glyph { outline: 1.5px dashed color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 1px; }
+
+/* 擲骰換題: the die sits on the 擂台's top right edge, tilted, and tumbles when tapped */
+.dice-btn {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--plaque-h) / -2 - 4px);
+  right: 30px;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 5px 0 var(--panel-drop)) drop-shadow(0 8px 8px rgba(0, 0, 0, 0.25));
+}
+.dice-btn svg { display: block; width: 100%; height: 100%; }
+.dice-btn:active:not(:disabled) { transform: rotate(-8deg) translateY(2px); box-shadow: none; }
+.dice-btn.rolling { animation: dice-roll 0.55s cubic-bezier(0.3, 1.4, 0.5, 1); }
+@keyframes dice-roll {
+  0% { transform: rotate(-8deg); }
+  45% { transform: translateY(-16px) rotate(200deg) scale(1.08); }
+  100% { transform: rotate(352deg); }
+}
+@media (max-width: 560px), (max-height: 500px) {
+  .dice-btn { width: 46px; height: 46px; right: 22px; }
+  .plaque { max-width: calc(100% - 170px); }
+}
