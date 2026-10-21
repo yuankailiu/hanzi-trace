@@ -55,6 +55,8 @@ const state = {
   myName: '',
   recent: [],
   list: [],
+  slist: [],
+  sentence: null,
 };
 // xp: every tael ever earned (spending never lowers it); gear: what the 俠客 holds, wears, brings along
 const purse = {
@@ -129,8 +131,13 @@ function parseText(text) {
 }
 function boxSize() {
   const plaqueH = parseFloat(getComputedStyle(arena).getPropertyValue('--plaque-h')) || 0;
-  const w = stage.clientWidth - 2 * ARENA_PAD;
-  const h = stage.clientHeight - 2 * ARENA_PAD - plaqueH;
+  let w = stage.clientWidth - 2 * ARENA_PAD;
+  let h = stage.clientHeight - 2 * ARENA_PAD - plaqueH;
+  const sent = document.getElementById('sentence');
+  if (!sent.hidden) {
+    if (isLandscape()) w -= sent.offsetWidth + 14;
+    else h -= sent.offsetHeight + 14;
+  }
   return Math.floor(Math.max(200, Math.min(w, h, 760)));
 }
 function boxPadding(size) {
@@ -260,6 +267,8 @@ function serializeProfile() {
     myName: state.myName,
     recent: state.recent,
     list: state.list,
+    slist: state.slist,
+    sentence: state.sentence,
     text: state.text,
     purse: purse,
   };
@@ -269,6 +278,8 @@ function resetProgress() {
   state.myName = '';
   state.recent = [];
   state.list = [];
+  state.slist = [];
+  state.sentence = null;
   state.text = '';
   Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, scrolls: [], words: [], lastDay: '', streak: 0, honors: [], honor: '', customHonor: '', granted: [], perfectRun: 0 });
 }
@@ -294,6 +305,8 @@ function applyProfile(source) {
   if (p.myName) state.myName = p.myName;
   if (p.recent) state.recent = p.recent;
   if (p.list) state.list = p.list;
+  if (p.slist) state.slist = p.slist;
+  if (p.sentence) state.sentence = p.sentence;
   if (p.text) state.text = p.text;
   if (p.purse) {
     const old = p.purse;
@@ -678,12 +691,194 @@ function pickWord() {
   return pool[pool.length - 1].w;
 }
 function nextWord(speak) {
+  if (sentenceContent()) {
+    const sent = pickSentence();
+    if (sent) loadSentence(sent, speak);
+    return;
+  }
   if (!words.length && !(state.content === 'list' && state.list.length)) return;
   loadText(pickWord().w, speak);
 }
 
+// ---------- 句子: a sentence to read with 注音; its marked characters are written one by one ----------
+// data/sentences.json: { s: sentence, z: 注音 per character, k: positions to write, t: tier, src: 'b' | 'm' },
+// from the app's own graded sentences and 教育部《國語小字典》 (tools/make_sentences.py).
+let sentences = [];
+const VERTICAL_PUNCT = {
+  '，': '︐', '。': '︒', '、': '︑', '：': '︓', '；': '︔', '！': '︕', '？': '︖',
+  '「': '﹁', '」': '﹂', '『': '﹃', '』': '﹄', '（': '︵', '）': '︶', '…': '︙', '—': '︱',
+};
+function sentenceContent() {
+  return state.content === 'sentences' || state.content === 'mysentences';
+}
+// a line of 我的句子本: [ ] or ［ ］ mark the characters to write; without marks every character is written
+function parseMySentence(line) {
+  const chars = [];
+  const k = [];
+  let marked = false;
+  let anyMark = false;
+  for (const ch of Array.from(line.trim())) {
+    if (ch === '[' || ch === '［') {
+      marked = true;
+      anyMark = true;
+      continue;
+    }
+    if (ch === ']' || ch === '］') {
+      marked = false;
+      continue;
+    }
+    if (marked && /\p{Script=Han}/u.test(ch)) k.push(chars.length);
+    chars.push(ch);
+  }
+  if (!anyMark) {
+    chars.forEach(function (ch, i) {
+      if (/\p{Script=Han}/u.test(ch)) k.push(i);
+    });
+  }
+  return { s: chars.join(''), z: null, k: k.slice(0, 12), src: 'own' };
+}
+function pickSentence() {
+  if (state.content === 'mysentences') {
+    const mine = state.slist.map(parseMySentence).filter(function (x) { return x.k.length; });
+    if (!mine.length) return null;
+    const fresh = mine.filter(function (x) { return seen.indexOf(x.s) < 0; });
+    const from = fresh.length ? fresh : mine;
+    return from[Math.floor(Math.random() * from.length)];
+  }
+  if (!sentences.length) return null;
+  const tier = wordTier();
+  const pool = [];
+  let total = 0;
+  for (const s of sentences) {
+    if (s.t > tier || seen.indexOf(s.s) >= 0) continue;
+    let weight = 1;
+    if (s.t === tier) weight = 4;
+    else if (s.t === tier - 1) weight = 2;
+    pool.push({ s: s, weight: weight });
+    total += weight;
+  }
+  if (!pool.length) return sentences[Math.floor(Math.random() * sentences.length)];
+  let r = Math.random() * total;
+  for (const item of pool) {
+    r -= item.weight;
+    if (r <= 0) return item.s;
+  }
+  return pool[pool.length - 1].s;
+}
+function loadSentence(sent, speak) {
+  const chars = Array.from(sent.s);
+  const targets = [];
+  for (const i of sent.k) targets.push(chars[i]);
+  loadText(targets.join(''), false, sent);
+  if (speak && state.sound) say(sent.s);
+}
+// 注音 for a sentence of 我的句子本: the longest word with known readings, else each character's usual one
+async function sentenceZhuyin(sent) {
+  const chars = Array.from(sent.s);
+  const z = [];
+  let i = 0;
+  while (i < chars.length) {
+    let n = 4;
+    while (n >= 2 && !readings[chars.slice(i, i + n).join('')]) n -= 1;
+    if (n >= 2 && i + n <= chars.length) {
+      for (const r of readings[chars.slice(i, i + n).join('')]) z.push(r);
+      i += n;
+      continue;
+    }
+    const ch = chars[i];
+    let zy = '';
+    if (ch === '一') zy = 'ㄧ';
+    else if (ch === '不') zy = 'ㄅㄨˋ';
+    else if (/\p{Script=Han}/u.test(ch)) {
+      const d = await getCharData(ch);
+      zy = d && d.zy && d.zy.length ? d.zy[0] : '';
+    }
+    z.push(zy);
+    i += 1;
+  }
+  return z;
+}
+
+// the sentence beside the box: a column read top to bottom, right to left, in landscape; a strip below
+// the box in portrait. The character being written is framed, the ones written are inked in.
+const sentenceEl = document.getElementById('sentence');
+let justInked = -1;
+function isLandscape() {
+  return window.matchMedia('(min-aspect-ratio: 1001/1000)').matches;
+}
+function renderSentence() {
+  const sent = state.sentence;
+  stage.classList.toggle('with-sentence', Boolean(sent));
+  sentenceEl.hidden = !sent;
+  if (!sent) return;
+  const vertical = isLandscape();
+  sentenceEl.classList.toggle('vertical', vertical);
+  const chars = Array.from(sent.s);
+  const now = sent.k[state.idx];
+  const g = vertical
+    ? Math.max(26, Math.min(40, stage.clientHeight / 17))
+    : Math.max(22, Math.min(34, stage.clientWidth / 13));
+  sentenceEl.style.setProperty('--g', g + 'px');
+  sentenceEl.innerHTML = '';
+  chars.forEach(function (ch, i) {
+    const cell = document.createElement('span');
+    cell.className = 'cell';
+    const glyph = document.createElement('span');
+    glyph.className = 'glyph';
+    glyph.textContent = vertical && VERTICAL_PUNCT[ch] ? VERTICAL_PUNCT[ch] : ch;
+    const zy = document.createElement('span');
+    zy.className = 'zy-v';
+    if (sent.z && sent.z[i]) renderZhuyin(zy, sent.z[i]);
+    cell.append(glyph, zy);
+    const j = sent.k.indexOf(i);
+    if (j >= 0) {
+      cell.classList.add('target');
+      cell.dataset.j = j;
+      if (i === now) cell.classList.add('now');
+      if (sessionDone.has(j)) cell.classList.add('done');
+      if (j === justInked) cell.classList.add('inked');
+    }
+    sentenceEl.append(cell);
+  });
+  justInked = -1;
+  // as many cells per column (or row) as the stage has room for
+  const cellW = g * 1.75;
+  const cellH = g * 1.2;
+  if (vertical) {
+    const perCol = Math.max(4, Math.floor((stage.clientHeight - 2 * ARENA_PAD) / cellH));
+    sentenceEl.style.width = Math.ceil(chars.length / perCol) * cellW + 'px';
+    sentenceEl.style.height = Math.min(chars.length, perCol) * cellH + 'px';
+  } else {
+    const perRow = Math.max(4, Math.floor((stage.clientWidth - 2 * ARENA_PAD) / cellW));
+    sentenceEl.style.width = Math.min(chars.length, perRow) * cellW + 'px';
+    sentenceEl.style.height = Math.ceil(chars.length / perRow) * cellH + 'px';
+  }
+  if (!sent.z) {
+    sentenceZhuyin(sent).then(function (z) {
+      sent.z = z;
+      if (state.sentence === sent) {
+        renderSentence();
+        if (charData) renderInfo(charData);
+      }
+    });
+  }
+}
+// a tap on a framed character goes to it; anywhere else reads the sentence
+sentenceEl.addEventListener('click', function (e) {
+  const cell = e.target.closest('.cell.target');
+  if (cell) {
+    state.idx = Number(cell.dataset.j);
+    renderChips();
+    build();
+    if (state.sound) say(currentChar());
+    return;
+  }
+  if (state.sentence && state.sound) say(state.sentence.s);
+});
+
 // ---------- the current exercise ----------
-function loadText(text, speak) {
+// sent: the sentence these characters are written in, if any
+function loadText(text, speak, sent) {
   const chars = parseText(text);
   if (chars.length === 0) {
     toast('請輸入中文字');
@@ -691,13 +886,15 @@ function loadText(text, speak) {
   }
   state.text = chars.join('');
   state.chars = chars;
+  state.sentence = sent || null;
   state.idx = 0;
   state.mode = 'watch';
   sessionDone.clear();
 
-  const at = seen.indexOf(state.text);
+  const seenAs = sent ? sent.s : state.text;
+  const at = seen.indexOf(seenAs);
   if (at >= 0) seen.splice(at, 1);
-  seen.unshift(state.text);
+  seen.unshift(seenAs);
   seen.length = Math.min(seen.length, 40);
 
   save();
@@ -716,7 +913,8 @@ function loadText(text, speak) {
 }
 // resume what this 俠客 was practicing, else their name, else a word from the bank
 function startText() {
-  if (state.text) loadText(state.text);
+  if (state.sentence) loadSentence(state.sentence);
+  else if (state.text) loadText(state.text);
   else if (state.myName) loadText(state.myName);
   else if (words.length) nextWord(false);
 }
@@ -1199,7 +1397,9 @@ function renderInfo(data) {
     mini.innerHTML = '';
     return;
   }
-  renderZhuyin(zyEl, zhuyinAt(state.text, state.idx, data));
+  const sent = state.sentence;
+  const inSentence = sent && sent.z ? sent.z[sent.k[state.idx]] : '';
+  renderZhuyin(zyEl, inSentence || zhuyinAt(state.text, state.idx, data));
 
   // the model character, with the radical strokes colored
   const radSet = new Set(data.radStrokes || []);
@@ -1269,6 +1469,7 @@ function renderBoxMeta() {
 async function build() {
   const myToken = ++buildToken;
   const ch = currentChar();
+  renderSentence();
   resultEl.hidden = true;
   hideNextHint();
   brush.live = false;
@@ -1647,10 +1848,12 @@ function finish(mistakes) {
   }
   checkHonors(mistakes);
   // a character traced or written counts the word as practiced
-  const at = state.recent.indexOf(state.text);
-  if (at >= 0) state.recent.splice(at, 1);
-  state.recent.unshift(state.text);
-  state.recent = state.recent.slice(0, RECENT_MAX);
+  if (!state.sentence) {
+    const at = state.recent.indexOf(state.text);
+    if (at >= 0) state.recent.splice(at, 1);
+    state.recent.unshift(state.text);
+    state.recent = state.recent.slice(0, RECENT_MAX);
+  }
   save();
   renderChips();
   avatarPlay('cheer');
@@ -1667,13 +1870,17 @@ function finish(mistakes) {
   // the whole word done in this mode: read the whole word, fireworks for words of 2+ characters
   // positions, not characters, so a word like 弟弟 needs both written
   sessionDone.add(state.idx);
+  if (state.sentence) {
+    justInked = state.idx;
+    renderSentence();
+  }
   let allDone = true;
   state.chars.forEach(function (c, i) {
     if (!sessionDone.has(i) && strokeCount[c] !== 0) allDone = false;
   });
   if (allDone) {
     sessionDone.clear();
-    if (state.mode === 'write' && state.chars.length > 1 && purse.words.indexOf(state.text) < 0) {
+    if (state.mode === 'write' && state.chars.length > 1 && !state.sentence && purse.words.indexOf(state.text) < 0) {
       purse.words.unshift(state.text);
       toast('收進字訣本：「' + state.text + '」');
       save();
@@ -1685,7 +1892,7 @@ function finish(mistakes) {
       setTimeout(function () { flyCoins('gold', 1); }, 2000);
     }
     setTimeout(function () {
-      if (state.sound) say(state.text);
+      if (state.sound) say(state.sentence ? state.sentence.s : state.text);
     }, 1500);
     if (state.chars.length > 1) {
       queueCelebration(1500, function () {
@@ -1715,7 +1922,7 @@ function finish(mistakes) {
 
   const nextBtn = document.getElementById('nextBtn');
   let action = 'next-word';
-  let label = '下一個詞';
+  let label = state.sentence ? '下一句' : '下一個詞';
   if (state.idx < state.chars.length - 1) {
     action = 'next';
     label = '下一個字';
@@ -1903,9 +2110,32 @@ document.getElementById('saveListBtn').addEventListener('click', function () {
   closeSheet(document.getElementById('customSheet'));
   nextWord(true);
 });
+document.getElementById('saveSentencesBtn').addEventListener('click', function () {
+  const lines = [];
+  for (const line of document.getElementById('sentenceInput').value.split('\n')) {
+    if (parseMySentence(line).k.length) lines.push(line.trim());
+  }
+  if (!lines.length) {
+    toast('請輸入中文句子');
+    return;
+  }
+  state.slist = lines;
+  state.content = 'mysentences';
+  renderOptions();
+  renderSentenceCount();
+  save();
+  toast('句子本：' + lines.length + ' 句');
+  closeSheet(document.getElementById('customSheet'));
+  nextWord(true);
+});
+function renderSentenceCount() {
+  document.getElementById('sentenceCount').textContent = state.slist.length ? '目前 ' + state.slist.length + ' 句' : '';
+}
 document.getElementById('customBtn').addEventListener('click', function () {
   const input = document.getElementById('customInput');
   document.getElementById('listInput').value = state.list.join(' ');
+  document.getElementById('sentenceInput').value = state.slist.join('\n');
+  renderSentenceCount();
   renderListCount();
   input.value = '';
   input.placeholder = state.myName ? '例如：' + state.myName : '例如：劉岱恬';
@@ -1976,7 +2206,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
   if (fromGate && profileSheet.hidden) {
     leaveGate();
     if (state.music !== 'off') playMusic(state.music);
-    const text = state.text || state.myName;
+    const text = state.sentence ? state.sentence.s : state.text || state.myName;
     if (state.sound && text) say(text);
   }
 });
@@ -2024,6 +2254,10 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     if (opt === 'content') {
       if (b.dataset.val === 'list' && state.list.length === 0) {
         toast('先在「自己出題」存一份生字本');
+        return;
+      }
+      if (b.dataset.val === 'mysentences' && state.slist.length === 0) {
+        toast('先在「自己出題」寫幾句我的句子本');
         return;
       }
       state.content = b.dataset.val;
@@ -2117,6 +2351,9 @@ let bootAlias = '';
   const wordsReady = fetch('data/words.json').then(function (r) { return r.json(); }).then(function (list) {
     words = list;
   }, function () {});
+  const sentencesReady = fetch('data/sentences.json').then(function (r) { return r.json(); }).then(function (list) {
+    sentences = list;
+  }, function () {});
   fetch('data/readings.json').then(function (r) { return r.json(); }).then(function (map) {
     readings = map;
     if (charData) renderInfo(charData);
@@ -2126,6 +2363,7 @@ let bootAlias = '';
   if (state.text || state.myName) startText();
   checkInbox();
   await wordsReady;
+  await sentencesReady;
   if (!state.chars.length) startText();
 })();
 
@@ -2215,7 +2453,7 @@ function enterGame(alias) {
   if (alias !== account.alias) enterAs(alias);
   rememberHero(alias);
   if (state.music !== 'off') playMusic(state.music);
-  const text = state.text || state.myName;
+  const text = state.sentence ? state.sentence.s : state.text || state.myName;
   if (state.sound && text) say(text);
 }
 // at start the 俠客 sheet opens on 群俠譜 and stays until someone is chosen, a guest included
@@ -2649,6 +2887,7 @@ function renderHonors(grid) {
   wear.addEventListener('click', function () {
     purse.customHonor = input.value.trim();
     wearHonor(purse.customHonor ? 'custom' : '');
+    if (purse.customHonor && state.sound) say('自稱，' + purse.customHonor);
   });
   const off = document.createElement('button');
   off.type = 'button';

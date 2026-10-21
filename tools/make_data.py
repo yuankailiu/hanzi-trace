@@ -118,7 +118,14 @@ def map_radical(moe_medians, mmh):
 
 
 # single characters whose everyday reading is a particle or the commoner of two equals
-READING_FIRST = {'了': '˙ㄌㄜ', '著': '˙ㄓㄜ', '長': 'ㄔㄤˊ', '都': 'ㄉㄡ', '還': 'ㄏㄞˊ'}
+# the everyday reading first, where the reading with the most definitions is not the one children use
+READING_FIRST = {
+    '了': '˙ㄌㄜ', '著': '˙ㄓㄜ', '長': 'ㄔㄤˊ', '都': 'ㄉㄡ', '還': 'ㄏㄞˊ', '鳥': 'ㄋㄧㄠˇ',
+    '喝': 'ㄏㄜ', '騎': 'ㄑㄧˊ', '那': 'ㄋㄚˋ', '沒': 'ㄇㄟˊ', '什': 'ㄕㄣˊ', '怎': 'ㄗㄣˇ',
+    '嚇': 'ㄒㄧㄚˋ', '棋': 'ㄑㄧˊ', '鉛': 'ㄑㄧㄢ', '蘋': 'ㄆㄧㄥˊ', '椅': 'ㄧˇ', '胖': 'ㄆㄤˋ',
+    '校': 'ㄒㄧㄠˋ', '曾': 'ㄘㄥˊ', '難': 'ㄋㄢˊ', '藏': 'ㄘㄤˊ', '塞': 'ㄙㄞ', '炮': 'ㄆㄠˋ',
+    '挑': 'ㄊㄧㄠ', '粽': 'ㄗㄨㄥˋ',
+}
 
 
 def load_moe_readings(path):

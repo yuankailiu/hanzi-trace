@@ -419,9 +419,13 @@ function say(text) {
   if (synth.speaking || synth.pending) synth.cancel();
   speakOnce(text, myToken, true);
 }
+// words the system voices misread, spoken as homophones: 少俠 is ㄕㄠˋ ㄒㄧㄚˊ, not ㄕㄠˇ
+const SPEAK_AS = [['少俠', '紹俠']];
 function speakOnce(text, myToken, retry) {
   const synth = window.speechSynthesis;
-  const u = new SpeechSynthesisUtterance(text);
+  let spoken = text;
+  for (const pair of SPEAK_AS) spoken = spoken.split(pair[0]).join(pair[1]);
+  const u = new SpeechSynthesisUtterance(spoken);
   const v = chineseVoices()[0];
   u.lang = v ? v.lang : 'zh-TW';
   u.rate = 0.75;

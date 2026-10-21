@@ -9,9 +9,9 @@ const REALMS = ['初入師門', '仗劍', '名動江湖', '開宗', '傳世'];
 const TITLES = [
   // 一・初入師門
   { name: '學徒', robe: '#9A948A', belt: '#5A4632', gear: 'none' },
-  { name: '門人', robe: '#B9A27A', belt: '#5A4632', gear: 'band' },
-  { name: '入室弟子', robe: '#3F6FB0', belt: '#2A3F66', gear: 'band' },
-  { name: '親傳', robe: '#2E8B7A', belt: '#1D5A4F', gear: 'bandTails' },
+  { name: '小師弟', nameGirl: '小師妹', robe: '#B9A27A', belt: '#5A4632', gear: 'band' },
+  { name: '入門弟子', robe: '#3F6FB0', belt: '#2A3F66', gear: 'band' },
+  { name: '大師兄', nameGirl: '大師姊', robe: '#2E8B7A', belt: '#1D5A4F', gear: 'bandTails' },
   // 二・仗劍
   { name: '少俠', nameGirl: '俠女', robe: '#3F7FB0', belt: '#B23A2E', gear: 'bandTails' },
   { name: '遊俠', robe: '#3A3A44', belt: '#B23A2E', gear: 'hat' },
@@ -19,16 +19,16 @@ const TITLES = [
   { name: '大俠', robe: '#E9E4D8', belt: '#2F5D7C', gear: 'hat', cape: '#B8322A' },
   // 三・名動江湖
   { name: '豪傑', robe: '#2F4A6E', belt: '#C5CCD2', gear: 'hat', cape: '#A8322A' },
-  { name: '武林名家', robe: '#8E2F2A', belt: '#E0B957', gear: 'topknot', cape: '#3A3A44' },
-  { name: '一方魁首', robe: '#6E2A3A', belt: '#E0B957', gear: 'topknot', cape: '#C9A03A' },
-  { name: '名宿', robe: '#5E5A7A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
+  { name: '武林高手', robe: '#8E2F2A', belt: '#E0B957', gear: 'topknot', cape: '#3A3A44' },
+  { name: '一方掌門', robe: '#6E2A3A', belt: '#E0B957', gear: 'topknot', cape: '#C9A03A' },
+  { name: '武林前輩', robe: '#5E5A7A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
   // 四・開宗
   { name: '宗師', robe: '#6B4C9A', belt: '#E0B957', gear: 'goldBand', cape: '#2F2A44' },
   { name: '開山祖師', robe: '#2F5A4A', belt: '#E0B957', gear: 'goldBand', cape: '#C9A03A' },
   { name: '大宗師', robe: '#F2EEE4', belt: '#C9A03A', gear: 'goldBand', cape: '#C9A03A' },
-  { name: '盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
+  { name: '武林盟主', robe: '#B8322A', belt: '#E0B957', gear: 'crown', cape: '#E0B957' },
   // 五・傳世
-  { name: '武林泰斗', robe: '#1F3A5A', belt: '#E0B957', gear: 'jadeCrown', cape: '#B8322A' },
+  { name: '武林至尊', robe: '#1F3A5A', belt: '#E0B957', gear: 'jadeCrown', cape: '#B8322A' },
   { name: '武聖', robe: '#7A1F2A', belt: '#E0B957', gear: 'jadeCrown', cape: '#E0B957' },
   { name: '天下第一', robe: '#E0B957', belt: '#B8322A', gear: 'crown', cape: '#B8322A' },
   { name: '一代傳奇', robe: '#F4F0FF', belt: '#C9A03A', gear: 'crown', cape: '#6B4C9A' },
