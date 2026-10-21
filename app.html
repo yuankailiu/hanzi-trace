@@ -21,6 +21,8 @@
   <symbol id="i-user" viewBox="0 0 24 24"><circle class="i-line" cx="12" cy="8.5" r="4"></circle><path class="i-line" d="M4.5 20.5c1.2-3.8 4-5.6 7.5-5.6s6.3 1.8 7.5 5.6"></path></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><circle class="i-line" cx="12" cy="12" r="3"></circle><path class="i-line" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></symbol>
   <symbol id="i-tap" viewBox="0 0 24 24"><circle class="i-fill" cx="12" cy="12" r="3"></circle><circle class="i-line" cx="12" cy="12" r="7"></circle><circle class="i-line" cx="12" cy="12" r="10.5" opacity="0.45"></circle></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path class="i-line" d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"></path><circle class="i-line" cx="12" cy="12" r="3"></circle></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path class="i-line" d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"></path><circle class="i-line" cx="12" cy="12" r="3"></circle><path class="i-line" d="M4 20 20 4"></path></symbol>
   <symbol id="i-speaker" viewBox="0 0 24 24"><path class="i-fill" d="M3.5 9v6h4l5 4V5l-5 4z"></path><path class="i-line" d="M16 8.5a5 5 0 0 1 0 7M18.6 5.8a8.8 8.8 0 0 1 0 12.4"></path></symbol>
 </svg>
 
@@ -81,6 +83,7 @@
     <button type="button" class="player card" id="playerCard" aria-label="我的俠客">
       <span class="avatar-tile"><canvas id="avatar" width="48" height="36"></canvas></span>
       <span class="player-info">
+        <span class="honor-line" id="honorTag"></span>
         <span class="alias" id="aliasTag" hidden></span>
         <span class="title-row"><span class="rank-tag" id="rankTag">新手</span><span class="lv" id="lvTag">Lv 1</span></span>
         <span class="xp"><i id="xpBar" style="width:0%"></i></span>
@@ -183,6 +186,10 @@
     </div>
     <div id="accountPane">
     <p class="status-line" id="profileStatus"></p>
+    <div class="seg-row" id="accountModes" role="tablist">
+      <button type="button" role="tab" data-mode="login" aria-selected="true">登入</button>
+      <button type="button" role="tab" data-mode="create" aria-selected="false">建立新俠客</button>
+    </div>
     <div class="row">
       <div class="field">
         <label for="aliasInput">江湖名字</label>
@@ -190,18 +197,21 @@
       </div>
       <div class="field">
         <label for="passInput">4 位數密碼</label>
-        <input id="passInput" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••">
+        <span class="pass-wrap">
+          <input id="passInput" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••">
+          <button type="button" class="eye" id="passEye" aria-label="看密碼" aria-pressed="false" data-quiet>
+            <svg aria-hidden="true"><use href="#i-eye"></use></svg>
+          </button>
+        </span>
       </div>
     </div>
-    <div class="opt-row" id="newGenderRow">
-      <span class="label">新俠客</span>
-      <button type="button" data-g="boy">男生</button>
-      <button type="button" data-g="girl">女生</button>
-      <button type="button" data-g="any">雌雄難辨</button>
+    <div class="opt-row" id="newGenderRow" hidden>
+      <span class="label">是</span>
+      <button type="button" data-g="boy">少俠</button>
+      <button type="button" data-g="girl">女俠</button>
     </div>
-    <p class="note">建立新俠客時選一次，選好就固定了；雌雄難辨可以隨時換，還能在包打聽幫別人改。</p>
     <div class="row">
-      <button type="submit" class="primary">登入／建立</button>
+      <button type="submit" class="primary" id="accountSubmit">登入</button>
       <button type="button" id="logoutBtn">換回訪客</button>
     </div>
     <p class="note" id="profileNote"></p>
@@ -235,22 +245,39 @@
         </div>
         <div class="label">送東西（點一下選取）</div>
         <div class="gift-items" id="giftItems"></div>
-        <div class="opt-row gift-row" id="giftGenderRow" hidden>
-          <span class="label">改性別</span>
-          <button type="button" data-gender="">不改</button>
-          <button type="button" data-gender="boy">男生</button>
-          <button type="button" data-gender="girl">女生</button>
-          <button type="button" data-gender="any">雌雄難辨</button>
+        <div class="admin-only" id="giftAdmin" hidden>
+          <div class="opt-row gift-row" id="giftGenderRow">
+            <span class="label">改成</span>
+            <button type="button" data-gender="">不改</button>
+            <button type="button" data-gender="boy">少俠</button>
+            <button type="button" data-gender="girl">女俠</button>
+          </div>
+          <div class="field">
+            <label for="giftHonor">賜稱號（最多 6 個字）</label>
+            <input id="giftHonor" maxlength="6" placeholder="例如：小書法家">
+          </div>
         </div>
         <div class="field">
           <label for="letterText">捎信</label>
           <textarea id="letterText" maxlength="100" rows="2" placeholder="想說的話"></textarea>
         </div>
-        <div class="row"><button type="button" class="primary" id="giftSend">捎信送出</button></div>
+        <div class="row">
+          <button type="button" class="primary" id="giftSend">捎信送出</button>
+          <button type="button" class="danger" id="giftRemove" hidden>逐出江湖</button>
+        </div>
         <p class="note" id="giftNote"></p>
       </div>
     </div>
   </form>
+</div>
+
+<!-- a new 稱號, shown as a token -->
+<div class="honor-pop" id="honorPop" hidden>
+  <div class="token">
+    <span class="honor-pop-top">解鎖稱號</span>
+    <b id="honorPopName"></b>
+    <span class="honor-pop-sub">到「我的俠客 → 稱號」掛在名字前面吧！</span>
+  </div>
 </div>
 
 <!-- 江湖來信: letters and gifts from other 俠客 -->
@@ -282,7 +309,7 @@
       <button type="button" data-val="chars">只練單字</button>
       <button type="button" data-val="list">我的生字本</button>
     </div>
-    <p class="note">詞語與單字來自教育部《國小學童常用字詞調查報告書》，依字頻由淺到深，跟著俠客頭銜慢慢變難。「我的生字本」在鉛筆圖示「自己出題」裡設定。</p>
+    <p class="note">詞語與單字來自教育部《國小學童常用字詞調查報告書》，依字頻由淺到深，跟著俠客的江湖身分慢慢變難。「我的生字本」在鉛筆圖示「自己出題」裡設定。</p>
     <div class="opt-row" data-opt="music">
       <span class="label">背景音樂</span>
       <button type="button" data-val="xiangqi">象棋</button>
@@ -336,11 +363,11 @@
   </div>
 </div>
 
-<!-- 我的俠客：等級、頭銜、商店 -->
+<!-- 我的俠客：等級、江湖身分、稱號、商店 -->
 <div class="sheet" id="heroSheet" hidden role="dialog" aria-modal="true" aria-labelledby="heroTitle">
   <div class="sheet-panel card wide">
     <div class="sheet-head">
-      <h2><button type="button" class="plain-btn" id="heroTitle">我的俠客</button></h2>
+      <h2 class="hero-name"><span id="heroHonor"></span><button type="button" class="plain-btn" id="heroTitle">我的俠客</button></h2>
       <button type="button" data-close>關閉</button>
     </div>
     <section class="hero">
@@ -348,19 +375,18 @@
       <div class="hero-info">
         <div class="title-row"><button type="button" class="plain-btn rank-tag big" id="heroRank"></button><span class="lv" id="heroLv"></span></div>
         <div class="xp wide"><i id="heroXp" style="width:0%"></i></div>
-        <div class="quiet" id="heroNext"></div>
         <div class="purse-row">
           <span class="purse"><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg><b id="heroTaels">0</b> 兩</span>
           <span class="purse"><svg class="sycee gold" aria-hidden="true"><use href="#sycee"></use></svg><b id="heroIngots">0</b> 元寶</span>
         </div>
         <div class="opt-row" data-opt="gender">
-          <button type="button" data-val="boy">男生</button>
-          <button type="button" data-val="girl">女生</button>
+          <button type="button" data-val="boy">少俠</button>
+          <button type="button" data-val="girl">女俠</button>
         </div>
       </div>
     </section>
     <section>
-      <h3>頭銜</h3>
+      <h3>江湖身分</h3>
       <div class="ladder" id="ladder"></div>
     </section>
     <section>

@@ -75,6 +75,28 @@ const SLOTS = [
   { id: 'acc', name: '飾品' },
   { id: 'pet', name: '夥伴' },
 ];
+// 稱號: won by special feats and worn before the name, unlike the 江湖身分 that rises with practice.
+// tier sets the look: bronze 竹簡, gold 令牌, legend 紫電. 'master' belongs to the 管理員 alone.
+const HONORS = [
+  { id: 'firstWrite', name: '妙筆生花', tier: 'bronze', hint: '第一次自己寫，一筆都沒錯' },
+  { id: 'stubborn', name: '百折不撓', tier: 'bronze', hint: '一個字錯了三次以上，還是把它寫完' },
+  { id: 'streak3', name: '聞雞起舞', tier: 'bronze', hint: '連續三天都來練功' },
+  { id: 'chars20', name: '認字高手', tier: 'bronze', hint: '自己寫會二十個字' },
+  { id: 'quick', name: '快筆小俠', tier: 'bronze', hint: '又快又對地自己寫完一個八畫以上的字' },
+  { id: 'streak7', name: '風雨無阻', tier: 'gold', hint: '連續七天都來練功' },
+  { id: 'chars50', name: '識字小狀元', tier: 'gold', hint: '自己寫會五十個字' },
+  { id: 'heavy', name: '入木三分', tier: 'gold', hint: '自己寫出一個二十畫以上的字' },
+  { id: 'perfect10', name: '一字千金', tier: 'legend', hint: '連續十個字自己寫，一筆都沒錯' },
+  { id: 'chars200', name: '破卷書生', tier: 'legend', hint: '自己寫會兩百個字' },
+  { id: 'master', name: '武林神工', tier: 'legend', hint: '打造這座江湖的人', admin: true },
+];
+function honorById(id) {
+  for (const h of HONORS) {
+    if (h.id === id) return h;
+  }
+  return null;
+}
+
 // where an item goes on the hero: gear.weapon / gear.head / gear.waist / gear.back / gear.pet
 function placeOf(item) {
   return item.slot === 'acc' ? item.place : item.slot;

@@ -67,10 +67,17 @@ const purse = {
   words: [],
   lastDay: '',
   streak: 0,
+  // 稱號: won ids, the worn one ('' / an id / 'custom' / 'g:' + a granted name), the typed one, granted names
+  honors: [],
+  honor: '',
+  customHonor: '',
+  granted: [],
+  perfectRun: 0,
 };
 // words shown lately (practiced or not), so the dice does not repeat itself
 const seen = [];
-const account = { alias: '', pass: '', sync: 'local' };
+// admin: this 俠客 is the 管理員 (set in Supabase, see supabase/heroes.sql)
+const account = { alias: '', pass: '', sync: 'local', admin: false };
 const strokeCount = {};
 const glyphData = {};
 const sessionDone = new Set();
@@ -83,7 +90,7 @@ function zhuyinAt(text, i, data) {
   return data && data.zy && data.zy.length ? data.zy[0] : '';
 }
 let shopSlot = 'scrolls';
-const HERO_TABS = [{ id: 'scrolls', name: '字訣本' }].concat(SLOTS);
+const HERO_TABS = [{ id: 'scrolls', name: '字訣本' }, { id: 'honors', name: '稱號' }].concat(SLOTS);
 
 let writer = null;
 let charData = null;
@@ -254,7 +261,7 @@ function resetProgress() {
   state.recent = [];
   state.list = [];
   state.text = '';
-  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, scrolls: [], words: [], lastDay: '', streak: 0 });
+  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, scrolls: [], words: [], lastDay: '', streak: 0, honors: [], honor: '', customHonor: '', granted: [], perfectRun: 0 });
 }
 function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
@@ -271,8 +278,9 @@ function applyProfile(source) {
     if (typeof p.settings.volume === 'number') state.volume = p.settings.volume;
   }
   // accounts made before the gender was chosen at sign-up keep the one they had
+  if (state.genderLock !== 'boy' && state.genderLock !== 'girl') state.genderLock = '';
   if (account.alias && !state.genderLock) state.genderLock = state.gender;
-  if (state.genderLock === 'boy' || state.genderLock === 'girl') state.gender = state.genderLock;
+  if (state.genderLock) state.gender = state.genderLock;
   if (p.stars) state.stars = p.stars;
   if (p.myName) state.myName = p.myName;
   if (p.recent) state.recent = p.recent;
@@ -297,6 +305,11 @@ function applyProfile(source) {
     purse.words = old.words || [];
     purse.lastDay = old.lastDay || '';
     purse.streak = old.streak || 0;
+    purse.honors = old.honors || [];
+    purse.honor = old.honor || '';
+    purse.customHonor = old.customHonor || '';
+    purse.granted = old.granted || [];
+    purse.perfectRun = old.perfectRun || 0;
   }
   // a character with a 自己寫 grade has been written alone, even if an older version did not record it
   for (const ch in state.stars) {
@@ -368,6 +381,8 @@ function scheduleCloudSave() {
   cloudTimer = setTimeout(cloudSave, 1500);
 }
 async function cloudSave() {
+  // the 俠客 may have switched to a guest while the save waited
+  if (!account.alias) return;
   try {
     await rpc('profile_save', { p_alias: account.alias, p_pass: account.pass, p_data: serializeProfile() });
     account.sync = 'cloud';
@@ -384,6 +399,7 @@ async function cloudRefresh() {
     const res = await rpc('profile_load', { p_alias: alias, p_pass: account.pass });
     if (account.alias !== alias) return false;
     account.sync = 'cloud';
+    setAdmin(Boolean(res && res.admin));
     const local = loadLocalProfile(account.alias);
     const localAt = local && local.savedAt ? local.savedAt : 0;
     if (res && res.data && (res.data.savedAt || 0) > localAt) {
@@ -425,9 +441,26 @@ async function passHash(alias, pass) {
   return hex;
 }
 
+// the 管理員 wears 武林神工 and may change genders, grant 稱號 and remove 俠客
+function setAdmin(on) {
+  account.admin = on;
+  const has = purse.honors.indexOf('master') >= 0;
+  if (on && !has) {
+    purse.honors.push('master');
+    if (!purse.honor) purse.honor = 'master';
+    save();
+  } else if (!on && has) {
+    purse.honors.splice(purse.honors.indexOf('master'), 1);
+    if (purse.honor === 'master') purse.honor = '';
+    save();
+  }
+  renderPurse();
+}
+
 function switchTo(alias, pass, data) {
   account.alias = alias;
   account.pass = pass;
+  account.admin = false;
   account.sync = cloudEnabled() && alias ? 'cloud' : 'local';
   try {
     localStorage.setItem(CURRENT_KEY, alias);
@@ -442,6 +475,7 @@ function switchTo(alias, pass, data) {
   checkInbox();
 }
 
+let accountMode = 'login';
 async function login(alias, pass) {
   const note = document.getElementById('profileNote');
   alias = alias.trim().toLowerCase();
@@ -465,10 +499,18 @@ async function login(alias, pass) {
       note.textContent = e.wrongPass ? '密碼不對喔，再試一次。' : '連不上雲端，請稍後再試。';
       return;
     }
+    if (accountMode === 'login' && !res) {
+      note.textContent = '找不到「' + alias + '」。第一次來的話，請按上面的「建立新俠客」。';
+      return;
+    }
+    if (accountMode === 'create' && res) {
+      note.textContent = '「' + alias + '」已經有人用了，換一個名字吧；如果是你，請按「登入」。';
+      return;
+    }
     let data = res ? res.data : carry;
     if (!res) {
       if (!newGender) {
-        note.textContent = '新俠客要先選：男生、女生，還是雌雄難辨。';
+        note.textContent = '新俠客要先選：少俠還是女俠。';
         return;
       }
       data = withGender(data, newGender);
@@ -484,6 +526,7 @@ async function login(alias, pass) {
     }
     note.textContent = '';
     switchTo(alias, pass, data);
+    setAdmin(Boolean(res && res.admin));
     closeSheet(document.getElementById('profileSheet'));
     return;
   }
@@ -497,11 +540,19 @@ async function login(alias, pass) {
   }
   localStorage.setItem(PASSHASH_PREFIX + alias, hash);
   let data = loadLocalProfile(alias);
+  if (accountMode === 'login' && !data) {
+    note.textContent = '找不到「' + alias + '」。第一次來的話，請按上面的「建立新俠客」。';
+    return;
+  }
+  if (accountMode === 'create' && data) {
+    note.textContent = '「' + alias + '」已經有人用了，換一個名字吧；如果是你，請按「登入」。';
+    return;
+  }
   if (data) {
     toast('歡迎回來，' + alias);
   } else {
     if (!newGender) {
-      note.textContent = '新俠客要先選：男生、女生，還是雌雄難辨。';
+      note.textContent = '新俠客要先選：少俠還是女俠。';
       return;
     }
     data = withGender(carry, newGender);
@@ -518,9 +569,28 @@ function withGender(data, g) {
   const out = JSON.parse(JSON.stringify(data || {}));
   out.settings = out.settings || {};
   out.settings.genderLock = g;
-  if (g !== 'any') out.settings.gender = g;
+  out.settings.gender = g;
   return out;
 }
+function setAccountMode(mode) {
+  accountMode = mode;
+  document.querySelectorAll('#accountModes button').forEach(function (b) {
+    b.setAttribute('aria-selected', b.dataset.mode === mode ? 'true' : 'false');
+  });
+  document.getElementById('newGenderRow').hidden = mode !== 'create';
+  document.getElementById('accountSubmit').textContent = mode === 'create' ? '建立' : '登入';
+  document.getElementById('profileNote').textContent = '';
+}
+document.querySelectorAll('#accountModes button').forEach(function (b) {
+  b.addEventListener('click', function () { setAccountMode(b.dataset.mode); });
+});
+document.getElementById('passEye').addEventListener('click', function (e) {
+  const input = document.getElementById('passInput');
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  e.currentTarget.setAttribute('aria-pressed', show ? 'true' : 'false');
+  e.currentTarget.querySelector('use').setAttribute('href', show ? '#i-eye-off' : '#i-eye');
+});
 document.querySelectorAll('#newGenderRow button').forEach(function (b) {
   b.addEventListener('click', function () {
     newGender = b.dataset.g;
@@ -536,13 +606,14 @@ function renderProfileStatus() {
   const name = account.alias || '訪客';
   let where = '只存在這台裝置';
   if (account.alias && cloudEnabled()) where = account.sync === 'offline' ? '雲端暫時連不上，先存在這台裝置' : '雲端同步';
-  status.innerHTML = '目前：<b></b>（' + where + '）';
+  status.innerHTML = '目前：<b></b>（' + where + (account.admin ? '・管理員' : '') + '）';
   status.querySelector('b').textContent = name;
   if (!note.textContent) {
     note.textContent = cloudEnabled()
-      ? '第一次輸入的名字會建立新帳號；在其他裝置用同一個名字和密碼登入，就能接著練。'
+      ? '在其他裝置用同一個名字和密碼登入，就能接著練。'
       : '雲端同步還沒開通，帳號只存在這台裝置。一台平板有好幾個小朋友時，可以各自登入。';
   }
+  document.getElementById('logoutBtn').hidden = !account.alias;
   const btn = document.getElementById('profileBtn');
   let badge = btn.querySelector('.badge');
   if (!badge) {
@@ -765,6 +836,10 @@ function renderPurse() {
   const aliasTag = document.getElementById('aliasTag');
   aliasTag.textContent = account.alias;
   aliasTag.hidden = !account.alias;
+  const honorTag = document.getElementById('honorTag');
+  honorTag.innerHTML = '';
+  const badge = honorBadge(purse.honor, purse.customHonor);
+  if (badge) honorTag.append(badge);
   const info = levelInfo(purse.xp);
   document.getElementById('rankTag').textContent = TITLES[titleIndexFor(info.level)].name;
   document.getElementById('lvTag').textContent = 'Lv ' + info.level;
@@ -784,13 +859,14 @@ function renderHero() {
   const info = levelInfo(purse.xp);
   const tIdx = titleIndexFor(info.level);
   document.getElementById('heroTitle').textContent = account.alias || '我的俠客';
-  document.querySelector('#heroSheet .opt-row[data-opt="gender"]').hidden = state.genderLock === 'boy' || state.genderLock === 'girl';
+  const heroHonor = document.getElementById('heroHonor');
+  heroHonor.innerHTML = '';
+  const badge = honorBadge(purse.honor, purse.customHonor);
+  if (badge) heroHonor.append(badge);
+  document.querySelector('#heroSheet .opt-row[data-opt="gender"]').hidden = Boolean(state.genderLock) && !account.admin;
   document.getElementById('heroRank').textContent = TITLES[tIdx].name;
   document.getElementById('heroLv').textContent = 'Lv ' + info.level;
   document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
-  document.getElementById('heroNext').textContent = info.level >= MAX_LEVEL
-    ? '已經是天下第一'
-    : '再 ' + (info.need - info.into) + ' 經驗升到 Lv ' + (info.level + 1);
   document.getElementById('heroTaels').textContent = purse.taels;
   document.getElementById('heroIngots').textContent = purse.ingots;
   drawHeroOn(document.getElementById('heroAvatar'), { title: tIdx, gear: purse.gear, qi: qiColor() });
@@ -805,6 +881,8 @@ function renderHero() {
     const c = document.createElement('canvas');
     drawHeroOn(c, { title: i, gear: {} });
     const label = document.createElement('span');
+    if (i < tIdx) item.classList.add('past');
+    item.style.zIndex = String(i + 1);
     if (i === tIdx) {
       item.classList.add('now');
       label.textContent = TITLES[i].name;
@@ -839,8 +917,13 @@ function renderHero() {
   grid.innerHTML = '';
   grid.classList.toggle('scrollbook', shopSlot === 'scrolls');
   document.getElementById('scrollCount').hidden = shopSlot !== 'scrolls';
+  grid.classList.toggle('honorbook', shopSlot === 'honors');
   if (shopSlot === 'scrolls') {
     renderScrollbook(grid);
+    return;
+  }
+  if (shopSlot === 'honors') {
+    renderHonors(grid);
     return;
   }
   for (const it of ITEMS) {
@@ -999,7 +1082,7 @@ function openItem(it) {
     }
   } else {
     title.innerHTML = '<span class="mystery">？？？</span>';
-    note.textContent = tIdx < it.minTitle ? '頭銜再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
+    note.textContent = tIdx < it.minTitle ? '江湖身分再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
   }
 
   openSheet(sheet);
@@ -1293,6 +1376,7 @@ function startMode(myToken) {
   if (state.mode === 'write') writer.hideOutline();
   else writer.showOutline();
   brush.live = true;
+  quizStartedAt = performance.now();
 
   writer.quiz({
     leniency: state.lenient ? 1.5 : 1.0,
@@ -1339,6 +1423,7 @@ function strokeRipple(strokeNum) {
 // 看筆順: each tap on the box shows the next stroke. A tap during a stroke waits for it to finish,
 // so no stroke is left half drawn; while taps are waiting the strokes play faster to catch up.
 const watchStep = { busy: false, pending: 0 };
+let quizStartedAt = 0;
 function strokeSpeed() {
   return state.slow ? 0.6 : 1.2;
 }
@@ -1557,6 +1642,7 @@ function finish(mistakes) {
     purse.scrolls.unshift(ch);
     toast('習得「' + ch + '」字訣');
   }
+  checkHonors(mistakes);
   // a character traced or written counts the word as practiced
   const at = state.recent.indexOf(state.text);
   if (at >= 0) state.recent.splice(at, 1);
@@ -1866,7 +1952,10 @@ document.getElementById('profileBtn').addEventListener('click', function () {
   showProfilePane('accountPane');
   newGender = '';
   document.querySelectorAll('#newGenderRow button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
-  document.getElementById('profileNote').textContent = '';
+  setAccountMode('login');
+  document.getElementById('passInput').type = 'password';
+  document.getElementById('passEye').setAttribute('aria-pressed', 'false');
+  document.getElementById('passEye').querySelector('use').setAttribute('href', '#i-eye');
   document.getElementById('aliasInput').value = account.alias;
   document.getElementById('passInput').value = '';
   renderProfileStatus();
@@ -1936,8 +2025,9 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
       return;
     }
     if (opt === 'gender') {
-      if (state.genderLock === 'boy' || state.genderLock === 'girl') return;
-      state[opt] = b.dataset.val;
+      if (state.genderLock && !account.admin) return;
+      state.gender = b.dataset.val;
+      if (state.genderLock) state.genderLock = state.gender;
       renderOptions();
       save();
       renderHero();
@@ -2032,21 +2122,31 @@ function lookFor(xp, gear, gender) {
 
 // ---------- 開始: one of the recent 俠客 on this device, or a guest ----------
 // The tap that enters also starts the music and reads the word (browsers play sound only after a tap).
-const RECENT_HEROES_KEY = 'bishun.recentHeroes';
+// the three 俠客 on this device used most recently: every saved profile with a passcode, by the later of
+// its last save and its last entry here
+const LAST_USED_KEY = 'bishun.lastUsed';
 function recentHeroes() {
-  let list = [];
+  const out = [];
   try {
-    list = JSON.parse(localStorage.getItem(RECENT_HEROES_KEY) || '[]');
+    const used = JSON.parse(localStorage.getItem(LAST_USED_KEY) || '{}');
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.indexOf(PROFILE_PREFIX) !== 0) continue;
+      const alias = key.slice(PROFILE_PREFIX.length);
+      if (!alias || !localStorage.getItem(PASS_PREFIX + alias)) continue;
+      const p = JSON.parse(localStorage.getItem(key)) || {};
+      out.push({ alias: alias, at: Math.max(p.savedAt || 0, used[alias] || 0) });
+    }
   } catch (e) {}
-  if (!list.length && bootAlias) list = [bootAlias];
-  return list.slice(0, 3);
+  out.sort(function (a, b) { return b.at - a.at; });
+  return out.slice(0, 3).map(function (h) { return h.alias; });
 }
 function rememberHero(alias) {
   if (!alias) return;
-  const list = recentHeroes().filter(function (a) { return a !== alias; });
-  list.unshift(alias);
   try {
-    localStorage.setItem(RECENT_HEROES_KEY, JSON.stringify(list.slice(0, 3)));
+    const used = JSON.parse(localStorage.getItem(LAST_USED_KEY) || '{}');
+    used[alias] = Date.now();
+    localStorage.setItem(LAST_USED_KEY, JSON.stringify(used));
   } catch (e) {}
 }
 
@@ -2075,7 +2175,10 @@ function renderGate() {
     name.textContent = alias;
     const rank = document.createElement('span');
     rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
-    b.append(c, name, rank);
+    b.append(c);
+    const badge = honorBadge(pp.honor, pp.customHonor);
+    if (badge) b.append(badge);
+    b.append(name, rank);
     b.setAttribute('data-quiet', '');
     b.addEventListener('click', function () { enterGame(alias); });
     gate.slots.push({ canvas: c, look: look, phase: i * 5 });
@@ -2109,6 +2212,7 @@ function enterAs(alias) {
   } catch (e) {}
   account.alias = alias;
   account.pass = pass;
+  account.admin = false;
   account.sync = cloudEnabled() && alias ? 'cloud' : 'local';
   const data = loadLocalProfile(alias);
   if (data) applyProfile(data);
@@ -2171,12 +2275,15 @@ function receiveGifts(body) {
   for (const id of body.items || []) {
     if (itemById(id) && purse.owned.indexOf(id) < 0) purse.owned.push(id);
   }
-  // a 雌雄難辨 俠客 may set another's gender
-  if (body.gender === 'any') {
-    state.genderLock = 'any';
-  } else if (body.gender === 'boy' || body.gender === 'girl') {
+  // from the 管理員: a gender, a 稱號
+  if (body.gender === 'boy' || body.gender === 'girl') {
     state.genderLock = body.gender;
     state.gender = body.gender;
+  }
+  const honor = String(body.honor || '').trim();
+  if (honor && purse.granted.indexOf(honor) < 0) {
+    purse.granted.push(honor);
+    if (!purse.honor) purse.honor = 'g:' + honor;
   }
 }
 function giftText(body) {
@@ -2187,9 +2294,9 @@ function giftText(body) {
     const it = itemById(id);
     if (it) parts.push(it.name);
   }
-  if (body.gender === 'boy') parts.push('變成男生');
-  if (body.gender === 'girl') parts.push('變成女生');
-  if (body.gender === 'any') parts.push('變成雌雄難辨');
+  if (body.gender === 'boy') parts.push('變成少俠');
+  if (body.gender === 'girl') parts.push('變成女俠');
+  if (body.honor) parts.push('稱號【' + body.honor + '】');
   return parts.join('、');
 }
 function showLetters(letters) {
@@ -2260,7 +2367,10 @@ async function renderNews() {
     rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
     const money = document.createElement('span');
     money.textContent = '銀 ' + (h.taels || 0) + '　元寶 ' + (h.ingots || 0);
-    b.append(c, name, rank, money);
+    b.append(c);
+    const badge = honorBadge(h.honor, h.customHonor);
+    if (badge) b.append(badge);
+    b.append(name, rank, money);
     cards.append(b);
     drawHeroOn(c, { title: look.title, gear: look.gear, gender: look.gender });
     if (h.alias === account.alias) b.classList.add('me');
@@ -2280,18 +2390,21 @@ function openGift(h) {
   document.getElementById('giftName').textContent = h.alias;
   document.getElementById('giftRank').textContent = TITLES[look.title].name + ' Lv ' + look.level;
   document.getElementById('giftMoney').textContent = '銀兩 ' + (h.taels || 0) + '　元寶 ' + (h.ingots || 0);
-  document.getElementById('giftGenderRow').hidden = state.genderLock !== 'any';
+  document.getElementById('giftAdmin').hidden = !account.admin;
+  document.getElementById('giftRemove').hidden = !account.admin;
+  document.getElementById('giftHonor').value = '';
 
-  // what this 俠客 owns and could give away
+  // what this 俠客 owns and could give away; the 管理員 can give anything
   const grid = document.getElementById('giftItems');
   grid.innerHTML = '';
-  if (!purse.owned.length) {
+  const giveable = account.admin ? ITEMS.map(function (it) { return it.id; }) : purse.owned;
+  if (!giveable.length) {
     const none = document.createElement('span');
     none.className = 'quiet';
     none.textContent = '還沒有東西可以送';
     grid.append(none);
   }
-  for (const id of purse.owned) {
+  for (const id of giveable) {
     const it = itemById(id);
     if (!it) continue;
     const b = document.createElement('button');
@@ -2312,8 +2425,9 @@ function openGift(h) {
   renderGiftAmounts();
 }
 function renderGiftAmounts() {
-  document.getElementById('giftTaels').textContent = '送 ' + gift.taels + ' 兩（你有 ' + purse.taels + ' 兩）';
-  document.getElementById('giftIngots').textContent = '送 ' + gift.ingots + ' 個（你有 ' + purse.ingots + ' 個）';
+  const mine = account.admin ? '（管理員賞賜，不扣自己的）' : '（你有 ';
+  document.getElementById('giftTaels').textContent = '送 ' + gift.taels + ' 兩' + (account.admin ? mine : mine + purse.taels + ' 兩）');
+  document.getElementById('giftIngots').textContent = '送 ' + gift.ingots + ' 個' + (account.admin ? mine : mine + purse.ingots + ' 個）');
   document.querySelectorAll('#giftGenderRow button').forEach(function (b) {
     b.setAttribute('aria-pressed', b.dataset.gender === gift.gender ? 'true' : 'false');
   });
@@ -2321,14 +2435,16 @@ function renderGiftAmounts() {
 document.querySelectorAll('#heroDetail [data-taels]').forEach(function (b) {
   b.addEventListener('click', function () {
     const n = Number(b.dataset.taels);
-    gift.taels = n ? Math.min(purse.taels, gift.taels + n) : 0;
+    gift.taels = n ? gift.taels + n : 0;
+    if (!account.admin) gift.taels = Math.min(purse.taels, gift.taels);
     renderGiftAmounts();
   });
 });
 document.querySelectorAll('#heroDetail [data-ingots]').forEach(function (b) {
   b.addEventListener('click', function () {
     const n = Number(b.dataset.ingots);
-    gift.ingots = n ? Math.min(purse.ingots, gift.ingots + n) : 0;
+    gift.ingots = n ? gift.ingots + n : 0;
+    if (!account.admin) gift.ingots = Math.min(purse.ingots, gift.ingots);
     renderGiftAmounts();
   });
 });
@@ -2342,12 +2458,14 @@ document.getElementById('newsBack').addEventListener('click', renderNews);
 document.getElementById('giftSend').addEventListener('click', async function () {
   const note = document.getElementById('giftNote');
   const text = document.getElementById('letterText').value.trim();
-  if (!text && !gift.taels && !gift.ingots && !gift.items.length && !gift.gender) {
+  const honor = account.admin ? document.getElementById('giftHonor').value.trim() : '';
+  if (!text && !gift.taels && !gift.ingots && !gift.items.length && !gift.gender && !honor) {
     note.textContent = '寫幾句話，或選要送的東西。';
     return;
   }
   const body = { text: text, taels: gift.taels, ingots: gift.ingots, items: gift.items.slice() };
   if (gift.gender) body.gender = gift.gender;
+  if (honor) body.honor = honor;
   note.textContent = '飛鴿傳書中…';
   try {
     await rpc('letter_send', { p_alias: account.alias, p_pass: account.pass, p_to: gift.to.alias, p_body: body });
@@ -2355,13 +2473,15 @@ document.getElementById('giftSend').addEventListener('click', async function () 
     note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '沒送出去，請稍後再試。';
     return;
   }
-  // the gifts leave this 俠客's purse, and come off if worn
-  purse.taels -= gift.taels;
-  purse.ingots -= gift.ingots;
-  for (const id of gift.items) {
-    purse.owned.splice(purse.owned.indexOf(id), 1);
-    for (const slot in purse.gear) {
-      if (purse.gear[slot] === id) purse.gear[slot] = '';
+  // the gifts leave this 俠客's purse, and come off if worn; the 管理員's cost nothing
+  if (!account.admin) {
+    purse.taels -= gift.taels;
+    purse.ingots -= gift.ingots;
+    for (const id of gift.items) {
+      purse.owned.splice(purse.owned.indexOf(id), 1);
+      for (const slot in purse.gear) {
+        if (purse.gear[slot] === id) purse.gear[slot] = '';
+      }
     }
   }
   shown.taels = purse.taels;
@@ -2369,5 +2489,145 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   save();
   renderAll();
   toast('信已經送到「' + gift.to.alias + '」');
+  renderNews();
+});
+
+// ---------- 稱號 ----------
+// the worn 稱號: an earned or granted one in its tier's frame, a typed one as plain words
+function honorInfo(value, custom) {
+  if (!value) return null;
+  if (value === 'custom') return custom ? { name: custom, tier: 'plain' } : null;
+  if (value.indexOf('g:') === 0) return { name: value.slice(2), tier: 'gold' };
+  const h = honorById(value);
+  return h ? { name: h.name, tier: h.tier } : null;
+}
+function honorBadge(value, custom) {
+  const info = honorInfo(value, custom);
+  if (!info) return null;
+  const el = document.createElement('span');
+  el.className = 'honor ' + info.tier;
+  el.textContent = '【' + info.name + '】';
+  return el;
+}
+function wearHonor(value) {
+  purse.honor = value;
+  save();
+  renderPurse();
+  renderHero();
+}
+
+// the 稱號 tab: won ones to wear (tap again to take off), the rest as shadows saying how to win them,
+// and one of your own words
+function renderHonors(grid) {
+  const list = document.createElement('div');
+  list.className = 'honor-list';
+  const entries = [];
+  for (const h of HONORS) {
+    const won = purse.honors.indexOf(h.id) >= 0;
+    if (h.admin && !won) continue;
+    entries.push({ value: h.id, name: h.name, tier: h.tier, hint: h.hint, won: won });
+  }
+  for (const g of purse.granted) {
+    entries.push({ value: 'g:' + g, name: g, tier: 'gold', hint: '管理員賜的稱號', won: true });
+  }
+  for (const e of entries) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'honor-card';
+    const badge = document.createElement('span');
+    badge.className = 'honor ' + (e.won ? e.tier : 'shadow');
+    badge.textContent = '【' + (e.won ? e.name : '？？？') + '】';
+    const hint = document.createElement('span');
+    hint.className = 'quiet';
+    hint.textContent = e.hint;
+    b.append(badge, hint);
+    if (e.won) {
+      const wearing = purse.honor === e.value;
+      b.setAttribute('aria-pressed', wearing ? 'true' : 'false');
+      b.setAttribute('aria-label', e.name);
+      b.addEventListener('click', function () { wearHonor(wearing ? '' : e.value); });
+    } else {
+      // tapping a shadow reads how to win it
+      b.setAttribute('aria-label', e.hint);
+    }
+    list.append(b);
+  }
+
+  const own = document.createElement('div');
+  own.className = 'row honor-own';
+  const input = document.createElement('input');
+  input.maxLength = 6;
+  input.placeholder = '自己取一個稱號';
+  input.value = purse.customHonor;
+  const wear = document.createElement('button');
+  wear.type = 'button';
+  wear.textContent = '掛上';
+  wear.addEventListener('click', function () {
+    purse.customHonor = input.value.trim();
+    wearHonor(purse.customHonor ? 'custom' : '');
+  });
+  const off = document.createElement('button');
+  off.type = 'button';
+  off.textContent = '不掛稱號';
+  off.addEventListener('click', function () { wearHonor(''); });
+  own.append(input, wear, off);
+  grid.append(list, own);
+}
+
+// 稱號 won with the character just finished, each shown as a token after the stamp
+function checkHonors(mistakes) {
+  const won = [];
+  function win(id) {
+    if (purse.honors.indexOf(id) >= 0) return;
+    purse.honors.push(id);
+    won.push(honorById(id));
+  }
+  const strokes = strokeCount[currentChar()] || 0;
+  const seconds = (performance.now() - quizStartedAt) / 1000;
+  if (state.mode === 'write') {
+    purse.perfectRun = mistakes === 0 ? purse.perfectRun + 1 : 0;
+    if (mistakes === 0) win('firstWrite');
+    if (mistakes === 0 && strokes >= 8 && seconds <= strokes * 1.5) win('quick');
+    if (strokes >= 20) win('heavy');
+    if (purse.perfectRun >= 10) win('perfect10');
+  }
+  if (mistakes >= 3) win('stubborn');
+  if (purse.streak >= 3) win('streak3');
+  if (purse.streak >= 7) win('streak7');
+  if (purse.scrolls.length >= 20) win('chars20');
+  if (purse.scrolls.length >= 50) win('chars50');
+  if (purse.scrolls.length >= 200) win('chars200');
+  if (!won.length) return;
+  if (!purse.honor) purse.honor = won[0].id;
+  save();
+  renderPurse();
+  for (const h of won) {
+    queueCelebration(1800, function () { showHonor(h.name, h.tier); });
+  }
+}
+const honorPop = document.getElementById('honorPop');
+function showHonor(name, tier) {
+  document.getElementById('honorPopName').textContent = '【' + name + '】';
+  honorPop.className = 'honor-pop ' + tier;
+  honorPop.hidden = false;
+  sfxGong(0.4);
+  if (state.sound) say('解鎖稱號，' + name);
+  setTimeout(function () { honorPop.hidden = true; }, 3400);
+}
+honorPop.addEventListener('click', function () { honorPop.hidden = true; });
+
+// 逐出江湖: the 管理員 removes a 俠客 for good, after asking
+document.getElementById('giftRemove').addEventListener('click', async function () {
+  const h = gift.to;
+  if (!h || !account.admin) return;
+  if (!window.confirm('真的要把「' + h.alias + '」逐出江湖嗎？他的進度會全部刪除，救不回來。')) return;
+  const note = document.getElementById('giftNote');
+  try {
+    await rpc('hero_delete', { p_alias: account.alias, p_pass: account.pass, p_target: h.alias });
+  } catch (e) {
+    note.textContent = '沒有成功，請稍後再試。';
+    return;
+  }
+  toast('「' + h.alias + '」已經離開江湖');
   renderNews();
 });
