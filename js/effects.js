@@ -410,14 +410,16 @@ let sayToken = 0;
 // Speech starts right inside the tap (iOS plays nothing that starts later). Chrome's synthesizer
 // can get stuck after an interrupted utterance and then says nothing: if an utterance has not
 // started after 1.5 s, cancel and try it once more.
-function say(text) {
+// spokenAs: the same words with 破音字 swapped for one-reading homophones, so the voice reads them as
+// the 注音 shows (他還敢來 as 他孩敢來); text is what the page shows
+function say(text, spokenAs) {
   if (!('speechSynthesis' in window)) return;
   lastSaidAt = performance.now();
   const myToken = ++sayToken;
   // cancel only what is playing: Safari can drop a speak() that follows a needless cancel()
   const synth = window.speechSynthesis;
   if (synth.speaking || synth.pending) synth.cancel();
-  speakOnce(text, myToken, true);
+  speakOnce(spokenAs || text, myToken, true);
 }
 // words the system voices misread, spoken as homophones: 少俠 is ㄕㄠˋ ㄒㄧㄚˊ, not ㄕㄠˇ; 名宿 is ㄇㄧㄥˊ ㄙㄨˋ
 const SPEAK_AS = [['少俠', '紹俠'], ['名宿', '名素']];

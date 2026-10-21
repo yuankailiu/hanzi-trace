@@ -2,8 +2,8 @@
 
 Two sources:
 - 教育部《國語小字典》 example sentences, verbatim, with the 注音 the dictionary gives each character in
-  that sentence. The character to write is the entry's own character. (CC BY-ND 3.0 TW; see
-  data/MINIDICT-LICENSE.txt.)
+  that sentence. What to write is the entry's own character, or the word of the word bank it forms
+  there (這本書真便宜 under 便: 便宜). (CC BY-ND 3.0 TW; see data/MINIDICT-LICENSE.txt.)
 - tools/sentences.txt, everyday sentences for grades 1–4 written for this app, following the sentence
   patterns recommended per grade in 吳欣儒、洪敏雄（2023）〈臺灣國小國語教科書的常用句型分析〉.
   Their 注音 comes from the longest 教育部《重編國語辭典修訂本》 words found in the sentence, then the
@@ -12,6 +12,12 @@ Two sources:
 
 Every sentence gets the tier of its hardest character to write, by rank in the children's character
 frequency table, with the same cut-offs as the word bank.
+
+The system voices guess the reading of a 破音字 and sometimes guess wrong (他還敢來 read ㄏㄨㄢˊ).
+A voice takes only text, not 注音, so each sentence also gets v, the text to speak: every character with
+several readings is replaced by a common character with only the reading the 注音 gives it (還 ㄏㄞˊ → 孩).
+Neutral tones and 一 / 不 are left to the voice. data/homophones.json keeps the table for the page, which
+does the same for a single character and for 我的句子本.
 
 usage: python3 -I tools/make_sentences.py <dict_mini xlsx> <SHREST1.DBF> <moedict dict-revised.json>
 """
@@ -103,6 +109,21 @@ def tokens(markup):
     return out
 
 
+BANK_WORDS = set()
+for entry in json.loads((ROOT / 'data' / 'words.json').read_text(encoding='utf-8')):
+    if 2 <= len(entry['w']) <= 4:
+        BANK_WORDS.add(entry['w'])
+
+
+def word_around(text, k):
+    """positions of the longest word-bank word in text that covers position k, else just k"""
+    for n in (4, 3, 2):
+        for start in range(k - n + 1, k + 1):
+            if start >= 0 and start + n <= len(text) and text[start:start + n] in BANK_WORDS:
+                return list(range(start, start + n))
+    return [k]
+
+
 def mini_sentences(path):
     found = {}
     for row in read_mini(path):
@@ -123,9 +144,11 @@ def mini_sentences(path):
                     continue
                 if text not in found:
                     found[text] = {'s': text, 'z': [z for _, z in ex], 'k': [], 'src': 'm'}
-                k = text.index(head)
-                if k not in found[text]['k']:
-                    found[text]['k'].append(k)
+                for k in word_around(text, text.index(head)):
+                    if k not in found[text]['k'] and has_moe(text[k]):
+                        found[text]['k'].append(k)
+    for s in found.values():
+        s['k'].sort()
     return list(found.values())
 
 
@@ -207,12 +230,46 @@ def bank_sentences(words):
     return out
 
 
+# ---------- what to say ----------
+def homophones():
+    """{注音: the most common character whose only reading it is}; neutral tones are left to the voice."""
+    best = {}
+    for f in sorted((ROOT / 'data').glob('c*.json')):
+        for ch, e in json.loads(f.read_text(encoding='utf-8')).items():
+            zy = e.get('zy') or []
+            if len(zy) != 1 or zy[0].startswith('˙') or ch not in char_rank or char_rank[ch] > 2000:
+                continue
+            if zy[0] not in best or char_rank[ch] < char_rank[best[zy[0]]]:
+                best[zy[0]] = ch
+    return best
+
+
+def spoken(text, zys, homo):
+    out = []
+    for ch, zy in zip(text, zys):
+        e = char_entry(ch) if HAN.match(ch) else None
+        many = e is not None and len(e.get('zy') or []) > 1
+        if many and zy and not zy.startswith('˙') and ch not in '一不' and homo.get(zy, ch) != ch:
+            out.append(homo[zy])
+        else:
+            out.append(ch)
+    return ''.join(out)
+
+
 bank = bank_sentences(word_readings(sys.argv[3]))
 mini = mini_sentences(sys.argv[1])
+homo = homophones()
+(ROOT / 'data' / 'homophones.json').write_text(json.dumps(homo, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 for s in bank + mini:
     s['t'] = tier_of([s['s'][k] for k in s['k']])
+    v = spoken(s['s'], s['z'], homo)
+    if v != s['s']:
+        s['v'] = v
 (ROOT / 'data' / 'sentences.json').write_text(json.dumps(bank + mini, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-print('bank', len(bank), 'mini', len(mini))
+print('bank', len(bank), 'mini', len(mini), 'homophones', len(homo))
+for s in bank + mini:
+    if s['s'] in ('他還敢來？', '化悲憤為力量') or '還敢來' in s['s'] or '化悲憤為' in s['s']:
+        print('voice:', s['s'], '→', s.get('v', s['s']))
 tiers = {}
 for s in bank + mini:
     tiers[s['t']] = tiers.get(s['t'], 0) + 1

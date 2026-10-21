@@ -86,6 +86,28 @@ const sessionDone = new Set();
 let words = [];
 // whole-word 注音 from the MOE dictionary, so 長大 reads ㄓㄤˇ and 音樂 ㄩㄝˋ
 let readings = {};
+// homophones.json: {注音: a common character with only that reading}. A voice takes only text, so a
+// 破音字 is spoken as such a character with the reading its 注音 gives (還 ㄏㄞˊ as 孩); see make_sentences.py
+let homophones = {};
+function voiceChar(ch, zy, readingsOfChar) {
+  const many = readingsOfChar && readingsOfChar.length > 1;
+  if (!many || !zy || zy[0] === '˙' || '一不'.indexOf(ch) >= 0) return ch;
+  return homophones[zy] || ch;
+}
+// the reading of the character at idx: the sentence's, else the word's, else the character's usual one
+function readingAt(idx) {
+  const sent = state.sentence;
+  if (sent && sent.z && sent.z[sent.k[idx]]) return sent.z[sent.k[idx]];
+  return zhuyinAt(state.text, idx, glyphData[state.chars[idx]]);
+}
+function sayCharAt(idx) {
+  const ch = state.chars[idx];
+  const data = glyphData[ch];
+  say(ch, voiceChar(ch, readingAt(idx), data && data.zy));
+}
+function saySentence(sent) {
+  say(sent.s, sent.v);
+}
 function zhuyinAt(text, i, data) {
   const r = readings[text];
   if (r && r.length === Array.from(text).length && r[i]) return r[i];
@@ -135,8 +157,8 @@ function boxSize() {
   let h = stage.clientHeight - 2 * ARENA_PAD - plaqueH;
   const sent = document.getElementById('sentence');
   if (!sent.hidden) {
-    if (isLandscape()) w -= sent.offsetWidth + 14;
-    else h -= sent.offsetHeight + 14;
+    if (isLandscape()) w -= sent.offsetWidth + SENTENCE_GAP;
+    else h -= sent.offsetHeight + SENTENCE_GAP;
   }
   return Math.floor(Math.max(200, Math.min(w, h, 760)));
 }
@@ -770,9 +792,20 @@ function loadSentence(sent, speak) {
   const targets = [];
   for (const i of sent.k) targets.push(chars[i]);
   loadText(targets.join(''), false, sent);
-  if (speak && state.sound) say(sent.s);
+  if (speak && state.sound) saySentence(sent);
 }
-// 注音 for a sentence of 我的句子本: the longest word with known readings, else each character's usual one
+// 注音 for a sentence of 我的句子本: the longest word with known readings, else each character's usual one;
+// and the spoken form from it
+async function sentenceVoice(sent) {
+  const chars = Array.from(sent.s);
+  const z = await sentenceZhuyin(sent);
+  let v = '';
+  for (let i = 0; i < chars.length; i++) {
+    const d = /\p{Script=Han}/u.test(chars[i]) ? await getCharData(chars[i]) : null;
+    v += voiceChar(chars[i], z[i], d && d.zy);
+  }
+  return { z: z, v: v };
+}
 async function sentenceZhuyin(sent) {
   const chars = Array.from(sent.s);
   const z = [];
@@ -802,6 +835,10 @@ async function sentenceZhuyin(sent) {
 // the sentence beside the box: a column read top to bottom, right to left, in landscape; a strip below
 // the box in portrait. The character being written is framed, the ones written are inked in.
 const sentenceEl = document.getElementById('sentence');
+const SENTENCE_PAD = 10;
+// 挑字: while on, a tap on a character adds it to the ones to write, or takes it out
+let picking = false;
+const SENTENCE_GAP = 30;
 let justInked = -1;
 function isLandscape() {
   return window.matchMedia('(min-aspect-ratio: 1001/1000)').matches;
@@ -820,6 +857,21 @@ function renderSentence() {
     : Math.max(22, Math.min(34, stage.clientWidth / 13));
   sentenceEl.style.setProperty('--g', g + 'px');
   sentenceEl.innerHTML = '';
+  const whole = document.createElement('button');
+  whole.type = 'button';
+  whole.className = 'sentence-say';
+  whole.setAttribute('aria-label', '念整句');
+  whole.setAttribute('data-quiet', '');
+  whole.innerHTML = '<svg aria-hidden="true"><use href="#i-speaker"></use></svg>';
+  const pick = document.createElement('button');
+  pick.type = 'button';
+  pick.className = 'sentence-pick';
+  pick.setAttribute('aria-label', '挑字');
+  pick.setAttribute('aria-pressed', picking ? 'true' : 'false');
+  pick.setAttribute('data-quiet', '');
+  pick.innerHTML = '<svg aria-hidden="true"><use href="#i-pencil"></use></svg>';
+  sentenceEl.append(whole, pick);
+  sentenceEl.classList.toggle('picking', picking);
   chars.forEach(function (ch, i) {
     const cell = document.createElement('span');
     cell.className = 'cell';
@@ -830,6 +882,7 @@ function renderSentence() {
     zy.className = 'zy-v';
     if (sent.z && sent.z[i]) renderZhuyin(zy, sent.z[i]);
     cell.append(glyph, zy);
+    cell.dataset.i = i;
     const j = sent.k.indexOf(i);
     if (j >= 0) {
       cell.classList.add('target');
@@ -841,21 +894,24 @@ function renderSentence() {
     sentenceEl.append(cell);
   });
   justInked = -1;
-  // as many cells per column (or row) as the stage has room for
-  const cellW = g * 1.75;
-  const cellH = g * 1.2;
+  // as many cells per column (or row) as the stage has room for; the speaker takes one cell
+  const cellW = g * 2;
+  const cellH = g * 1.34;
+  const n = chars.length + 2;
+  const pad = 2 * SENTENCE_PAD;
   if (vertical) {
-    const perCol = Math.max(4, Math.floor((stage.clientHeight - 2 * ARENA_PAD) / cellH));
-    sentenceEl.style.width = Math.ceil(chars.length / perCol) * cellW + 'px';
-    sentenceEl.style.height = Math.min(chars.length, perCol) * cellH + 'px';
+    const perCol = Math.max(4, Math.floor((stage.clientHeight - 2 * ARENA_PAD - pad) / cellH));
+    sentenceEl.style.width = Math.ceil(n / perCol) * cellW + pad + 'px';
+    sentenceEl.style.height = Math.min(n, perCol) * cellH + pad + 'px';
   } else {
-    const perRow = Math.max(4, Math.floor((stage.clientWidth - 2 * ARENA_PAD) / cellW));
-    sentenceEl.style.width = Math.min(chars.length, perRow) * cellW + 'px';
-    sentenceEl.style.height = Math.ceil(chars.length / perRow) * cellH + 'px';
+    const perRow = Math.max(4, Math.floor((stage.clientWidth - 2 * ARENA_PAD - pad) / cellW));
+    sentenceEl.style.width = Math.min(n, perRow) * cellW + pad + 'px';
+    sentenceEl.style.height = Math.ceil(n / perRow) * cellH + pad + 'px';
   }
   if (!sent.z) {
-    sentenceZhuyin(sent).then(function (z) {
-      sent.z = z;
+    sentenceVoice(sent).then(function (r) {
+      sent.z = r.z;
+      sent.v = r.v;
       if (state.sentence === sent) {
         renderSentence();
         if (charData) renderInfo(charData);
@@ -863,17 +919,40 @@ function renderSentence() {
     });
   }
 }
-// a tap on a framed character goes to it; anywhere else reads the sentence
+// the speaker reads the whole sentence; a character is read on its own, in its reading here,
+// and a framed one is also the next to write
 sentenceEl.addEventListener('click', function (e) {
-  const cell = e.target.closest('.cell.target');
-  if (cell) {
+  const sent = state.sentence;
+  if (!sent) return;
+  if (e.target.closest('.sentence-say')) {
+    if (state.sound) saySentence(sent);
+    return;
+  }
+  if (e.target.closest('.sentence-pick')) {
+    picking = !picking;
+    if (state.sound) say(picking ? '挑字：點一下字，加進或拿掉' : '挑好了');
+    renderSentence();
+    return;
+  }
+  const cell = e.target.closest('.cell');
+  if (!cell) return;
+  const i = Number(cell.dataset.i);
+  const ch = Array.from(sent.s)[i];
+  if (!/\p{Script=Han}/u.test(ch)) return;
+  if (state.sound) say(ch, Array.from(sent.v || sent.s)[i]);
+  if (picking) {
+    // a copy, so the sentence bank keeps its own marks; at least one character stays
+    const k = sent.k.indexOf(i) >= 0 ? sent.k.filter(function (x) { return x !== i; }) : sent.k.concat([i]);
+    if (!k.length || k.length > 12) return;
+    k.sort(function (a, b) { return a - b; });
+    loadSentence(Object.assign({}, sent, { k: k }));
+    return;
+  }
+  if (cell.dataset.j !== undefined && Number(cell.dataset.j) !== state.idx) {
     state.idx = Number(cell.dataset.j);
     renderChips();
     build();
-    if (state.sound) say(currentChar());
-    return;
   }
-  if (state.sentence && state.sound) say(state.sentence.s);
 });
 
 // ---------- the current exercise ----------
@@ -1397,9 +1476,8 @@ function renderInfo(data) {
     mini.innerHTML = '';
     return;
   }
-  const sent = state.sentence;
-  const inSentence = sent && sent.z ? sent.z[sent.k[state.idx]] : '';
-  renderZhuyin(zyEl, inSentence || zhuyinAt(state.text, state.idx, data));
+  glyphData[state.chars[state.idx]] = data;
+  renderZhuyin(zyEl, readingAt(state.idx));
 
   // the model character, with the radical strokes colored
   const radSet = new Set(data.radStrokes || []);
@@ -1433,7 +1511,7 @@ function renderChips() {
     b.append(g);
     b.addEventListener('click', function () {
       state.idx = i;
-      if (state.sound) say(ch);
+      if (state.sound) sayCharAt(i);
       renderChips();
       build();
     });
@@ -1892,7 +1970,9 @@ function finish(mistakes) {
       setTimeout(function () { flyCoins('gold', 1); }, 2000);
     }
     setTimeout(function () {
-      if (state.sound) say(state.sentence ? state.sentence.s : state.text);
+      if (!state.sound) return;
+      if (state.sentence) saySentence(state.sentence);
+      else say(state.text);
     }, 1500);
     if (state.chars.length > 1) {
       queueCelebration(1500, function () {
@@ -1906,7 +1986,7 @@ function finish(mistakes) {
     }
   } else {
     setTimeout(function () {
-      if (myToken === buildToken && state.sound) say(ch);
+      if (myToken === buildToken && state.sound) sayCharAt(state.idx);
     }, 1300);
   }
   announceLevels(reward.levelBefore, reward.levelAfter);
@@ -2006,8 +2086,7 @@ document.addEventListener('touchstart', function () {}, { passive: true });
 document.getElementById('restartBtn').addEventListener('click', function () { build(); });
 document.getElementById('againBtn').addEventListener('click', function () { build(); });
 document.getElementById('sayBtn').addEventListener('click', function () {
-  const ch = currentChar();
-  if (ch) say(ch);
+  if (currentChar()) sayCharAt(state.idx);
 });
 keepBtn.addEventListener('click', function () {
   state.keep = !state.keep;
@@ -2029,11 +2108,11 @@ document.getElementById('nextBtn').addEventListener('click', function (e) {
     state.idx += 1;
     renderChips();
     build();
-    if (state.sound) say(currentChar());
+    if (state.sound) sayCharAt(state.idx);
   } else if (action === 'to-write') {
     state.idx = 0;
     setMode('write');
-    if (state.sound) say(currentChar());
+    if (state.sound) sayCharAt(state.idx);
   } else {
     nextWord(true);
   }
@@ -2206,8 +2285,8 @@ document.getElementById('profileForm').addEventListener('submit', async function
   if (fromGate && profileSheet.hidden) {
     leaveGate();
     if (state.music !== 'off') playMusic(state.music);
-    const text = state.sentence ? state.sentence.s : state.text || state.myName;
-    if (state.sound && text) say(text);
+    if (state.sound && state.sentence) saySentence(state.sentence);
+    else if (state.sound && (state.text || state.myName)) say(state.text || state.myName);
   }
 });
 document.getElementById('logoutBtn').addEventListener('click', function () {
@@ -2354,6 +2433,9 @@ let bootAlias = '';
   const sentencesReady = fetch('data/sentences.json').then(function (r) { return r.json(); }).then(function (list) {
     sentences = list;
   }, function () {});
+  fetch('data/homophones.json').then(function (r) { return r.json(); }).then(function (table) {
+    homophones = table;
+  }, function () {});
   fetch('data/readings.json').then(function (r) { return r.json(); }).then(function (map) {
     readings = map;
     if (charData) renderInfo(charData);
@@ -2453,8 +2535,8 @@ function enterGame(alias) {
   if (alias !== account.alias) enterAs(alias);
   rememberHero(alias);
   if (state.music !== 'off') playMusic(state.music);
-  const text = state.sentence ? state.sentence.s : state.text || state.myName;
-  if (state.sound && text) say(text);
+  if (state.sound && state.sentence) saySentence(state.sentence);
+  else if (state.sound && (state.text || state.myName)) say(state.text || state.myName);
 }
 // at start the 俠客 sheet opens on 群俠譜 and stays until someone is chosen, a guest included
 const profileSheet = document.getElementById('profileSheet');
