@@ -155,18 +155,51 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .player { grid-area: player; }
   .lower { grid-area: lower; }
 }
-@media (max-aspect-ratio: 1/1) and (min-width: 640px) {
+/* Portrait: the character card shrinks and shares a row with the modes, so the writing box gets the height */
+@media (max-aspect-ratio: 1/1) {
   .lower {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
       "info modes"
-      "info controls";
+      "controls controls";
+    gap: 10px;
     align-items: stretch;
   }
-  .lower .info { grid-area: info; }
+  .lower .info { grid-area: info; padding: 6px 12px; gap: 6px; }
   .lower .seg { grid-area: modes; }
-  .lower .controls { grid-area: controls; }
+  .lower .controls { grid-area: controls; min-height: 50px; }
+  .lower .mini { width: 56px; height: 56px; }
+  .lower .zy-v { font-size: 1.15rem; }
+  .lower .say { width: 50px; height: 50px; margin-left: 2px; }
+  .lower .say svg { width: 24px; height: 24px; }
+}
+@media (max-aspect-ratio: 1/1) and (max-width: 560px) {
+  .lower .info { padding: 4px 8px; gap: 4px; }
+  .lower .mini { width: 44px; height: 44px; }
+  .lower .zy-v { font-size: 1rem; margin-right: 0.55em; }
+  .lower .say { width: 42px; height: 42px; }
+  .lower .say svg { width: 20px; height: 20px; }
+  .lower .seg { padding: 5px; gap: 5px; }
+  .lower .seg button { padding: 5px 2px 4px; font-size: 0.82rem; }
+  .lower .seg button svg { width: 20px; height: 20px; }
+}
+
+/* Landscape with room to spare: the hero gets a big stage under the controls instead of the small tile */
+.hero-stage { display: none; }
+@media (min-aspect-ratio: 1001/1000) and (min-height: 620px) {
+  .hero-stage {
+    display: grid;
+    place-items: center;
+    flex: 1;
+    min-height: 0;
+    padding: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--tile);
+  }
+  .hero-stage canvas { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+  .player .avatar-tile { display: none; }
 }
 
 /* Boards: chunky outline, a highlight along the top, a solid drop below */
@@ -947,10 +980,23 @@ canvas.pixel {
 .hero-info { display: grid; gap: 6px; flex: 1 1 220px; min-width: 0; }
 /* 江湖身分 reached so far, stacked like cards: the older ones behind and greyed, the current one on
    top at the right, the next one as a shadow beside it */
-.ladder { display: flex; flex-wrap: nowrap; align-items: flex-end; overflow-x: auto; padding: 4px 2px; }
-.ladder-item { position: relative; flex: none; }
+.ladder { display: flex; flex-wrap: nowrap; align-items: flex-end; overflow-x: auto; padding: 24px 2px 4px; }
+/* a tapped older card slides up out of the stack in colour, and back down behind when let go */
+.ladder-item {
+  position: relative;
+  flex: none;
+  transition: transform 0.35s cubic-bezier(0.2, 1.3, 0.4, 1), filter 0.3s, opacity 0.3s, z-index 0s 0.35s;
+}
 .ladder-item.past { margin-right: -48px; filter: grayscale(0.85) brightness(0.92); opacity: 0.7; }
 .ladder-item.past span { visibility: hidden; }
+.ladder-item.past.lifted {
+  transform: translateY(-20px) scale(1.06);
+  filter: none;
+  opacity: 1;
+  z-index: 40 !important;
+  transition: transform 0.35s cubic-bezier(0.2, 1.3, 0.4, 1), filter 0.3s, opacity 0.3s, z-index 0s;
+}
+.ladder-item.past.lifted span { visibility: visible; }
 .ladder-item.next { margin-left: 14px; }
 .ladder-item { display: grid; justify-items: center; gap: 4px; font-family: var(--font-display); font-size: 0.9rem; }
 .ladder-item canvas { width: 72px; height: 54px; background: var(--tile); border: 2px solid var(--panel-edge); border-radius: 10px; }
@@ -1147,7 +1193,18 @@ h2 .plain-btn { font-size: inherit; color: inherit; }
 .gift-name { font-family: var(--font-display); font-size: 1.4rem; }
 .gift-row { flex-wrap: wrap; }
 .gift-items { display: flex; flex-wrap: wrap; gap: 8px; }
-.gift-items button { padding: 4px; }
+.gift-items button { position: relative; padding: 4px; }
+.gift-items button[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  right: -12px;
+  width: 40px;
+  height: 40px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23d4302b' d='M3 27 10 20 19 30 40 3 46 5 22 42 16 42z'/%3E%3Cpath fill='%23d4302b' opacity='.5' d='M24 35 42 9 44 10 26 37z'/%3E%3C/svg%3E") no-repeat center / contain;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
 .gift-items button canvas { display: block; width: 64px; height: 48px; }
 .gift-items button[aria-pressed="true"] { border-color: var(--accent-strong); box-shadow: inset 0 0 0 2px var(--accent-strong), 0 4px 0 var(--btn-drop); }
 .hero-detail .field { width: 100%; }
@@ -1263,3 +1320,52 @@ h2 .plain-btn { font-size: inherit; color: inherit; }
 button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2), 0 4px 0 #4a1612; }
 .admin-only { display: grid; gap: 8px; width: 100%; box-sizing: border-box; padding: 10px; border: 2px dashed #c58bff; border-radius: 12px; }
 .admin-only[hidden] { display: none; }
+
+/* 逐出江湖 needs a full slide, not a tap */
+.slide-confirm {
+  position: relative;
+  display: grid;
+  align-items: center;
+  width: min(320px, 100%);
+  height: 44px;
+  margin-top: 6px;
+  border-radius: 22px;
+  background: #4a1612;
+  border: 2px solid #2b0c09;
+  overflow: hidden;
+}
+.slide-confirm[hidden] { display: none; }
+.slide-confirm span {
+  grid-area: 1 / 1;
+  justify-self: center;
+  color: #ffd9cf;
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+.slide-confirm input {
+  grid-area: 1 / 1;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+}
+.slide-confirm input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e64553;
+  border: 2px solid #ffd9cf;
+  cursor: grab;
+}
+.slide-confirm input::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e64553;
+  border: 2px solid #ffd9cf;
+}
+.gift-row .label .sycee, .detail-hero .sycee, .hero-card .sycee { width: 18px; height: 12px; vertical-align: -1px; }

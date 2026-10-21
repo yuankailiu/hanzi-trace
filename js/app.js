@@ -881,7 +881,14 @@ function renderHero() {
     const c = document.createElement('canvas');
     drawHeroOn(c, { title: i, gear: {} });
     const label = document.createElement('span');
-    if (i < tIdx) item.classList.add('past');
+    if (i < tIdx) {
+      item.classList.add('past');
+      item.addEventListener('click', function () {
+        const was = item.classList.contains('lifted');
+        ladder.querySelectorAll('.lifted').forEach(function (x) { x.classList.remove('lifted'); });
+        if (!was) item.classList.add('lifted');
+      });
+    }
     item.style.zIndex = String(i + 1);
     if (i === tIdx) {
       item.classList.add('now');
@@ -1119,7 +1126,7 @@ function equip(place, id) {
 }
 
 // ---------- the 俠客 on the main screen ----------
-const avatar = { canvas: null, queue: [], idle: 0, frame: 0, last: 0 };
+const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0 };
 function avatarPlay(name) {
   avatar.queue = ACTIONS[name].slice();
   if (reducedMotion()) avatarRender(performance.now());
@@ -1133,7 +1140,9 @@ function avatarRender(now) {
     avatar.idle += 1;
   }
   avatar.frame += 1;
-  drawHeroOn(avatar.canvas, { title: titleIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() });
+  for (const c of avatar.canvases) {
+    drawHeroOn(c, { title: titleIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() });
+  }
 }
 // the pixel hero steps like a sprite, faster during an action
 function avatarTick(now) {
@@ -1145,7 +1154,7 @@ function avatarTick(now) {
   requestAnimationFrame(avatarTick);
 }
 function startAvatar() {
-  avatar.canvas = document.getElementById('avatar');
+  avatar.canvases = [document.getElementById('avatar'), document.getElementById('stageCanvas')];
   if (reducedMotion()) {
     avatarRender(1000);
     return;
@@ -2230,13 +2239,21 @@ renderGate();
 // ---------- 我的俠客: tap the hero and it moves ----------
 const SHEET_ACTIONS = ['attack', 'cheer', 'hurt'];
 const sheetHero = { timer: 0, next: 0 };
-document.getElementById('heroAvatar').addEventListener('click', function (e) {
-  const canvas = e.currentTarget;
+// the next of 出招 / 歡呼 / 受傷, with its sound
+function nextHeroAction() {
   const name = SHEET_ACTIONS[sheetHero.next % SHEET_ACTIONS.length];
   sheetHero.next += 1;
   if (name === 'attack') sfxSwish();
   else if (name === 'cheer') sfxTick(1568);
   else sfxWood();
+  return name;
+}
+document.getElementById('heroStage').addEventListener('click', function () {
+  avatarPlay(nextHeroAction());
+});
+document.getElementById('heroAvatar').addEventListener('click', function (e) {
+  const canvas = e.currentTarget;
+  const name = nextHeroAction();
   const queue = ACTIONS[name].slice();
   let frame = 0;
   clearInterval(sheetHero.timer);
@@ -2353,7 +2370,7 @@ async function renderNews() {
     note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '連不上雲端，請稍後再試。';
     return;
   }
-  note.textContent = '江湖上有 ' + heroes.length + ' 位俠客。點一位，可以送東西、捎信給他。';
+  note.textContent = '江湖上有 ' + heroes.length + ' 位俠客';
   for (const h of heroes) {
     const look = lookFor(h.xp, h.gear, h.gender);
     const b = document.createElement('button');
@@ -2366,7 +2383,7 @@ async function renderNews() {
     const rank = document.createElement('span');
     rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
     const money = document.createElement('span');
-    money.textContent = '銀 ' + (h.taels || 0) + '　元寶 ' + (h.ingots || 0);
+    money.innerHTML = moneyHtml(h.taels, h.ingots);
     b.append(c);
     const badge = honorBadge(h.honor, h.customHonor);
     if (badge) b.append(badge);
@@ -2389,7 +2406,7 @@ function openGift(h) {
   drawHeroOn(document.getElementById('giftAvatar'), { title: look.title, gear: look.gear, gender: look.gender });
   document.getElementById('giftName').textContent = h.alias;
   document.getElementById('giftRank').textContent = TITLES[look.title].name + ' Lv ' + look.level;
-  document.getElementById('giftMoney').textContent = '銀兩 ' + (h.taels || 0) + '　元寶 ' + (h.ingots || 0);
+  document.getElementById('giftMoney').innerHTML = moneyHtml(h.taels, h.ingots);
   document.getElementById('giftAdmin').hidden = !account.admin;
   document.getElementById('giftRemove').hidden = !account.admin;
   document.getElementById('giftHonor').value = '';
@@ -2401,7 +2418,7 @@ function openGift(h) {
   if (!giveable.length) {
     const none = document.createElement('span');
     none.className = 'quiet';
-    none.textContent = '還沒有東西可以送';
+    none.textContent = '還沒有東西';
     grid.append(none);
   }
   for (const id of giveable) {
@@ -2424,10 +2441,13 @@ function openGift(h) {
   }
   renderGiftAmounts();
 }
+// silver and gold counts with their icons
+function moneyHtml(taels, ingots) {
+  return syceeHtml('silver') + (taels || 0) + '　' + syceeHtml('gold') + (ingots || 0);
+}
 function renderGiftAmounts() {
-  const mine = account.admin ? '（管理員賞賜，不扣自己的）' : '（你有 ';
-  document.getElementById('giftTaels').textContent = '送 ' + gift.taels + ' 兩' + (account.admin ? mine : mine + purse.taels + ' 兩）');
-  document.getElementById('giftIngots').textContent = '送 ' + gift.ingots + ' 個' + (account.admin ? mine : mine + purse.ingots + ' 個）');
+  document.getElementById('giftTaels').textContent = '送 ' + gift.taels + (account.admin ? '（賞賜）' : '（剩 ' + (purse.taels - gift.taels) + '）');
+  document.getElementById('giftIngots').textContent = '送 ' + gift.ingots + (account.admin ? '（賞賜）' : '（剩 ' + (purse.ingots - gift.ingots) + '）');
   document.querySelectorAll('#giftGenderRow button').forEach(function (b) {
     b.setAttribute('aria-pressed', b.dataset.gender === gift.gender ? 'true' : 'false');
   });
@@ -2460,7 +2480,7 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   const text = document.getElementById('letterText').value.trim();
   const honor = account.admin ? document.getElementById('giftHonor').value.trim() : '';
   if (!text && !gift.taels && !gift.ingots && !gift.items.length && !gift.gender && !honor) {
-    note.textContent = '寫幾句話，或選要送的東西。';
+    note.textContent = '寫幾句話，或選個禮物';
     return;
   }
   const body = { text: text, taels: gift.taels, ingots: gift.ingots, items: gift.items.slice() };
@@ -2616,11 +2636,18 @@ function showHonor(name, tier) {
 }
 honorPop.addEventListener('click', function () { honorPop.hidden = true; });
 
-// 逐出江湖: the 管理員 removes a 俠客 for good, after asking
-document.getElementById('giftRemove').addEventListener('click', async function () {
+// 逐出江湖: the 管理員 removes a 俠客 for good by sliding all the way; let go early and it springs back
+const removeSlider = document.getElementById('removeSlider');
+removeSlider.addEventListener('input', function () {
+  if (Number(removeSlider.value) >= 100) removeHero();
+});
+removeSlider.addEventListener('change', function () {
+  removeSlider.value = 0;
+});
+async function removeHero() {
+  removeSlider.value = 0;
   const h = gift.to;
   if (!h || !account.admin) return;
-  if (!window.confirm('真的要把「' + h.alias + '」逐出江湖嗎？他的進度會全部刪除，救不回來。')) return;
   const note = document.getElementById('giftNote');
   try {
     await rpc('hero_delete', { p_alias: account.alias, p_pass: account.pass, p_target: h.alias });
@@ -2630,4 +2657,4 @@ document.getElementById('giftRemove').addEventListener('click', async function (
   }
   toast('「' + h.alias + '」已經離開江湖');
   renderNews();
-});
+}

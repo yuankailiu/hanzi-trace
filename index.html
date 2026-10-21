@@ -133,7 +133,7 @@ img { max-width: 100%; }
         <button type="button" data-mode="write" aria-pressed="false"><svg aria-hidden="true"><use href="#i-pencil"></use></svg>自己寫</button>
       </div>
 
-      <div class="controls">
+      <div class="controls" id="controls">
         <div class="actions hint" id="watchActions">
           <svg aria-hidden="true"><use href="#i-tap"></use></svg><span>點格子：下一筆</span>
         </div>
@@ -159,6 +159,10 @@ img { max-width: 100%; }
           </button>
         </div>
       </div>
+    </div>
+
+    <div class="hero-stage card" id="heroStage" aria-hidden="true">
+      <canvas id="stageCanvas" width="48" height="36"></canvas>
     </div>
   </aside>
 </div>
@@ -253,7 +257,7 @@ img { max-width: 100%; }
           </div>
         </div>
         <div class="opt-row gift-row">
-          <span class="label">送銀兩</span>
+          <span class="label"><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg>銀兩</span>
           <button type="button" data-taels="10">＋10</button>
           <button type="button" data-taels="50">＋50</button>
           <button type="button" data-taels="100">＋100</button>
@@ -261,12 +265,12 @@ img { max-width: 100%; }
           <span class="quiet" id="giftTaels"></span>
         </div>
         <div class="opt-row gift-row">
-          <span class="label">送元寶</span>
+          <span class="label"><svg class="sycee gold" aria-hidden="true"><use href="#sycee"></use></svg>元寶</span>
           <button type="button" data-ingots="1">＋1</button>
           <button type="button" data-ingots="0">清除</button>
           <span class="quiet" id="giftIngots"></span>
         </div>
-        <div class="label">送東西（點一下選取）</div>
+        <div class="label">送東西</div>
         <div class="gift-items" id="giftItems"></div>
         <div class="admin-only" id="giftAdmin" hidden>
           <div class="opt-row gift-row" id="giftGenderRow">
@@ -284,10 +288,11 @@ img { max-width: 100%; }
           <label for="letterText">捎信</label>
           <textarea id="letterText" maxlength="100" rows="2" placeholder="想說的話"></textarea>
         </div>
-        <div class="row">
-          <button type="button" class="primary" id="giftSend">捎信送出</button>
-          <button type="button" class="danger" id="giftRemove" hidden>逐出江湖</button>
-        </div>
+        <div class="row"><button type="button" class="primary" id="giftSend">捎信送出</button></div>
+        <label class="slide-confirm" id="giftRemove" hidden>
+          <input type="range" id="removeSlider" min="0" max="100" value="0">
+          <span>滑到底：逐出江湖</span>
+        </label>
         <p class="note" id="giftNote"></p>
       </div>
     </div>
