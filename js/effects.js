@@ -287,6 +287,7 @@ const TRACKS = {
   scions: 'audio/scions-village.mp3',
   eren: 'audio/eren-valley.mp3',
   chungum: 'audio/chungumgwan.mp3',
+  rexue: 'audio/rexue.mp4',
 };
 const MUSIC_VOLUME = 0.3;
 const MUSIC_FADE = 1.6;

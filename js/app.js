@@ -765,6 +765,12 @@ function drawHeroOn(canvas, o) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, AV_W, AV_H);
   if (o.floor !== false) drawFloor(ctx);
+  if (o.shadow) {
+    ctx.fillStyle = 'rgba(70, 45, 25, 0.18)';
+    ctx.fillRect(AV_CX - 8, AV_GY, 17, 1);
+    ctx.fillRect(AV_CX - 6, AV_GY + 1, 13, 1);
+    if (o.gear && o.gear.pet) ctx.fillRect(1, AV_GY, 10, 1);
+  }
   drawAvatar(ctx, o.title, o.gear, o.pose || 'stand', o.frame || 0, o.qi, o.gender || state.gender);
 }
 function titleCanvas(idx) {
@@ -1140,9 +1146,10 @@ function avatarRender(now) {
     avatar.idle += 1;
   }
   avatar.frame += 1;
-  for (const c of avatar.canvases) {
-    drawHeroOn(c, { title: titleIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() });
-  }
+  const look = { title: titleIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() };
+  drawHeroOn(avatar.canvases[0], look);
+  // the landscape stage: no floor, just a soft shadow under the feet
+  drawHeroOn(avatar.canvases[1], Object.assign({ floor: false, shadow: true }, look));
 }
 // the pixel hero steps like a sprite, faster during an action
 function avatarTick(now) {
