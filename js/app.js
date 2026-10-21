@@ -836,8 +836,10 @@ async function sentenceZhuyin(sent) {
 // the box in portrait. The character being written is framed, the ones written are inked in.
 const sentenceEl = document.getElementById('sentence');
 const SENTENCE_PAD = 10;
-// 挑字: while on, a tap on a character adds it to the ones to write, or takes it out
+// 挑字: while on, a tap on a character adds it to the draft of characters to write, or takes it out,
+// in any order; turning it off writes the draft, which must keep at least one character
 let picking = false;
+let pickDraft = [];
 const SENTENCE_GAP = 30;
 let justInked = -1;
 function isLandscape() {
@@ -883,13 +885,18 @@ function renderSentence() {
     if (sent.z && sent.z[i]) renderZhuyin(zy, sent.z[i]);
     cell.append(glyph, zy);
     cell.dataset.i = i;
-    const j = sent.k.indexOf(i);
-    if (j >= 0) {
-      cell.classList.add('target');
-      cell.dataset.j = j;
-      if (i === now) cell.classList.add('now');
-      if (sessionDone.has(j)) cell.classList.add('done');
-      if (j === justInked) cell.classList.add('inked');
+    if (picking) {
+      // while picking, the draft shows which characters are chosen, all alike
+      if (pickDraft.indexOf(i) >= 0) cell.classList.add('target');
+    } else {
+      const j = sent.k.indexOf(i);
+      if (j >= 0) {
+        cell.classList.add('target');
+        cell.dataset.j = j;
+        if (i === now) cell.classList.add('now');
+        if (sessionDone.has(j)) cell.classList.add('done');
+        if (j === justInked) cell.classList.add('inked');
+      }
     }
     sentenceEl.append(cell);
   });
@@ -929,9 +936,25 @@ sentenceEl.addEventListener('click', function (e) {
     return;
   }
   if (e.target.closest('.sentence-pick')) {
-    picking = !picking;
-    if (state.sound) say(picking ? '挑字：點一下字，加進或拿掉' : '挑好了');
-    renderSentence();
+    if (!picking) {
+      picking = true;
+      pickDraft = sent.k.slice();
+      if (state.sound) say('挑字：點一下字，加進或拿掉');
+      renderSentence();
+      return;
+    }
+    if (!pickDraft.length) {
+      // nothing chosen: refuse with a shake
+      sfxWood();
+      restartAnimation(sentenceEl, 'shake');
+      if (state.sound) say('至少挑一個字');
+      return;
+    }
+    picking = false;
+    if (state.sound) say('挑好了');
+    const k = pickDraft.slice().sort(function (a, b) { return a - b; });
+    if (k.join() === sent.k.join()) renderSentence();
+    else loadSentence(Object.assign({}, sent, { k: k }));
     return;
   }
   const cell = e.target.closest('.cell');
@@ -941,11 +964,10 @@ sentenceEl.addEventListener('click', function (e) {
   if (!/\p{Script=Han}/u.test(ch)) return;
   if (state.sound) say(ch, Array.from(sent.v || sent.s)[i]);
   if (picking) {
-    // a copy, so the sentence bank keeps its own marks; at least one character stays
-    const k = sent.k.indexOf(i) >= 0 ? sent.k.filter(function (x) { return x !== i; }) : sent.k.concat([i]);
-    if (!k.length || k.length > 12) return;
-    k.sort(function (a, b) { return a - b; });
-    loadSentence(Object.assign({}, sent, { k: k }));
+    const at = pickDraft.indexOf(i);
+    if (at >= 0) pickDraft.splice(at, 1);
+    else if (pickDraft.length < 12) pickDraft.push(i);
+    renderSentence();
     return;
   }
   if (cell.dataset.j !== undefined && Number(cell.dataset.j) !== state.idx) {
