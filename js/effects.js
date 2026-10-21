@@ -357,7 +357,7 @@ document.addEventListener('visibilitychange', function () {
 });
 
 // ---------- speech ----------
-// Apple's novelty voices (Eloquence) read Chinese oddly; they never become the default or show in the picker
+// Apple's novelty voices (Eloquence) read Chinese oddly; they are never used
 const NOVELTY_VOICES = /Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
 
 // rank: Taiwan Mandarin first, 美佳 (Meijia) and its Enhanced/Premium versions above the rest
@@ -381,29 +381,39 @@ function chineseVoices() {
   out.sort(function (a, b) { return voiceScore(b) - voiceScore(a); });
   return out;
 }
-function pickVoice() {
-  const voices = chineseVoices();
-  for (const v of voices) {
-    if (v.voiceURI === state.voice) return v;
-  }
-  return voices[0] || null;
-}
 // when speech last started, so a generic button handler can tell a specific one already spoke
 let lastSaidAt = 0;
+let sayToken = 0;
+// Speech starts right inside the tap (iOS plays nothing that starts later). Chrome's synthesizer
+// can get stuck after an interrupted utterance and then says nothing: if an utterance has not
+// started after 1.5 s, cancel and try it once more.
 function say(text) {
   if (!('speechSynthesis' in window)) return;
   lastSaidAt = performance.now();
+  const myToken = ++sayToken;
   // cancel only what is playing: Safari can drop a speak() that follows a needless cancel()
   const synth = window.speechSynthesis;
   if (synth.speaking || synth.pending) synth.cancel();
-  synth.resume();
+  speakOnce(text, myToken, true);
+}
+function speakOnce(text, myToken, retry) {
+  const synth = window.speechSynthesis;
   const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice();
+  const v = chineseVoices()[0];
   u.lang = v ? v.lang : 'zh-TW';
   u.rate = 0.75;
   u.volume = state.volume;
   if (v) u.voice = v;
-  window.speechSynthesis.speak(u);
+  let started = false;
+  u.onstart = function () { started = true; };
+  synth.resume();
+  synth.speak(u);
+  if (!retry) return;
+  setTimeout(function () {
+    if (started || myToken !== sayToken) return;
+    synth.cancel();
+    speakOnce(text, myToken, false);
+  }, 1500);
 }
 if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
 

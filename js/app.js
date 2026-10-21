@@ -43,7 +43,6 @@ const state = {
   volume: 0.8,
   gender: 'boy',
   theme: 'light',
-  voice: '',
   grid: 'tian',
   lenient: true,
   slow: true,
@@ -237,7 +236,7 @@ function serializeProfile() {
     v: 4,
     savedAt: Date.now(),
     settings: {
-      content: state.content, music: state.music, volume: state.volume, gender: state.gender, theme: state.theme, voice: state.voice, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, volume: state.volume, gender: state.gender, theme: state.theme, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -261,7 +260,7 @@ function applyProfile(source) {
   const p = JSON.parse(JSON.stringify(source));
   resetProgress();
   if (p.settings) {
-    for (const key of ['content', 'music', 'gender', 'theme', 'voice', 'grid']) {
+    for (const key of ['content', 'music', 'gender', 'theme', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
@@ -586,6 +585,7 @@ function loadText(text, speak) {
   save();
   renderModes();
   renderChips();
+  unrollPlaque();
   build();
   if (speak && state.sound) say(state.text);
   chars.forEach(function (ch) {
@@ -1113,6 +1113,13 @@ function renderChips() {
     chipsEl.append(b);
   });
   renderBoxMeta();
+}
+// the scroll unrolls from the middle, its rollers moving out to the ends
+function unrollPlaque() {
+  const plaque = document.getElementById('plaque');
+  const cloth = plaque.querySelector('.cloth');
+  plaque.style.setProperty('--unroll', Math.round(cloth.offsetWidth / 2) + 'px');
+  restartAnimation(plaque, 'unroll');
 }
 // the current character's stroke count, and its best marks in 描字 / 自己寫
 function renderBoxMeta() {
@@ -1725,7 +1732,6 @@ document.getElementById('playerCard').addEventListener('click', function () {
   openSheet(document.getElementById('heroSheet'));
 });
 document.getElementById('settingsBtn').addEventListener('click', function () {
-  renderVoices();
   openSheet(document.getElementById('settingsSheet'));
 });
 
@@ -1900,34 +1906,6 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
   });
 });
 
-// the device's Chinese voices, each one tried out with 甲 when picked
-function renderVoices() {
-  const row = document.getElementById('voiceRow');
-  row.querySelectorAll('button, .quiet').forEach(function (el) { el.remove(); });
-  const voices = 'speechSynthesis' in window ? chineseVoices() : [];
-  if (voices.length === 0) {
-    const none = document.createElement('span');
-    none.className = 'quiet';
-    none.textContent = '這台裝置沒有中文語音';
-    row.append(none);
-    return;
-  }
-  const current = pickVoice();
-  for (const v of voices.slice(0, 6)) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = v.name.replace(/\s*\(.*\)\s*$/, '') + (/TW/i.test(v.lang) ? '（台灣）' : /HK/i.test(v.lang) ? '（香港）' : '（中國）');
-    b.setAttribute('aria-pressed', current && v.voiceURI === current.voiceURI ? 'true' : 'false');
-    b.addEventListener('click', function () {
-      state.voice = v.voiceURI;
-      save();
-      renderVoices();
-      say('甲');
-    });
-    row.append(b);
-  }
-}
-if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', renderVoices);
 
 function renderAll() {
   renderOptions();
@@ -1985,3 +1963,12 @@ sealEl.style.maskImage = sealMaskUrl;
   await wordsReady;
   if (!state.chars.length) startText();
 })();
+
+// 開始練功: the first tap starts the music and reads the word
+document.getElementById('startWho').textContent = account.alias ? account.alias + '，準備好了嗎？' : '少俠，準備好了嗎？';
+document.getElementById('startBtn').addEventListener('click', function () {
+  document.getElementById('startGate').hidden = true;
+  audioContext();
+  if (state.music !== 'off') playMusic(state.music);
+  if (state.sound && state.text) say(state.text);
+});
