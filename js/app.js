@@ -832,7 +832,9 @@ function announceLevels(before, after) {
   }, 1900);
   if (titleAfter > titleBefore) {
     queueCelebration(2600, function () {
-      celebrate([titleCanvas(titleAfter)], '晉升「' + TITLES[titleAfter].name + '」');
+      let sub = '晉升「' + titleName(titleAfter, state.gender) + '」';
+      if (realmOf(titleAfter) !== realmOf(titleBefore)) sub += '　踏入「' + realmOf(titleAfter) + '」';
+      celebrate([titleCanvas(titleAfter)], sub);
       avatarPlay('cheer');
     });
   }
@@ -847,7 +849,7 @@ function renderPurse() {
   const badge = honorBadge(purse.honor, purse.customHonor);
   if (badge) honorTag.append(badge);
   const info = levelInfo(purse.xp);
-  document.getElementById('rankTag').textContent = TITLES[titleIndexFor(info.level)].name;
+  document.getElementById('rankTag').textContent = titleName(titleIndexFor(info.level), state.gender);
   document.getElementById('lvTag').textContent = 'Lv ' + info.level;
   document.getElementById('xpBar').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
   renderCounters();
@@ -870,7 +872,8 @@ function renderHero() {
   const badge = honorBadge(purse.honor, purse.customHonor);
   if (badge) heroHonor.append(badge);
   document.querySelector('#heroSheet .opt-row[data-opt="gender"]').hidden = Boolean(state.genderLock) && !account.admin;
-  document.getElementById('heroRank').textContent = TITLES[tIdx].name;
+  document.getElementById('heroRank').textContent = titleName(tIdx, state.gender);
+  document.getElementById('heroRealm').textContent = realmOf(tIdx);
   document.getElementById('heroLv').textContent = 'Lv ' + info.level;
   document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
   document.getElementById('heroTaels').textContent = purse.taels;
@@ -898,14 +901,14 @@ function renderHero() {
     item.style.zIndex = String(i + 1);
     if (i === tIdx) {
       item.classList.add('now');
-      label.textContent = TITLES[i].name;
+      label.textContent = titleName(i, state.gender);
     } else if (i > tIdx) {
       item.classList.add('next');
       silhouette(c, '#1e1a26');
       label.textContent = '？？？';
       item.setAttribute('aria-label', '還沒解鎖');
     } else {
-      label.textContent = TITLES[i].name;
+      label.textContent = titleName(i, state.gender);
     }
     item.append(c, label);
     ladder.append(item);
@@ -1095,7 +1098,7 @@ function openItem(it) {
     }
   } else {
     title.innerHTML = '<span class="mystery">？？？</span>';
-    note.textContent = tIdx < it.minTitle ? '江湖身分再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
+    note.textContent = tIdx < it.minTitle ? '名望再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
   }
 
   openSheet(sheet);
@@ -2190,7 +2193,7 @@ function renderGate() {
     const name = document.createElement('b');
     name.textContent = alias;
     const rank = document.createElement('span');
-    rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
+    rank.textContent = titleName(look.title, look.gender) + ' Lv ' + look.level;
     b.append(c);
     const badge = honorBadge(pp.honor, pp.customHonor);
     if (badge) b.append(badge);
@@ -2388,7 +2391,7 @@ async function renderNews() {
     const name = document.createElement('b');
     name.textContent = h.alias === account.alias ? h.alias + '（你）' : h.alias;
     const rank = document.createElement('span');
-    rank.textContent = TITLES[look.title].name + ' Lv ' + look.level;
+    rank.textContent = titleName(look.title, look.gender) + ' Lv ' + look.level;
     const money = document.createElement('span');
     money.innerHTML = moneyHtml(h.taels, h.ingots);
     b.append(c);
@@ -2412,7 +2415,7 @@ function openGift(h) {
   const look = lookFor(h.xp, h.gear, h.gender);
   drawHeroOn(document.getElementById('giftAvatar'), { title: look.title, gear: look.gear, gender: look.gender });
   document.getElementById('giftName').textContent = h.alias;
-  document.getElementById('giftRank').textContent = TITLES[look.title].name + ' Lv ' + look.level;
+  document.getElementById('giftRank').textContent = titleName(look.title, look.gender) + ' Lv ' + look.level;
   document.getElementById('giftMoney').innerHTML = moneyHtml(h.taels, h.ingots);
   document.getElementById('giftAdmin').hidden = !account.admin;
   document.getElementById('giftRemove').hidden = !account.admin;

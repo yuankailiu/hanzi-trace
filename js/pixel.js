@@ -466,9 +466,9 @@ function drawFloor(ctx) {
   for (let x = 3; x < AV_W; x += 8) pxRect(ctx, x, AV_GY + 1, 1, AV_H - AV_GY - 1, '#55381F');
 }
 
-// the two highest titles glow: flickering dots circle the body
+// the ranks of 傳世, the highest 大境, glow: flickering dots circle the body
 function drawAura(ctx, titleIdx, cx, gy, frame) {
-  const strength = titleIdx - 11;
+  const strength = titleIdx - 15;
   if (strength < 1) return;
   const n = strength * 4;
   for (let i = 0; i < n; i++) {

@@ -337,7 +337,7 @@ img { max-width: 100%; }
       <button type="button" data-val="chars">只練單字</button>
       <button type="button" data-val="list">我的生字本</button>
     </div>
-    <p class="note">詞語與單字來自教育部《國小學童常用字詞調查報告書》，依字頻由淺到深，跟著俠客的江湖身分慢慢變難。「我的生字本」在鉛筆圖示「自己出題」裡設定。</p>
+    <p class="note">詞語與單字來自教育部《國小學童常用字詞調查報告書》，依字頻由淺到深，跟著俠客的名望慢慢變難。「我的生字本」在鉛筆圖示「自己出題」裡設定。</p>
     <div class="opt-row" data-opt="music">
       <span class="label">背景音樂</span>
       <button type="button" data-val="xiangqi">象棋</button>
@@ -392,7 +392,7 @@ img { max-width: 100%; }
   </div>
 </div>
 
-<!-- 我的俠客：等級、江湖身分、稱號、商店 -->
+<!-- 我的俠客：等級、名望、稱號、商店 -->
 <div class="sheet" id="heroSheet" hidden role="dialog" aria-modal="true" aria-labelledby="heroTitle">
   <div class="sheet-panel card wide">
     <div class="sheet-head">
@@ -402,7 +402,7 @@ img { max-width: 100%; }
     <section class="hero">
       <canvas id="heroAvatar" width="48" height="36"></canvas>
       <div class="hero-info">
-        <div class="title-row"><button type="button" class="plain-btn rank-tag big" id="heroRank"></button><span class="lv" id="heroLv"></span></div>
+        <div class="title-row"><button type="button" class="plain-btn rank-tag big" id="heroRank"></button><span class="lv" id="heroLv"></span><span class="realm" id="heroRealm"></span></div>
         <div class="xp wide"><i id="heroXp" style="width:0%"></i></div>
         <div class="purse-row">
           <span class="purse"><svg class="sycee silver" aria-hidden="true"><use href="#sycee"></use></svg><b id="heroTaels">0</b> 兩</span>
@@ -415,7 +415,7 @@ img { max-width: 100%; }
       </div>
     </section>
     <section>
-      <h3>江湖身分</h3>
+      <h3>名望</h3>
       <div class="ladder" id="ladder"></div>
     </section>
     <section>
