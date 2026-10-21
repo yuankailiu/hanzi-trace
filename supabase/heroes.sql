@@ -105,7 +105,7 @@ begin
   if t = r.alias or not exists (select 1 from public.profiles where alias = t) then
     raise exception 'no such hero' using errcode = '22023';
   end if;
-  if length(coalesce(p_body ->> 'text', '')) > 200 or length(coalesce(p_body ->> 'honor', '')) > 12 then
+  if length(coalesce(p_body ->> 'text', '')) > 200 or length(coalesce(p_body ->> 'honor', '')) > 20 then
     raise exception 'letter too long' using errcode = '22023';
   end if;
   if (p_body ? 'gender' or p_body ? 'honor') and not r.is_admin then

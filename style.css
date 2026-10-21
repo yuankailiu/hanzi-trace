@@ -1786,3 +1786,25 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .plaque-pick small { font-size: 0.75rem; color: var(--muted); }
 #giftPlaques .plaque-pick[aria-pressed="true"] { background: var(--btn); color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 3px 0 var(--btn-drop); }
 #giftPlaques .plaque-pick[aria-pressed="true"] small { color: var(--accent); font-weight: 700; }
+
+/* 隨信送上: a gift slip under the letter, red-edged like a 禮單 */
+.gift-slip {
+  justify-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  padding: 10px 14px;
+  background: #fbf3e2;
+  border: 1px solid #d9c6a3;
+  border-left: 6px solid #c8322a;
+  border-radius: 4px;
+  color: #2f2a26;
+}
+.gift-slip-title { align-self: center; font-family: "Iansui", var(--font-display); font-size: 1.1rem; font-weight: 400; color: #a8281f; letter-spacing: 0.15em; }
+.gift-slip-item { display: grid; justify-items: center; gap: 3px; }
+.gift-slip-item small { font-size: 0.75rem; color: #7d6b5c; }
+.gift-slip-item canvas { width: 56px; height: 42px; background: #fdf8ef; border: 1.5px solid #d9c6a3; border-radius: 8px; }
+.gift-slip-item .honor { font-size: 1rem; }
+.gift-slip-money { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 1.05rem; }
+.gift-slip-word { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }

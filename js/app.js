@@ -2849,7 +2849,7 @@ function showLetters(letters) {
     paper.className = 'letter-paper';
     const head = document.createElement('p');
     head.className = 'letter-to';
-    head.textContent = account.alias + '：';
+    head.textContent = '給　' + account.alias;
     paper.append(head);
     if (body.text) {
       const p = document.createElement('p');
@@ -2860,12 +2860,7 @@ function showLetters(letters) {
     paper.append(nameSeal(letter.from));
     card.append(paper);
     const gifts = giftText(body);
-    if (gifts) {
-      const g = document.createElement('p');
-      g.className = 'gifts';
-      g.textContent = '附上：' + gifts;
-      card.append(g);
-    }
+    if (gifts) card.append(giftSlip(body));
     const read = document.createElement('button');
     read.type = 'button';
     read.textContent = '念給我聽';
@@ -2878,7 +2873,65 @@ function showLetters(letters) {
     list.append(card);
   }
   openSheet(document.getElementById('letterSheet'));
+  // the pictures are drawn once the sheet is open and the canvases have a size
+  list.querySelectorAll('.gift-slip canvas[data-item]').forEach(function (c) { drawItemIcon(c, itemById(c.dataset.item)); });
   sfxPage();
+}
+// 隨信送上: the gifts on a red-edged slip under the letter, each as it looks: the 稱號 on its plaque,
+// the things and companions as their pictures, the money as 銀兩 and 元寶
+function giftSlip(body) {
+  const slip = document.createElement('div');
+  slip.className = 'gift-slip';
+  const title = document.createElement('b');
+  title.className = 'gift-slip-title';
+  title.textContent = '隨信送上';
+  slip.append(title);
+  function add(content, caption) {
+    const cell = document.createElement('span');
+    cell.className = 'gift-slip-item';
+    cell.append(content);
+    if (caption) {
+      const small = document.createElement('small');
+      small.textContent = caption;
+      cell.append(small);
+    }
+    slip.append(cell);
+  }
+  if (body.honor) {
+    const tier = GRANT_TIERS.indexOf(body.honorTier) >= 0 ? body.honorTier : 'gold';
+    const badge = document.createElement('span');
+    badge.className = 'honor ' + tier;
+    badge.textContent = framedHonor(body.honor);
+    add(badge, '稱號');
+  }
+  for (const id of body.items || []) {
+    const it = itemById(id);
+    if (!it) continue;
+    const c = document.createElement('canvas');
+    c.dataset.item = id;
+    add(c, it.name);
+  }
+  const taels = wholeNumber(body.taels);
+  const ingots = wholeNumber(body.ingots);
+  if (taels) {
+    const m = document.createElement('span');
+    m.className = 'gift-slip-money';
+    m.innerHTML = syceeHtml('silver') + taels;
+    add(m, '銀兩');
+  }
+  if (ingots) {
+    const m = document.createElement('span');
+    m.className = 'gift-slip-money';
+    m.innerHTML = syceeHtml('gold') + ingots;
+    add(m, '元寶');
+  }
+  if (body.gender === 'boy' || body.gender === 'girl') {
+    const g = document.createElement('span');
+    g.className = 'gift-slip-word';
+    g.textContent = body.gender === 'boy' ? '少俠' : '女俠';
+    add(g, '從此是');
+  }
+  return slip;
 }
 // the sender's name seal: 白文 (red ground, the characters left blank), read top to bottom from the right;
 // up to three characters in one column, four to six in two
@@ -3061,7 +3114,7 @@ document.getElementById('giftSend').addEventListener('click', async function () 
     console.warn('letter_send:', e.message);
     let why = '包打聽半路迷路，信沒送到，等一下再試。';
     if (e.notFound) why = '包打聽還沒開張：請在 Supabase 執行 supabase/heroes.sql。';
-    else if (e.tooLong) why = '包打聽說：「信太重了，帶不動！」信最多 200 字，稱號最多 12 字（符號也算）。';
+    else if (e.tooLong) why = '包打聽說：「信太重了，帶不動！」信最多 200 字，稱號最多 20 字（符號也算）。';
     else if (e.noHero) why = '包打聽說：「江湖上找不到這個人。」';
     else if (e.notAllowed) why = '包打聽說：「賜稱號、改性別，要掌門才行。」';
     else if (e.wrongPass) why = '包打聽說：「你的密碼對不上，先回帳號重新報到。」';
@@ -3250,7 +3303,7 @@ function renderHonors(grid) {
   const own = document.createElement('div');
   own.className = 'row honor-own';
   const input = document.createElement('input');
-  input.maxLength = 12;
+  input.maxLength = 20;
   input.placeholder = '自己取一個稱號';
   input.value = purse.customHonor;
   const wear = document.createElement('button');
