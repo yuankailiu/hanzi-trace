@@ -429,6 +429,9 @@ async function rpc(fn, body) {
   if (!r.ok) {
     const err = new Error(text);
     err.wrongPass = text.indexOf('wrong passcode') >= 0;
+    err.tooLong = text.indexOf('letter too long') >= 0;
+    err.noHero = text.indexOf('no such hero') >= 0;
+    err.notAllowed = text.indexOf('not allowed') >= 0;
     err.notFound = r.status === 404;
     throw err;
   }
@@ -3054,7 +3057,15 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   try {
     await rpc('letter_send', { p_alias: account.alias, p_pass: account.pass, p_to: gift.to.alias, p_body: body });
   } catch (e) {
-    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '包打聽半路迷路，信沒送到，等一下再試。';
+    // what the 雲端 refused, in 包打聽's words; a network failure is the only real 迷路
+    console.warn('letter_send:', e.message);
+    let why = '包打聽半路迷路，信沒送到，等一下再試。';
+    if (e.notFound) why = '包打聽還沒開張：請在 Supabase 執行 supabase/heroes.sql。';
+    else if (e.tooLong) why = '包打聽說：「信太重了，帶不動！」信最多 200 字，稱號最多 12 字（符號也算）。';
+    else if (e.noHero) why = '包打聽說：「江湖上找不到這個人。」';
+    else if (e.notAllowed) why = '包打聽說：「賜稱號、改性別，要掌門才行。」';
+    else if (e.wrongPass) why = '包打聽說：「你的密碼對不上，先回帳號重新報到。」';
+    note.textContent = why;
     return;
   }
   // the gifts leave this 俠客's purse, and come off if worn; the 管理員's cost nothing
