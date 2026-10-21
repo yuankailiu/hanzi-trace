@@ -15,7 +15,8 @@ frequency table, with the same cut-offs as the word bank.
 
 The system voices guess the reading of a 破音字 and sometimes guess wrong (他還敢來 read ㄏㄨㄢˊ).
 A voice takes only text, not 注音, so each sentence also gets v, the text to speak: every character with
-several readings is replaced by a common character with only the reading the 注音 gives it (還 ㄏㄞˊ → 孩).
+several readings, and every rare one, is replaced by a common character read as the 注音 gives it
+(還 ㄏㄞˊ → 孩, 嚥 ㄧㄢˋ → 驗).
 Neutral tones and 一 / 不 are left to the voice. data/homophones.json keeps the table for the page, which
 does the same for a single character and for 我的句子本.
 
@@ -211,8 +212,9 @@ def bank_sentences(words):
             else:
                 # a character left alone may still end a word with the one before it (來學 then 校: 學校)
                 ch = chars[j]
+                # not a neutral tone: that belongs to the word only (同學說 is not 學說 ㄒㄩㄝˊ ˙ㄕㄨㄛ)
                 pair = text[j - 1:j + 1] if j > 0 else ''
-                if pair in words:
+                if pair in words and not words[pair][1].startswith('˙'):
                     zy[j] = words[pair][1]
                 else:
                     zy[j] = {'一': 'ㄧ', '不': 'ㄅㄨˋ', '得': '˙ㄉㄜ'}.get(ch, usual_reading(ch))
@@ -232,15 +234,24 @@ def bank_sentences(words):
 
 # ---------- what to say ----------
 def homophones():
-    """{注音: the most common character whose only reading it is}; neutral tones are left to the voice."""
-    best = {}
+    """{注音: the most common character whose only reading it is}; neutral tones are left to the voice.
+    Where every common character with that sound has several readings (ㄧㄤˋ), the most common one whose
+    usual reading it is (樣) stands in: voices read a character alone in its usual reading."""
+    only = {}
+    usual = {}
     for f in sorted((ROOT / 'data').glob('c*.json')):
         for ch, e in json.loads(f.read_text(encoding='utf-8')).items():
             zy = e.get('zy') or []
-            if len(zy) != 1 or zy[0].startswith('˙') or ch not in char_rank or char_rank[ch] > 2000:
+            if not zy or zy[0].startswith('˙') or ch not in char_rank or char_rank[ch] > 2000:
                 continue
-            if zy[0] not in best or char_rank[ch] < char_rank[best[zy[0]]]:
-                best[zy[0]] = ch
+            # 一 and 不 change tone before other syllables, so they never stand in for anything
+            if ch in '一不':
+                continue
+            table = only if len(zy) == 1 else usual
+            if zy[0] not in table or char_rank[ch] < char_rank[table[zy[0]]]:
+                table[zy[0]] = ch
+    best = dict(usual)
+    best.update(only)
     return best
 
 
@@ -249,7 +260,9 @@ def spoken(text, zys, homo):
     for ch, zy in zip(text, zys):
         e = char_entry(ch) if HAN.match(ch) else None
         many = e is not None and len(e.get('zy') or []) > 1
-        if many and zy and not zy.startswith('˙') and ch not in '一不' and homo.get(zy, ch) != ch:
+        # a rare character is misread too (嚥 ㄧㄢˋ said as 燕 ㄧㄢ)
+        rare = e is not None and char_rank.get(ch, 99999) > 3000
+        if (many or rare) and zy and not zy.startswith('˙') and ch not in '一不' and homo.get(zy, ch) != ch:
             out.append(homo[zy])
         else:
             out.append(ch)

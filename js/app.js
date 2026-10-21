@@ -103,6 +103,12 @@ function readingAt(idx) {
 function sayCharAt(idx) {
   const ch = state.chars[idx];
   const data = glyphData[ch];
+  const sent = state.sentence;
+  // in a sentence, the character as its spoken text has it (rare ones are swapped there too)
+  if (sent && sent.v && sent.k[idx] !== undefined) {
+    say(ch, Array.from(sent.v)[sent.k[idx]]);
+    return;
+  }
   say(ch, voiceChar(ch, readingAt(idx), data && data.zy));
 }
 function saySentence(sent) {
