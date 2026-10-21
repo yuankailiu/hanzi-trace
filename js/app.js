@@ -2636,13 +2636,13 @@ function announceEntry() {
     }, 1100);
   });
 }
-// at start the 俠客 sheet opens on 群俠譜 and stays until someone is chosen, a guest included;
+// at start the 俠客 sheet opens on 墨香客棧 (the 俠客 of this device) and stays until someone is chosen, a guest included;
 // rise: after the opening gong, the sheet comes up from below like a page turned up
 const profileSheet = document.getElementById('profileSheet');
 function openGate(rise) {
   profileSheet.classList.add('gate');
   profileSheet.classList.toggle('rising', Boolean(rise));
-  document.getElementById('profileTitle').textContent = '筆順描字本';
+  document.getElementById('profileTitle').textContent = '墨香客棧';
   showProfilePane('rosterPane');
   openSheet(profileSheet);
 }
@@ -2675,7 +2675,7 @@ function enterAs(alias) {
 }
 document.getElementById('guestStart').addEventListener('click', function () { enterGame(''); });
 
-// 開場: strike the gong (the first tap also lets the page make sound), then the 群俠譜 turns up
+// 開場: strike the gong (the first tap also lets the page make sound), then the 客棧 turns up
 const opening = document.getElementById('opening');
 const gongBtn = document.getElementById('gongBtn');
 gongBtn.addEventListener('click', function () {
@@ -2819,6 +2819,10 @@ function giftText(body) {
   return parts.join('、');
 }
 function showLetters(letters) {
+  // 包打聽 runs the letters over
+  const herald = '包打聽氣喘吁吁跑來：「有你的 ' + letters.length + ' 封信！」';
+  document.getElementById('letterHerald').textContent = herald;
+  if (state.sound) say(herald);
   const list = document.getElementById('letterList');
   list.innerHTML = '';
   for (const letter of letters) {
@@ -2853,7 +2857,7 @@ function showLetters(letters) {
   sfxGong(0.25);
 }
 
-// ---------- 包打聽: every 俠客, and a letter with gifts to one of them ----------
+// ---------- 群俠譜: every 俠客, and a letter with gifts to one of them, all through 包打聽 the messenger ----------
 async function renderNews() {
   const note = document.getElementById('newsNote');
   const cards = document.getElementById('heroCards');
@@ -2861,18 +2865,18 @@ async function renderNews() {
   cards.hidden = false;
   cards.innerHTML = '';
   if (!cloudEnabled() || !account.alias) {
-    note.textContent = '先報到，才能打聽江湖消息。';
+    note.textContent = '先報到，包打聽才肯幫你打聽。';
     return;
   }
-  note.textContent = '打聽中…';
+  note.textContent = '包打聽跑去打聽了……';
   let heroes = [];
   try {
     heroes = await rpc('hero_list', { p_alias: account.alias, p_pass: account.pass }) || [];
   } catch (e) {
-    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '連不上雲端，請稍後再試。';
+    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '包打聽空手而回，晚點再問。';
     return;
   }
-  note.textContent = '江湖上有 ' + heroes.length + ' 位俠客';
+  note.textContent = '包打聽說：「江湖上目前有 ' + heroes.length + ' 位俠客。」';
   for (const h of heroes) {
     const look = lookFor(h.xp, h.gear, h.gender);
     const b = document.createElement('button');
@@ -2988,11 +2992,11 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   const body = { text: text, taels: gift.taels, ingots: gift.ingots, items: gift.items.slice() };
   if (gift.gender) body.gender = gift.gender;
   if (honor) body.honor = honor;
-  note.textContent = '飛鴿傳書中…';
+  note.textContent = '包打聽拿著信跑出去了……';
   try {
     await rpc('letter_send', { p_alias: account.alias, p_pass: account.pass, p_to: gift.to.alias, p_body: body });
   } catch (e) {
-    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '沒送出去，請稍後再試。';
+    note.textContent = e.notFound ? '包打聽還沒開張：請在 Supabase 執行 supabase/letters.sql。' : '包打聽半路迷路，信沒送到，等一下再試。';
     return;
   }
   // the gifts leave this 俠客's purse, and come off if worn; the 管理員's cost nothing
@@ -3010,7 +3014,7 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   shown.ingots = purse.ingots;
   save();
   renderAll();
-  toast('飛鴿已經送到「' + gift.to.alias + '」');
+  toast('包打聽拿了信，一溜煙跑去找「' + gift.to.alias + '」了');
   renderNews();
 });
 
@@ -3197,6 +3201,6 @@ async function removeHero() {
     note.textContent = '沒有成功，等一下再試。';
     return;
   }
-  toast('「' + h.alias + '」被逐出江湖了');
+  toast('包打聽已把消息傳遍江湖：「' + h.alias + '」被逐出江湖了');
   renderNews();
 }

@@ -250,13 +250,13 @@
     </div>
     <div class="tabbed">
     <div class="tabs" id="profileTabs" role="tablist">
-      <button type="button" role="tab" data-pane="rosterPane" aria-selected="true">群俠譜</button>
+      <button type="button" role="tab" data-pane="rosterPane" aria-selected="true">客棧</button>
+      <button type="button" role="tab" data-pane="newsPane" aria-selected="false">群俠譜</button>
       <button type="button" role="tab" data-pane="accountPane" aria-selected="false">帳號</button>
-      <button type="button" role="tab" data-pane="newsPane" aria-selected="false">包打聽</button>
     </div>
     <div class="tab-body">
     <div id="rosterPane">
-      <p class="roster-ask">哪一位俠客要練功？</p>
+      <p class="roster-ask">店小二：「客官，今天哪位要練功？」</p>
       <div class="recent-heroes" id="recentHeroes"></div>
       <div class="row roster-row"><button type="button" id="guestStart" data-quiet>先當個路人甲</button></div>
     </div>
@@ -334,10 +334,10 @@
           </div>
         </div>
         <div class="field">
-          <label for="letterText">捎信</label>
+          <label for="letterText">信上寫</label>
           <textarea id="letterText" maxlength="100" rows="2" placeholder="想說的話"></textarea>
         </div>
-        <div class="row"><button type="button" class="primary" id="giftSend">飛鴿傳書</button></div>
+        <div class="row"><button type="button" class="primary" id="giftSend">託包打聽捎信</button></div>
         <label class="slide-confirm" id="giftRemove" hidden>
           <span class="slide-fill" aria-hidden="true"></span>
           <span class="slide-text">滑到底：逐出江湖</span>
@@ -379,6 +379,7 @@
       <h2 id="letterTitle">江湖來信</h2>
       <button type="button" data-close>收下了</button>
     </div>
+    <p class="pane-note" id="letterHerald"></p>
     <div class="letters" id="letterList"></div>
   </div>
 </div>
