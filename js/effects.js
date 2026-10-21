@@ -325,6 +325,12 @@ function musicFade(to, seconds) {
   g.setValueAtTime(g.value, t);
   g.linearRampToValueAtTime(to, t + seconds);
 }
+// inside a tap that will wait on the network: start the music and wake speech now, while it counts as the tap
+function unlockSound() {
+  audioContext();
+  if (!music.started && state.music !== 'off') playMusic(state.music);
+  if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+}
 // called from a tap (browsers start sound only after the user touches the page)
 function playMusic(id) {
   if (!id || id === 'off' || !TRACKS[id]) {

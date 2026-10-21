@@ -226,6 +226,15 @@ function titleIndexFor(level) {
 function titleIndex() {
   return titleIndexFor(levelInfo(purse.xp).level);
 }
+// the 名望 outfit worn: gear.outfit, a rank already reached and picked in 我的俠客; '' follows the rank
+function outfitFor(xp, gear) {
+  const rank = titleIndexFor(levelInfo(xp || 0).level);
+  const o = gear ? gear.outfit : '';
+  return typeof o === 'number' && o >= 0 && o <= rank ? o : rank;
+}
+function outfitIndex() {
+  return outfitFor(purse.xp, purse.gear);
+}
 function itemById(id) {
   for (const it of ITEMS) {
     if (it.id === id) return it;
@@ -831,6 +840,9 @@ function announceLevels(before, after) {
     renderPurse();
   }, 1900);
   if (titleAfter > titleBefore) {
+    // a new rank puts on its new outfit
+    purse.gear.outfit = '';
+    save();
     queueCelebration(2600, function () {
       let sub = '晉升「' + titleName(titleAfter, state.gender) + '」';
       if (realmOf(titleAfter) !== realmOf(titleBefore)) sub += '　踏入「' + realmOf(titleAfter) + '」';
@@ -873,46 +885,25 @@ function renderHero() {
   if (badge) heroHonor.append(badge);
   document.querySelector('#heroSheet .opt-row[data-opt="gender"]').hidden = Boolean(state.genderLock) && !account.admin;
   document.getElementById('heroRank').textContent = titleName(tIdx, state.gender);
-  document.getElementById('heroRealm').textContent = realmOf(tIdx);
+  const realm = document.getElementById('heroRealm');
+  realm.textContent = realmOf(tIdx);
+  realm.className = 'realm r' + Math.floor(tIdx / 4);
+  document.getElementById('fameLabel').setAttribute('aria-label', '名望，' + realmOf(tIdx) + '，' + titleName(tIdx, state.gender));
+  const worn = outfitIndex();
+  document.getElementById('outfitName').innerHTML = '';
+  document.getElementById('outfitName').append(titleName(worn, state.gender));
+  if (worn !== tIdx) {
+    const small = document.createElement('small');
+    small.textContent = '造型';
+    document.getElementById('outfitName').append(small);
+  }
+  document.getElementById('outfitPrev').disabled = tIdx === 0;
+  document.getElementById('outfitNext').disabled = tIdx === 0;
   document.getElementById('heroLv').textContent = 'Lv ' + info.level;
   document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
   document.getElementById('heroTaels').textContent = purse.taels;
   document.getElementById('heroIngots').textContent = purse.ingots;
-  drawHeroOn(document.getElementById('heroAvatar'), { title: tIdx, gear: purse.gear, qi: qiColor() });
-
-  // titles reached so far, the current one framed, the next one as a black silhouette
-  const ladder = document.getElementById('ladder');
-  ladder.innerHTML = '';
-  for (let i = 0; i <= Math.min(tIdx + 1, TITLES.length - 1); i++) {
-    const item = document.createElement('button');
-    item.type = 'button';
-    item.className = 'ladder-item plain-btn';
-    const c = document.createElement('canvas');
-    drawHeroOn(c, { title: i, gear: {} });
-    const label = document.createElement('span');
-    if (i < tIdx) {
-      item.classList.add('past');
-      item.addEventListener('click', function () {
-        const was = item.classList.contains('lifted');
-        ladder.querySelectorAll('.lifted').forEach(function (x) { x.classList.remove('lifted'); });
-        if (!was) item.classList.add('lifted');
-      });
-    }
-    item.style.zIndex = String(i + 1);
-    if (i === tIdx) {
-      item.classList.add('now');
-      label.textContent = titleName(i, state.gender);
-    } else if (i > tIdx) {
-      item.classList.add('next');
-      silhouette(c, '#1e1a26');
-      label.textContent = '？？？';
-      item.setAttribute('aria-label', '還沒解鎖');
-    } else {
-      label.textContent = titleName(i, state.gender);
-    }
-    item.append(c, label);
-    ladder.append(item);
-  }
+  drawHeroOn(document.getElementById('heroAvatar'), { title: worn, gear: purse.gear, qi: qiColor() });
 
   const tabs = document.getElementById('shopTabs');
   tabs.innerHTML = '';
@@ -1149,7 +1140,7 @@ function avatarRender(now) {
     avatar.idle += 1;
   }
   avatar.frame += 1;
-  const look = { title: titleIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() };
+  const look = { title: outfitIndex(), gear: purse.gear, pose: pose, frame: avatar.frame, qi: qiColor() };
   drawHeroOn(avatar.canvases[0], look);
   // the landscape stage: no floor, just a soft shadow under the feet
   drawHeroOn(avatar.canvases[1], Object.assign({ floor: false, shadow: true }, look));
@@ -1864,12 +1855,13 @@ function closeSheet(el) {
 }
 document.querySelectorAll('.sheet').forEach(function (sheet) {
   sheet.addEventListener('click', function (e) {
+    if (sheet.classList.contains('gate')) return;
     if (e.target === sheet || e.target.closest('[data-close]')) closeSheet(sheet);
   });
 });
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
-  document.querySelectorAll('.sheet').forEach(function (sheet) { closeSheet(sheet); });
+  document.querySelectorAll('.sheet:not(.gate)').forEach(function (sheet) { closeSheet(sheet); });
 });
 
 document.getElementById('playerCard').addEventListener('click', function () {
@@ -1960,15 +1952,18 @@ function showProfilePane(id) {
   document.querySelectorAll('#profileTabs button').forEach(function (b) {
     b.setAttribute('aria-selected', b.dataset.pane === id ? 'true' : 'false');
   });
-  document.getElementById('accountPane').hidden = id !== 'accountPane';
-  document.getElementById('newsPane').hidden = id !== 'newsPane';
+  for (const pane of ['rosterPane', 'accountPane', 'newsPane']) {
+    document.getElementById(pane).hidden = id !== pane;
+  }
+  if (id === 'rosterPane') renderGate();
+  else clearInterval(gate.timer);
   if (id === 'newsPane') renderNews();
 }
 document.querySelectorAll('#profileTabs button').forEach(function (b) {
   b.addEventListener('click', function () { showProfilePane(b.dataset.pane); });
 });
 document.getElementById('profileBtn').addEventListener('click', function () {
-  showProfilePane('accountPane');
+  showProfilePane('rosterPane');
   newGender = '';
   document.querySelectorAll('#newGenderRow button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
   setAccountMode('login');
@@ -1980,9 +1975,17 @@ document.getElementById('profileBtn').addEventListener('click', function () {
   renderProfileStatus();
   openSheet(document.getElementById('profileSheet'));
 });
-document.getElementById('profileForm').addEventListener('submit', function (e) {
+document.getElementById('profileForm').addEventListener('submit', async function (e) {
   e.preventDefault();
-  login(document.getElementById('aliasInput').value, document.getElementById('passInput').value);
+  const fromGate = profileSheet.classList.contains('gate');
+  if (fromGate) unlockSound();
+  await login(document.getElementById('aliasInput').value, document.getElementById('passInput').value);
+  if (fromGate && profileSheet.hidden) {
+    leaveGate();
+    if (state.music !== 'off') playMusic(state.music);
+    const text = state.text || state.myName;
+    if (state.sound && text) say(text);
+  }
 });
 document.getElementById('logoutBtn').addEventListener('click', function () {
   switchTo('', '', loadLocalProfile(''));
@@ -2136,7 +2139,7 @@ let bootAlias = '';
 // what a 俠客 looks like, from experience, worn gear and gender
 function lookFor(xp, gear, gender) {
   const level = levelInfo(xp || 0).level;
-  return { title: titleIndexFor(level), level: level, gear: gear || {}, gender: gender || 'boy' };
+  return { title: titleIndexFor(level), outfit: outfitFor(xp, gear), level: level, gear: gear || {}, gender: gender || 'boy' };
 }
 
 // ---------- 開始: one of the recent 俠客 on this device, or a guest ----------
@@ -2171,6 +2174,7 @@ function rememberHero(alias) {
 
 const gate = { timer: 0, frame: 0, slots: [] };
 function renderGate() {
+  clearInterval(gate.timer);
   const el = document.getElementById('recentHeroes');
   el.innerHTML = '';
   gate.slots = [];
@@ -2209,18 +2213,31 @@ function drawGate() {
   gate.frame += 1;
   for (const s of gate.slots) {
     const pose = IDLE_SEQ[(gate.frame + s.phase) % IDLE_SEQ.length];
-    drawHeroOn(s.canvas, { title: s.look.title, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame });
+    drawHeroOn(s.canvas, { title: s.look.outfit, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame });
   }
 }
 function enterGame(alias) {
-  clearInterval(gate.timer);
-  document.getElementById('startGate').hidden = true;
+  leaveGate();
   audioContext();
   if (alias !== account.alias) enterAs(alias);
   rememberHero(alias);
   if (state.music !== 'off') playMusic(state.music);
   const text = state.text || state.myName;
   if (state.sound && text) say(text);
+}
+// at start the 俠客 sheet opens on 群俠譜 and stays until someone is chosen, a guest included
+const profileSheet = document.getElementById('profileSheet');
+function openGate() {
+  profileSheet.classList.add('gate');
+  document.getElementById('profileTitle').textContent = '筆順描字本';
+  showProfilePane('rosterPane');
+  openSheet(profileSheet);
+}
+function leaveGate() {
+  clearInterval(gate.timer);
+  profileSheet.classList.remove('gate');
+  document.getElementById('profileTitle').textContent = '俠客';
+  closeSheet(profileSheet);
 }
 // switch without saving first, so a newer copy in the cloud is still taken
 function enterAs(alias) {
@@ -2244,7 +2261,20 @@ function enterAs(alias) {
   });
 }
 document.getElementById('guestStart').addEventListener('click', function () { enterGame(''); });
-renderGate();
+openGate();
+
+// 名望 outfits: the arrows step through the ranks reached so far
+function stepOutfit(d) {
+  const rank = titleIndex();
+  const next = (outfitIndex() + d + rank + 1) % (rank + 1);
+  purse.gear.outfit = next === rank ? '' : next;
+  save();
+  renderHero();
+  avatarRender(performance.now());
+  say(titleName(next, state.gender));
+}
+document.getElementById('outfitPrev').addEventListener('click', function () { stepOutfit(-1); });
+document.getElementById('outfitNext').addEventListener('click', function () { stepOutfit(1); });
 
 // ---------- 我的俠客: tap the hero and it moves ----------
 const SHEET_ACTIONS = ['attack', 'cheer', 'hurt'];
@@ -2270,7 +2300,7 @@ document.getElementById('heroAvatar').addEventListener('click', function (e) {
   sheetHero.timer = setInterval(function () {
     const pose = queue.length ? queue.shift() : 'stand';
     frame += 1;
-    drawHeroOn(canvas, { title: titleIndex(), gear: purse.gear, pose: pose, frame: frame, qi: qiColor() });
+    drawHeroOn(canvas, { title: outfitIndex(), gear: purse.gear, pose: pose, frame: frame, qi: qiColor() });
     if (!queue.length) clearInterval(sheetHero.timer);
   }, 110);
 });
@@ -2399,7 +2429,7 @@ async function renderNews() {
     if (badge) b.append(badge);
     b.append(name, rank, money);
     cards.append(b);
-    drawHeroOn(c, { title: look.title, gear: look.gear, gender: look.gender });
+    drawHeroOn(c, { title: look.outfit, gear: look.gear, gender: look.gender });
     if (h.alias === account.alias) b.classList.add('me');
     else b.addEventListener('click', function () { openGift(h); });
   }
@@ -2413,7 +2443,7 @@ function openGift(h) {
   document.getElementById('letterText').value = '';
   document.getElementById('giftNote').textContent = '';
   const look = lookFor(h.xp, h.gear, h.gender);
-  drawHeroOn(document.getElementById('giftAvatar'), { title: look.title, gear: look.gear, gender: look.gender });
+  drawHeroOn(document.getElementById('giftAvatar'), { title: look.outfit, gear: look.gear, gender: look.gender });
   document.getElementById('giftName').textContent = h.alias;
   document.getElementById('giftRank').textContent = titleName(look.title, look.gender) + ' Lv ' + look.level;
   document.getElementById('giftMoney').innerHTML = moneyHtml(h.taels, h.ingots);
