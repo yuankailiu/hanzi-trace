@@ -2812,6 +2812,20 @@ function receiveGifts(body) {
     state.genderLock = body.gender;
     state.gender = body.gender;
   }
+  // taken back by the 管理員: a won one by its id, a granted one by its entry, the typed one as custom
+  for (const r of body.revoke || []) {
+    const v = String(r.v || '');
+    if (v === 'custom') {
+      purse.customHonor = '';
+    } else if (v.indexOf('g:') === 0) {
+      const at = purse.granted.indexOf(v.slice(2));
+      if (at >= 0) purse.granted.splice(at, 1);
+    } else {
+      const at = purse.honors.indexOf(v);
+      if (at >= 0) purse.honors.splice(at, 1);
+    }
+    if (purse.honor === v) purse.honor = '';
+  }
   const honor = String(body.honor || '').trim();
   const tier = GRANT_TIERS.indexOf(body.honorTier) >= 0 ? body.honorTier : 'gold';
   const entry = tier === 'gold' ? honor : tier + '|' + honor;
@@ -2832,6 +2846,9 @@ function giftText(body, voice) {
   if (body.gender === 'boy') parts.push('變成少俠');
   if (body.gender === 'girl') parts.push('變成女俠');
   if (body.honor) parts.push('稱號' + (voice ? spokenHonor(body.honor) : framedHonor(body.honor)));
+  for (const r of body.revoke || []) {
+    parts.push('收回稱號' + (voice ? spokenHonor(String(r.name || '')) : framedHonor(String(r.name || ''))));
+  }
   return parts.join('、');
 }
 function showLetters(letters) {
@@ -2931,6 +2948,26 @@ function giftSlip(body) {
     g.textContent = body.gender === 'boy' ? '少俠' : '女俠';
     add(g, '從此是');
   }
+  // only 稱號 taken back: no 隨信送上, just their own line
+  if (slip.children.length === 1) title.remove();
+  const revoked = body.revoke || [];
+  if (revoked.length) {
+    if (slip.children.length) {
+      const br = document.createElement('span');
+      br.className = 'gift-slip-break';
+      slip.append(br);
+    }
+    const back = document.createElement('b');
+    back.className = 'gift-slip-title';
+    back.textContent = '收回';
+    slip.append(back);
+    for (const r of revoked) {
+      const badge = document.createElement('span');
+      badge.className = 'honor revoked ' + (r.tier || 'plain');
+      badge.textContent = framedHonor(String(r.name || ''));
+      add(badge, '');
+    }
+  }
   return slip;
 }
 // the sender's name seal: 白文 (red ground, the characters left blank), read top to bottom from the right;
@@ -3007,7 +3044,7 @@ async function renderNews() {
 
 let gift = { to: null, taels: 0, ingots: 0, items: [], gender: '' };
 function openGift(h) {
-  gift = { to: h, taels: 0, ingots: 0, items: [], gender: '', honorTier: 'gold' };
+  gift = { to: h, taels: 0, ingots: 0, items: [], gender: '', honorTier: 'gold', revoke: [] };
   const seen = lastSeen(h.updated_at);
   let news = '包打聽說：「' + h.alias + '最近沒什麼消息。」';
   if (h.alias === account.alias) news = '包打聽說：「這不就是你嗎？」';
@@ -3027,6 +3064,7 @@ function openGift(h) {
   document.getElementById('giftRemove').hidden = !account.admin;
   document.getElementById('giftHonor').value = '';
   renderPlaques();
+  if (account.admin) renderRevoke(h);
 
   // what this 俠客 owns and could give away; the 管理員 can give anything
   const grid = document.getElementById('giftItems');
@@ -3096,7 +3134,7 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   const note = document.getElementById('giftNote');
   const text = document.getElementById('letterText').value.trim();
   const honor = account.admin ? document.getElementById('giftHonor').value.trim() : '';
-  if (!text && !gift.taels && !gift.ingots && !gift.items.length && !gift.gender && !honor) {
+  if (!text && !gift.taels && !gift.ingots && !gift.items.length && !gift.gender && !honor && !gift.revoke.length) {
     note.textContent = '寫幾句話，或選個禮物';
     return;
   }
@@ -3106,6 +3144,7 @@ document.getElementById('giftSend').addEventListener('click', async function () 
     body.honor = honor;
     body.honorTier = gift.honorTier;
   }
+  if (gift.revoke.length) body.revoke = gift.revoke.slice();
   note.textContent = '包打聽拿著信跑出去了……';
   try {
     await rpc('letter_send', { p_alias: account.alias, p_pass: account.pass, p_to: gift.to.alias, p_body: body });
@@ -3254,6 +3293,46 @@ function renderPlaques() {
   }
 }
 buildDecor(document.getElementById('giftDecor'), document.getElementById('giftHonor'), renderPlaques);
+// 收回稱號: every 稱號 this 俠客 has (won, granted, typed); a tap marks one to take back with the letter
+function renderRevoke(h) {
+  const list = document.getElementById('giftRevoke');
+  list.innerHTML = '';
+  const entries = [];
+  for (const id of h.honors || []) {
+    const won = honorById(id);
+    if (won) entries.push({ v: id, name: won.name, tier: won.tier });
+  }
+  for (const g of h.granted || []) {
+    const info = grantedInfo(g);
+    entries.push({ v: 'g:' + g, name: info.name, tier: info.tier });
+  }
+  if (h.customHonor) entries.push({ v: 'custom', name: h.customHonor, tier: 'plain' });
+  if (!entries.length) {
+    const none = document.createElement('span');
+    none.className = 'quiet';
+    none.textContent = h.honors === undefined ? '要先在 Supabase 更新 hero_list，才看得到別人的稱號。' : '還沒有稱號';
+    list.append(none);
+    return;
+  }
+  for (const e of entries) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'revoke-pick';
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', '收回 ' + (spokenHonor(e.name) || '稱號'));
+    const badge = document.createElement('span');
+    badge.className = 'honor ' + e.tier;
+    badge.textContent = framedHonor(e.name);
+    b.append(badge);
+    b.addEventListener('click', function () {
+      const at = gift.revoke.findIndex(function (r) { return r.v === e.v; });
+      if (at >= 0) gift.revoke.splice(at, 1);
+      else gift.revoke.push(e);
+      b.setAttribute('aria-pressed', at >= 0 ? 'false' : 'true');
+    });
+    list.append(b);
+  }
+}
 document.getElementById('giftHonor').addEventListener('input', renderPlaques);
 function wearHonor(value) {
   purse.honor = value;

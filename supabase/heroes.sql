@@ -81,6 +81,8 @@ begin
       'gear', data -> 'purse' -> 'gear',
       'honor', data -> 'purse' -> 'honor',
       'customHonor', data -> 'purse' -> 'customHonor',
+      'honors', data -> 'purse' -> 'honors',
+      'granted', data -> 'purse' -> 'granted',
       'updated_at', updated_at
     ) order by updated_at desc)
     from public.profiles
@@ -108,7 +110,7 @@ begin
   if length(coalesce(p_body ->> 'text', '')) > 200 or length(coalesce(p_body ->> 'honor', '')) > 20 then
     raise exception 'letter too long' using errcode = '22023';
   end if;
-  if (p_body ? 'gender' or p_body ? 'honor') and not r.is_admin then
+  if (p_body ? 'gender' or p_body ? 'honor' or p_body ? 'revoke') and not r.is_admin then
     raise exception 'not allowed' using errcode = '42501';
   end if;
   insert into public.letters (to_alias, from_alias, body) values (t, r.alias, p_body) returning id into new_id;

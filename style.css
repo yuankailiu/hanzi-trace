@@ -1808,3 +1808,26 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .gift-slip-item .honor { font-size: 1rem; }
 .gift-slip-money { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 1.05rem; }
 .gift-slip-word { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+
+/* 收回稱號: the 管理員 marks a 稱號 to take back; a marked one is struck through with a red cross */
+.revoke-box { display: grid; gap: 6px; }
+.revoke-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.revoke-pick { position: relative; padding: 5px 8px; font-weight: 400; }
+#giftRevoke .revoke-pick[aria-pressed="true"] { background: var(--btn); border-color: #c8322a; box-shadow: 0 0 0 2px #c8322a, 0 3px 0 var(--btn-drop); }
+.revoke-pick[aria-pressed="true"] .honor { opacity: 0.45; text-decoration: line-through; text-decoration-color: #c8322a; text-decoration-thickness: 2px; }
+.revoke-pick[aria-pressed="true"]::after {
+  content: "✕";
+  position: absolute;
+  top: -9px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  color: #fff;
+  background: #c8322a;
+  border-radius: 50%;
+}
+.honor.revoked { opacity: 0.55; text-decoration: line-through; text-decoration-color: #c8322a; text-decoration-thickness: 2px; }
+.gift-slip-break { flex-basis: 100%; height: 0; border-top: 1px dashed #d9c6a3; }
