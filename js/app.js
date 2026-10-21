@@ -888,17 +888,10 @@ function renderHero() {
   const realm = document.getElementById('heroRealm');
   realm.textContent = realmOf(tIdx);
   realm.className = 'realm r' + Math.floor(tIdx / 4);
-  document.getElementById('fameLabel').setAttribute('aria-label', '名望，' + realmOf(tIdx) + '，' + titleName(tIdx, state.gender));
+  document.getElementById('fameLabel').setAttribute('aria-label', '名望，' + realmOf(tIdx));
   const worn = outfitIndex();
-  document.getElementById('outfitName').innerHTML = '';
-  document.getElementById('outfitName').append(titleName(worn, state.gender));
-  if (worn !== tIdx) {
-    const small = document.createElement('small');
-    small.textContent = '造型';
-    document.getElementById('outfitName').append(small);
-  }
-  document.getElementById('outfitPrev').disabled = tIdx === 0;
-  document.getElementById('outfitNext').disabled = tIdx === 0;
+  document.getElementById('outfitText').textContent = titleName(worn, state.gender);
+  markOutfitEnds();
   document.getElementById('heroLv').textContent = 'Lv ' + info.level;
   document.getElementById('heroXp').style.width = (info.level >= MAX_LEVEL ? 100 : Math.round(100 * info.into / info.need)) + '%';
   document.getElementById('heroTaels').textContent = purse.taels;
@@ -2263,14 +2256,45 @@ function enterAs(alias) {
 document.getElementById('guestStart').addEventListener('click', function () { enterGame(''); });
 openGate();
 
-// 名望 outfits: the arrows step through the ranks reached so far
+// 裝束: the arrows step through the 名望 outfits reached so far, from the first to the current one
+function markOutfitEnds() {
+  const worn = outfitIndex();
+  document.getElementById('outfitPrev').classList.toggle('end', worn === 0);
+  document.getElementById('outfitNext').classList.toggle('end', worn === titleIndex());
+}
 function stepOutfit(d) {
   const rank = titleIndex();
-  const next = (outfitIndex() + d + rank + 1) % (rank + 1);
+  const next = outfitIndex() + d;
+  const text = document.getElementById('outfitText');
+  if (next < 0 || next > rank) {
+    // no more this way: a dull knock, and the name pushes against the edge and springs back
+    sfxWood();
+    text.animate([
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(' + (d * 14) + 'px)' },
+      { transform: 'translateX(' + (-d * 4) + 'px)' },
+      { transform: 'translateX(0)' },
+    ], { duration: 280, easing: 'ease-out' });
+    return;
+  }
   purse.gear.outfit = next === rank ? '' : next;
   save();
-  renderHero();
+  sfxTick(1175);
+  drawHeroOn(document.getElementById('heroAvatar'), { title: next, gear: purse.gear, qi: qiColor() });
   avatarRender(performance.now());
+  markOutfitEnds();
+  // the old name slides out one way, the new one comes in from the other side
+  const out = text.animate([
+    { transform: 'translateX(0)', opacity: 1 },
+    { transform: 'translateX(' + (-d * 120) + '%)', opacity: 0 },
+  ], { duration: 150, easing: 'ease-in' });
+  out.onfinish = function () {
+    text.textContent = titleName(next, state.gender);
+    text.animate([
+      { transform: 'translateX(' + (d * 120) + '%)', opacity: 0 },
+      { transform: 'translateX(0)', opacity: 1 },
+    ], { duration: 200, easing: 'ease-out' });
+  };
   say(titleName(next, state.gender));
 }
 document.getElementById('outfitPrev').addEventListener('click', function () { stepOutfit(-1); });
@@ -2676,16 +2700,49 @@ function showHonor(name, tier) {
 }
 honorPop.addEventListener('click', function () { honorPop.hidden = true; });
 
-// 逐出江湖: the 管理員 removes a 俠客 for good by sliding all the way; let go early and it springs back
+// 逐出江湖: the 管理員 slides all the way and holds there a moment; a gong, then one last question.
+// Letting go early springs the knob back.
 const removeSlider = document.getElementById('removeSlider');
+const slideBox = document.getElementById('giftRemove');
+const confirmSheet = document.getElementById('confirmSheet');
+let removeHold = 0;
+function setSlide(v) {
+  removeSlider.value = v;
+  slideBox.style.setProperty('--p', v / 100);
+  slideBox.classList.toggle('full', v >= 100);
+}
+function springBack() {
+  const from = Number(removeSlider.value);
+  const start = performance.now();
+  function frame(now) {
+    const k = Math.min(1, (now - start) / 220);
+    setSlide(Math.round(from * (1 - k)));
+    if (k < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
 removeSlider.addEventListener('input', function () {
-  if (Number(removeSlider.value) >= 100) removeHero();
+  const v = Number(removeSlider.value);
+  setSlide(v);
+  clearTimeout(removeHold);
+  if (v >= 100) removeHold = setTimeout(askRemove, 1200);
 });
 removeSlider.addEventListener('change', function () {
-  removeSlider.value = 0;
+  clearTimeout(removeHold);
+  springBack();
+});
+function askRemove() {
+  if (!gift.to || !account.admin) return;
+  sfxGong(0.5);
+  document.getElementById('confirmText').textContent = '確定要把「' + gift.to.alias + '」逐出江湖嗎？他的進度會全部刪除，救不回來。';
+  setSlide(0);
+  openSheet(confirmSheet);
+}
+document.getElementById('confirmYes').addEventListener('click', function () {
+  closeSheet(confirmSheet);
+  removeHero();
 });
 async function removeHero() {
-  removeSlider.value = 0;
   const h = gift.to;
   if (!h || !account.admin) return;
   const note = document.getElementById('giftNote');

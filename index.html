@@ -203,6 +203,7 @@ img { max-width: 100%; }
       <h2 id="profileTitle">俠客</h2>
       <button type="button" data-close>關閉</button>
     </div>
+    <div class="tabbed">
     <div class="tabs" id="profileTabs" role="tablist">
       <button type="button" role="tab" data-pane="rosterPane" aria-selected="true">群俠譜</button>
       <button type="button" role="tab" data-pane="accountPane" aria-selected="false">帳號</button>
@@ -293,14 +294,28 @@ img { max-width: 100%; }
         </div>
         <div class="row"><button type="button" class="primary" id="giftSend">捎信送出</button></div>
         <label class="slide-confirm" id="giftRemove" hidden>
+          <span class="slide-fill" aria-hidden="true"></span>
+          <span class="slide-text">滑到底：逐出江湖</span>
           <input type="range" id="removeSlider" min="0" max="100" value="0">
-          <span>滑到底：逐出江湖</span>
         </label>
         <p class="note" id="giftNote"></p>
       </div>
     </div>
     </div>
+    </div>
   </form>
+</div>
+
+<!-- 逐出江湖: the last question -->
+<div class="sheet" id="confirmSheet" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="sheet-panel card narrow">
+    <h2 id="confirmTitle">逐出江湖</h2>
+    <p id="confirmText"></p>
+    <div class="row">
+      <button type="button" class="danger" id="confirmYes">確定逐出</button>
+      <button type="button" data-close>算了</button>
+    </div>
+  </div>
 </div>
 
 <!-- a new 稱號, shown as a token -->
@@ -421,9 +436,10 @@ img { max-width: 100%; }
     <section class="fame-bar">
       <button type="button" class="plain-btn fame-label" id="fameLabel"><h3>名望</h3><span class="realm" id="heroRealm"></span></button>
       <span class="outfit-pick">
-        <button type="button" class="arrow" id="outfitPrev" aria-label="上一個造型"><svg aria-hidden="true"><use href="#i-chev-left"></use></svg></button>
-        <span class="outfit-name" id="outfitName"></span>
-        <button type="button" class="arrow" id="outfitNext" aria-label="下一個造型"><svg aria-hidden="true"><use href="#i-chev-right"></use></svg></button>
+        <span class="outfit-label">裝束</span>
+        <button type="button" class="arrow" id="outfitPrev" aria-label="上一套裝束" data-quiet><svg aria-hidden="true"><use href="#i-chev-left"></use></svg></button>
+        <span class="outfit-name"><span id="outfitText"></span></span>
+        <button type="button" class="arrow" id="outfitNext" aria-label="下一套裝束" data-quiet><svg aria-hidden="true"><use href="#i-chev-right"></use></svg></button>
       </span>
     </section>
     <section>

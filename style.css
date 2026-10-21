@@ -940,18 +940,16 @@ canvas.pixel {
 #heroAvatar { width: 192px; height: 144px; background: var(--tile); border-radius: 12px; border: 2.5px solid var(--panel-edge); }
 .hero-info { display: grid; gap: 6px; flex: 1 1 220px; min-width: 0; }
 
-/* folder tabs over a page: the chosen tab stands a little taller and joins the page below it */
+/* folder tabs on a rounded page: the tabs stand on the page's top edge, the chosen one opens into it */
 .tabs {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-end;
   gap: 4px;
-  padding: 0 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  /* the line along the bottom, drawn as a background so the chosen tab can cover it */
-  background: linear-gradient(var(--panel-edge), var(--panel-edge)) left bottom / 100% 2px no-repeat;
+  padding: 0 16px;
+  margin-bottom: -2.5px;
 }
-.tabs::-webkit-scrollbar { display: none; }
 .tabs button {
   flex: none;
   padding: 7px 16px 6px;
@@ -963,19 +961,21 @@ canvas.pixel {
 }
 .tabs button:active:not(:disabled) { transform: none; box-shadow: none; }
 .tabs button[aria-selected="true"] {
-  position: relative;
-  z-index: 1;
   padding-top: 10px;
   background: var(--paper);
   color: var(--accent);
-  border-bottom: 2.5px solid var(--paper);
+  border-bottom-color: var(--paper);
 }
 .tab-body {
   padding: 14px 12px 12px;
   background: var(--paper);
   border: 2.5px solid var(--panel-edge);
-  border-top: 0;
-  border-radius: 0 0 14px 14px;
+  border-radius: 14px;
+}
+@media (max-width: 560px) {
+  .tabs { padding: 0 8px; gap: 3px; }
+  .tabs button { padding: 6px 10px 5px; font-size: 0.9rem; }
+  .tabs button[aria-selected="true"] { padding-top: 9px; }
 }
 .items {
   display: grid;
@@ -1291,28 +1291,51 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .admin-only { display: grid; gap: 8px; width: 100%; box-sizing: border-box; padding: 10px; border: 2px dashed #c58bff; border-radius: 12px; }
 .admin-only[hidden] { display: none; }
 
-/* 逐出江湖 needs a full slide, not a tap */
+/* 逐出江湖 needs a full slide and a hold: a sunken grey track fills dark red behind a raised knob,
+   and the words shine like metal once the knob reaches the end */
 .slide-confirm {
+  --p: 0;
   position: relative;
   display: grid;
   align-items: center;
   width: min(320px, 100%);
-  height: 44px;
+  height: 46px;
   margin-top: 6px;
-  border-radius: 22px;
-  background: #4a1612;
-  border: 2px solid #2b0c09;
+  border-radius: 23px;
+  background: linear-gradient(180deg, #c9c3ba, #e4dfd7);
+  border: 2px solid #8f877b;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.28), 0 1px 0 rgba(255, 255, 255, 0.6);
   overflow: hidden;
 }
 .slide-confirm[hidden] { display: none; }
-.slide-confirm span {
+.slide-fill {
+  grid-area: 1 / 1;
+  align-self: stretch;
+  width: calc(21px + (100% - 42px) * var(--p));
+  border-radius: 23px;
+  background: linear-gradient(180deg, #9a2c25, #5e1612);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35);
+}
+.slide-text {
   grid-area: 1 / 1;
   justify-self: center;
-  color: #ffd9cf;
+  color: #fff3e6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   font-family: var(--font-display);
   letter-spacing: 0.12em;
   pointer-events: none;
 }
+.slide-confirm.full .slide-text {
+  color: transparent;
+  text-shadow: none;
+  background: linear-gradient(100deg, #fff6c8, #e0b957 30%, #ffffff 50%, #e0b957 70%, #fff6c8) text;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-size: 200% 100%;
+  filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.8));
+  animation: legend-shine 1.2s linear infinite;
+}
+.slide-confirm.full .slide-fill { box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 120, 90, 0.6); }
 .slide-confirm input {
   grid-area: 1 / 1;
   -webkit-appearance: none;
@@ -1324,20 +1347,23 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 }
 .slide-confirm input::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: #e64553;
-  border: 2px solid #ffd9cf;
+  background: radial-gradient(circle at 35% 30%, #ffc0b5, #dd3b42 45%, #8e1f24);
+  border: 2px solid #fff1e8;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
   cursor: grab;
 }
 .slide-confirm input::-moz-range-thumb {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: #e64553;
-  border: 2px solid #ffd9cf;
+  background: radial-gradient(circle at 35% 30%, #ffc0b5, #dd3b42 45%, #8e1f24);
+  border: 2px solid #fff1e8;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
 }
+.sheet-panel.narrow { width: min(380px, 100%); }
 .gift-row .label .sycee, .detail-hero .sycee, .hero-card .sycee { width: 18px; height: 12px; vertical-align: -1px; }
 
 /* the 名望 bar under the portrait: 名望 with its 大境 tag, and arrows through the outfits reached */
@@ -1355,10 +1381,13 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .fame-label { display: inline-flex; align-items: center; gap: 10px; }
 .fame-label h3 { margin: 0; }
 .outfit-pick { display: inline-flex; align-items: center; gap: 8px; }
+.outfit-label { font-family: var(--font-display); color: var(--muted); font-weight: 700; letter-spacing: 0.15em; margin-right: 2px; }
+.outfit-pick .arrow.end { opacity: 0.45; }
 .outfit-pick .arrow { width: 36px; height: 36px; padding: 0; border-radius: 50%; display: grid; place-items: center; }
 .outfit-pick .arrow svg { width: 20px; height: 20px; }
-.outfit-name { min-width: 7em; text-align: center; font-family: var(--font-display); font-weight: 700; }
-.outfit-name small { color: var(--muted); font-weight: 500; margin-left: 4px; }
+/* the name slides out and the next one slides in; it knocks against the end when there is no more */
+.outfit-name { min-width: 7em; text-align: center; font-family: var(--font-display); font-weight: 700; overflow: hidden; }
+.outfit-name span { display: inline-block; }
 /* the 大境 tag grows grander with each 大境: paper slip, steel, jade, red lacquer, purple lightning */
 .realm {
   font-family: var(--font-display);
