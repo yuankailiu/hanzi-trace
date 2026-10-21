@@ -5,6 +5,16 @@ const TRANSPARENT = 'rgba(0,0,0,0)';
 const COMPARE_RED = 'rgba(210,15,57,0.35)';
 const ARENA_PAD = 18;   // arena padding + its border + the paper border
 const SEAL_TEXT = { 3: '甲上', 2: '甲', 1: '加油' };
+// the plaques the 管理員 can grant a 稱號 on
+const GRANT_TIERS = ['gold', 'jade', 'ink', 'bronze', 'legend', 'plain'];
+const TIER_NAMES = { gold: '金匾', jade: '玉牌', ink: '墨匾', bronze: '竹牌', legend: '紫光', plain: '素字' };
+// 中二 decorations: pairs to wrap a 稱號 in, and single marks to add anywhere
+const DECOR_PAIRS = [
+  ['【', '】'], ['乂', '卍'], ['↖☆', '☆↘'], ['☆㊣↙', '↗㊣☆'], ['★彡', '彡★'], ['♛', '♛'],
+  ['亗', '亗'], ['『', '』'], ['〖', '〗'], ['✧', '✧'], ['o', 'o'], ['一', '一'], ['ღ', 'ღ'], ['━╋', '╋━'],
+];
+const DECOR_MARKS = ['☆', '★', '㊣', '♛', '亗', 'ツ', '乂', '卍', '↖', '↗', '↘', '↙', '彡', '♪', '♥', '✿', '❀', '✦', 'ღ', '☠', '∞', '煞氣a'];
+const DECOR_CHARS = new Set(Array.from('【】乂卍↖↗↘↙☆★㊣♛亗ツ☠彡♪♥✿❀✦✧ღ∞『』〖〗o一━╋'));
 const TAELS_FOR_GRADE = { 3: 10, 2: 6, 1: 3 };
 const RECENT_MAX = 15;
 const MAX_TIER = 6;
@@ -3068,16 +3078,6 @@ document.getElementById('giftSend').addEventListener('click', async function () 
 
 // ---------- 稱號 ----------
 // the worn 稱號: an earned or granted one in its tier's frame, a typed one as plain words
-// the plaques the 管理員 can grant a 稱號 on
-const GRANT_TIERS = ['gold', 'jade', 'ink', 'bronze', 'legend', 'plain'];
-const TIER_NAMES = { gold: '金匾', jade: '玉牌', ink: '墨匾', bronze: '竹牌', legend: '紫光', plain: '素字' };
-// 中二 decorations: pairs to wrap a 稱號 in, and single marks to add anywhere
-const DECOR_PAIRS = [
-  ['【', '】'], ['乂', '卍'], ['↖☆', '☆↘'], ['☆㊣↙', '↗㊣☆'], ['★彡', '彡★'], ['♛', '♛'],
-  ['亗', '亗'], ['『', '』'], ['〖', '〗'], ['✧', '✧'], ['o', 'o'], ['一', '一'], ['ღ', 'ღ'], ['━╋', '╋━'],
-];
-const DECOR_MARKS = ['☆', '★', '㊣', '♛', '亗', 'ツ', '乂', '卍', '↖', '↗', '↘', '↙', '彡', '♪', '♥', '✿', '❀', '✦', 'ღ', '☠', '∞', '煞氣a'];
-const DECOR_CHARS = new Set(Array.from('【】乂卍↖↗↘↙☆★㊣♛亗ツ☠彡♪♥✿❀✦✧ღ∞『』〖〗o一━╋'));
 // a granted entry: 'jade|名字', or a bare name on a gold plaque
 function grantedInfo(entry) {
   const bar = entry.indexOf('|');
