@@ -500,20 +500,20 @@ async function login(alias, pass) {
   const carry = account.alias === '' ? serializeProfile() : null;
 
   if (cloudEnabled()) {
-    note.textContent = '連線中…';
+    note.textContent = '飛鴿傳書中…';
     let res = null;
     try {
       res = await rpc('profile_load', { p_alias: alias, p_pass: pass });
     } catch (e) {
-      note.textContent = e.wrongPass ? '密碼不對喔，再試一次。' : '連不上雲端，請稍後再試。';
+      note.textContent = e.wrongPass ? '暗號不對喔，再試一次。' : '連不上雲端，請稍後再試。';
       return;
     }
     if (accountMode === 'login' && !res) {
-      note.textContent = '找不到「' + alias + '」。第一次來的話，請按上面的「建立新俠客」。';
+      note.textContent = '江湖上沒有「' + alias + '」這號人物。第一次來的話，請按上面的「拜師入門」。';
       return;
     }
     if (accountMode === 'create' && res) {
-      note.textContent = '「' + alias + '」已經有人用了，換一個名字吧；如果是你，請按「登入」。';
+      note.textContent = '「' + alias + '」這個名號已經有人用了，換一個吧；如果是你，請按「報到」。';
       return;
     }
     let data = res ? res.data : carry;
@@ -525,13 +525,13 @@ async function login(alias, pass) {
       data = withGender(data, newGender);
       try {
         await rpc('profile_save', { p_alias: alias, p_pass: pass, p_data: data || {} });
-        toast('建立新俠客「' + alias + '」');
+        toast('「' + alias + '」拜師入門！');
       } catch (e) {
-        note.textContent = '連不上雲端，請稍後再試。';
+        note.textContent = '飛鴿迷路了，連不上雲端，等一下再試。';
         return;
       }
     } else {
-      toast('歡迎回來，' + alias);
+      toast(alias + ' 回來了！');
     }
     note.textContent = '';
     switchTo(alias, pass, data);
@@ -544,28 +544,28 @@ async function login(alias, pass) {
   const hash = await passHash(alias, pass);
   const stored = localStorage.getItem(PASSHASH_PREFIX + alias);
   if (stored && stored !== hash) {
-    note.textContent = '密碼不對喔，再試一次。';
+    note.textContent = '暗號不對喔，再試一次。';
     return;
   }
   localStorage.setItem(PASSHASH_PREFIX + alias, hash);
   let data = loadLocalProfile(alias);
   if (accountMode === 'login' && !data) {
-    note.textContent = '找不到「' + alias + '」。第一次來的話，請按上面的「建立新俠客」。';
+    note.textContent = '江湖上沒有「' + alias + '」這號人物。第一次來的話，請按上面的「拜師入門」。';
     return;
   }
   if (accountMode === 'create' && data) {
-    note.textContent = '「' + alias + '」已經有人用了，換一個名字吧；如果是你，請按「登入」。';
+    note.textContent = '「' + alias + '」這個名號已經有人用了，換一個吧；如果是你，請按「報到」。';
     return;
   }
   if (data) {
-    toast('歡迎回來，' + alias);
+    toast(alias + ' 回來了！');
   } else {
     if (!newGender) {
       note.textContent = '新俠客要先選：少俠還是女俠。';
       return;
     }
     data = withGender(carry, newGender);
-    toast('建立新俠客「' + alias + '」');
+    toast('「' + alias + '」拜師入門！');
   }
   note.textContent = '';
   switchTo(alias, pass, data);
@@ -587,7 +587,7 @@ function setAccountMode(mode) {
     b.setAttribute('aria-selected', b.dataset.mode === mode ? 'true' : 'false');
   });
   document.getElementById('newGenderRow').hidden = mode !== 'create';
-  document.getElementById('accountSubmit').textContent = mode === 'create' ? '建立' : '登入';
+  document.getElementById('accountSubmit').textContent = mode === 'create' ? '拜師' : '報到';
   document.getElementById('profileNote').textContent = '';
 }
 document.querySelectorAll('#accountModes button').forEach(function (b) {
@@ -1073,7 +1073,7 @@ function openItem(it) {
       const canBuy = it.ingots ? purse.ingots >= it.ingots : purse.taels >= it.taels;
       btn.innerHTML = '買　' + (it.ingots ? syceeHtml('gold') + it.ingots + ' 元寶' : syceeHtml('silver') + it.taels + ' 兩');
       btn.disabled = !canBuy;
-      if (!canBuy) note.textContent = '銀兩還不夠，多寫幾個字再來。';
+      if (!canBuy) note.textContent = '銀兩不夠喔，多練幾個字再來買。';
       btn.addEventListener('click', function () {
         buy(it);
         closeSheet(sheet);
@@ -1983,7 +1983,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
 document.getElementById('logoutBtn').addEventListener('click', function () {
   switchTo('', '', loadLocalProfile(''));
   closeSheet(document.getElementById('profileSheet'));
-  toast('換回訪客');
+  toast('改當路人甲');
 });
 
 // ---------- settings ----------
@@ -2404,7 +2404,7 @@ function showLetters(letters) {
     }
     const read = document.createElement('button');
     read.type = 'button';
-    read.textContent = '念出來';
+    read.textContent = '念給我聽';
     read.addEventListener('click', function () {
       say(letter.from + ' 說：' + (body.text || '') + (gifts ? '。送你' + gifts : ''));
     });
@@ -2423,7 +2423,7 @@ async function renderNews() {
   cards.hidden = false;
   cards.innerHTML = '';
   if (!cloudEnabled() || !account.alias) {
-    note.textContent = '登入俠客帳號後，才能打聽江湖消息。';
+    note.textContent = '先報到，才能打聽江湖消息。';
     return;
   }
   note.textContent = '打聽中…';
@@ -2572,7 +2572,7 @@ document.getElementById('giftSend').addEventListener('click', async function () 
   shown.ingots = purse.ingots;
   save();
   renderAll();
-  toast('信已經送到「' + gift.to.alias + '」');
+  toast('飛鴿已經送到「' + gift.to.alias + '」');
   renderNews();
 });
 
@@ -2652,7 +2652,7 @@ function renderHonors(grid) {
   });
   const off = document.createElement('button');
   off.type = 'button';
-  off.textContent = '不掛稱號';
+  off.textContent = '摘下稱號';
   off.addEventListener('click', function () { wearHonor(''); });
   own.append(input, wear, off);
   grid.append(list, own);
@@ -2710,6 +2710,7 @@ function setSlide(v) {
   removeSlider.value = v;
   slideBox.style.setProperty('--p', v / 100);
   slideBox.classList.toggle('full', v >= 100);
+  if (v < 100) slideBox.classList.remove('pressed');
 }
 function springBack() {
   const from = Number(removeSlider.value);
@@ -2725,12 +2726,17 @@ removeSlider.addEventListener('input', function () {
   const v = Number(removeSlider.value);
   setSlide(v);
   clearTimeout(removeHold);
-  if (v >= 100) removeHold = setTimeout(askRemove, 1200);
+  if (v >= 100) removeHold = setTimeout(pressRemove, 1500);
 });
 removeSlider.addEventListener('change', function () {
   clearTimeout(removeHold);
   springBack();
 });
+function pressRemove() {
+  slideBox.classList.add('pressed');
+  sfxClack();
+  removeHold = setTimeout(askRemove, 380);
+}
 function askRemove() {
   if (!gift.to || !account.admin) return;
   sfxGong(0.5);
@@ -2749,9 +2755,9 @@ async function removeHero() {
   try {
     await rpc('hero_delete', { p_alias: account.alias, p_pass: account.pass, p_target: h.alias });
   } catch (e) {
-    note.textContent = '沒有成功，請稍後再試。';
+    note.textContent = '沒有成功，等一下再試。';
     return;
   }
-  toast('「' + h.alias + '」已經離開江湖');
+  toast('「' + h.alias + '」被逐出江湖了');
   renderNews();
 }

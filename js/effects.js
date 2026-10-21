@@ -182,6 +182,22 @@ function sfxStamp() {
 }
 
 // 木魚: a gentle wooden knock for a wrong stroke
+// 喀喀: a switch pressed down, two dry clicks
+function sfxClack() {
+  const ac = getAudio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  for (const at of [t, t + 0.09]) {
+    const o = ac.createOscillator();
+    o.type = 'square';
+    o.frequency.setValueAtTime(420, at);
+    o.frequency.exponentialRampToValueAtTime(180, at + 0.025);
+    const g = envelope(ac, at, 0.16, 0.001, 0.03);
+    o.connect(g).connect(audioOut());
+    o.start(at);
+    o.stop(at + 0.04);
+  }
+}
 // 擲骰子: a few quick wooden clacks
 function sfxDice() {
   const ac = getAudio();

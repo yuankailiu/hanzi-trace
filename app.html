@@ -34,7 +34,7 @@
 <div class="app" id="app">
   <header class="topbar">
     <div class="top-actions">
-      <button type="button" class="icon-btn small" id="diceBtn" aria-label="換一個詞" title="換一個詞" data-quiet>
+      <button type="button" class="icon-btn small" id="diceBtn" aria-label="擲骰換題" title="擲骰換題" data-quiet>
         <svg aria-hidden="true"><use href="#i-dice"></use></svg>
       </button>
       <button type="button" class="icon-btn small" id="customBtn" aria-label="自己出題" title="自己出題">
@@ -111,20 +111,20 @@
           <svg aria-hidden="true"><use href="#i-tap"></use></svg><span>點格子：下一筆</span>
         </div>
         <div class="actions" id="quizActions" hidden>
-          <button type="button" class="icon-btn" id="restartBtn" aria-label="重寫" title="重寫">
+          <button type="button" class="icon-btn" id="restartBtn" aria-label="重新來過" title="重新來過">
             <svg aria-hidden="true"><use href="#i-replay"></use></svg>
           </button>
-          <button type="button" class="icon-btn toggle" id="keepBtn" aria-pressed="false" aria-label="保留我的筆跡" title="保留我的筆跡">
+          <button type="button" class="icon-btn toggle" id="keepBtn" aria-pressed="false" aria-label="留下我的墨寶" title="留下我的墨寶">
             <svg aria-hidden="true"><use href="#i-brush"></use></svg>
           </button>
         </div>
         <div class="actions result-row" id="result" hidden>
           <span class="marks" id="resultMarks"></span>
           <span class="reward" id="resultReward"></span>
-          <button type="button" class="icon-btn toggle" id="compareBtn" aria-pressed="false" aria-label="對照標準字" title="對照標準字" hidden>
+          <button type="button" class="icon-btn toggle" id="compareBtn" aria-pressed="false" aria-label="對照字帖" title="對照字帖" hidden>
             <svg aria-hidden="true"><use href="#i-compare"></use></svg>
           </button>
-          <button type="button" class="icon-btn" id="againBtn" aria-label="再寫一次" title="再寫一次">
+          <button type="button" class="icon-btn" id="againBtn" aria-label="再練一回" title="再練一回">
             <svg aria-hidden="true"><use href="#i-replay"></use></svg>
           </button>
           <button type="button" class="icon-btn primary" id="nextBtn" aria-label="下一個字" title="下一個字">
@@ -147,7 +147,7 @@
   <form class="sheet-panel card" id="customForm" autocomplete="off">
     <div class="sheet-head">
       <h2 id="customTitle">自己出題</h2>
-      <button type="button" data-close>關閉</button>
+      <button type="button" data-close>回去練功</button>
     </div>
     <div class="field">
       <label for="customInput">想練習的字（最多 12 個）</label>
@@ -178,7 +178,7 @@
   <form class="sheet-panel card" id="profileForm" autocomplete="off">
     <div class="sheet-head">
       <h2 id="profileTitle">俠客</h2>
-      <button type="button" data-close>關閉</button>
+      <button type="button" data-close>回去練功</button>
     </div>
     <div class="tabbed">
     <div class="tabs" id="profileTabs" role="tablist">
@@ -190,13 +190,13 @@
     <div id="rosterPane">
       <p class="roster-ask">哪一位俠客要練功？</p>
       <div class="recent-heroes" id="recentHeroes"></div>
-      <div class="row roster-row"><button type="button" id="guestStart" data-quiet>以訪客身分進入</button></div>
+      <div class="row roster-row"><button type="button" id="guestStart" data-quiet>先當個路人甲</button></div>
     </div>
     <div id="accountPane" hidden>
     <p class="status-line" id="profileStatus"></p>
     <div class="seg-row" id="accountModes" role="tablist">
-      <button type="button" role="tab" data-mode="login" aria-selected="true">登入</button>
-      <button type="button" role="tab" data-mode="create" aria-selected="false">建立新俠客</button>
+      <button type="button" role="tab" data-mode="login" aria-selected="true">報到</button>
+      <button type="button" role="tab" data-mode="create" aria-selected="false">拜師入門</button>
     </div>
     <div class="row">
       <div class="field">
@@ -219,8 +219,8 @@
       <button type="button" class="girl" data-g="girl"><svg aria-hidden="true"><use href="#i-blossom"></use></svg>女俠</button>
     </div>
     <div class="row">
-      <button type="submit" class="primary" id="accountSubmit">登入</button>
-      <button type="button" id="logoutBtn">換回訪客</button>
+      <button type="submit" class="primary" id="accountSubmit">報到</button>
+      <button type="button" id="logoutBtn">當個路人甲</button>
     </div>
     <p class="note" id="profileNote"></p>
     </div>
@@ -228,7 +228,7 @@
       <p class="note" id="newsNote"></p>
       <div class="hero-cards" id="heroCards"></div>
       <div class="hero-detail" id="heroDetail" hidden>
-        <button type="button" id="newsBack">回列表</button>
+        <button type="button" id="newsBack">回去打聽</button>
         <div class="detail-hero">
           <canvas id="giftAvatar"></canvas>
           <div>
@@ -269,7 +269,7 @@
           <label for="letterText">捎信</label>
           <textarea id="letterText" maxlength="100" rows="2" placeholder="想說的話"></textarea>
         </div>
-        <div class="row"><button type="button" class="primary" id="giftSend">捎信送出</button></div>
+        <div class="row"><button type="button" class="primary" id="giftSend">飛鴿傳書</button></div>
         <label class="slide-confirm" id="giftRemove" hidden>
           <span class="slide-fill" aria-hidden="true"></span>
           <span class="slide-text">滑到底：逐出江湖</span>
@@ -289,8 +289,8 @@
     <h2 id="confirmTitle">逐出江湖</h2>
     <p id="confirmText"></p>
     <div class="row">
-      <button type="button" class="danger" id="confirmYes">確定逐出</button>
-      <button type="button" data-close>算了</button>
+      <button type="button" class="danger" id="confirmYes">逐出！</button>
+      <button type="button" data-close>饒了他</button>
     </div>
   </div>
 </div>
@@ -309,7 +309,7 @@
   <div class="sheet-panel card">
     <div class="sheet-head">
       <h2 id="letterTitle">江湖來信</h2>
-      <button type="button" data-close>關閉</button>
+      <button type="button" data-close>收下了</button>
     </div>
     <div class="letters" id="letterList"></div>
   </div>
@@ -320,7 +320,7 @@
   <div class="sheet-panel card">
     <div class="sheet-head">
       <h2 id="settingsTitle">設定</h2>
-      <button type="button" data-close>關閉</button>
+      <button type="button" data-close>好了</button>
     </div>
     <div class="opt-row volume-row">
       <label class="label" for="volumeRange">音量</label>
@@ -393,7 +393,7 @@
   <div class="sheet-panel card wide">
     <div class="sheet-head">
       <h2 class="hero-name"><span id="heroHonor"></span><button type="button" class="plain-btn" id="heroTitle">我的俠客</button></h2>
-      <button type="button" data-close>關閉</button>
+      <button type="button" data-close>回去練功</button>
     </div>
     <section class="hero">
       <canvas id="heroAvatar" width="48" height="36"></canvas>
@@ -436,7 +436,7 @@
     <div class="item-title" id="itemTitle"></div>
     <p class="quiet" id="itemNote"></p>
     <div class="row item-actions" id="itemActions"></div>
-    <button type="button" data-close>關閉</button>
+    <button type="button" data-close>看完了</button>
   </div>
 </div>
 
