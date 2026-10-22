@@ -2605,7 +2605,26 @@ function renderVoices() {
   note.textContent = '這台裝置沒有「' + VOICE_CHOICES[state.voice].name + '」，先用「' + used.name + '」。在 iPad 的「設定 → 輔助使用 → 朗讀內容 → 聲音 → 中文（台灣）」可以下載。';
 }
 if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', renderVoices);
+// 播放方式 switch: 單曲重複 or 依序輪播 (looked up here, not in constants: the first render runs before this point)
+function loopName(mode) {
+  return mode === 'all' ? '依序輪播' : '單曲重複';
+}
+function renderLoopSwitch() {
+  const sw = document.getElementById('loopSwitch');
+  sw.setAttribute('aria-checked', state.musicLoop === 'all' ? 'true' : 'false');
+  sw.setAttribute('aria-label', loopName(state.musicLoop));
+  sw.title = loopName(state.musicLoop);
+}
+document.getElementById('loopSwitch').addEventListener('click', function () {
+  state.musicLoop = state.musicLoop === 'all' ? 'one' : 'all';
+  if (music.el) music.el.loop = state.musicLoop !== 'all';
+  renderLoopSwitch();
+  save();
+  sfxClack();
+  say(loopName(state.musicLoop));
+});
 function renderOptions() {
+  renderLoopSwitch();
   applyTheme();
   volumeRange.value = Math.round(state.volume * 100);
   setVolume(state.volume);
@@ -2615,7 +2634,7 @@ function renderOptions() {
   document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
-    if (['grid', 'theme', 'content', 'music', 'musicLoop', 'gender', 'voice'].indexOf(opt) >= 0) current = state[opt];
+    if (['grid', 'theme', 'content', 'music', 'gender', 'voice'].indexOf(opt) >= 0) current = state[opt];
     else current = state[opt] ? '1' : '0';
     row.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
@@ -2626,7 +2645,7 @@ function renderOptions() {
 document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
   row.addEventListener('click', function (e) {
     const b = e.target.closest('button');
-    if (!b) return;
+    if (!b || b.classList.contains('loop-switch')) return;
     const opt = row.dataset.opt;
     if (opt === 'content') {
       if (b.dataset.val === 'list' && state.list.length === 0) {
@@ -2663,13 +2682,6 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     }
     if (opt === 'grid' || opt === 'theme') {
       state[opt] = b.dataset.val;
-      renderOptions();
-      save();
-      return;
-    }
-    if (opt === 'musicLoop') {
-      state.musicLoop = b.dataset.val;
-      if (music.el) music.el.loop = state.musicLoop !== 'all';
       renderOptions();
       save();
       return;

@@ -481,13 +481,6 @@
           <input type="range" id="volumeRange" min="0" max="100" step="5" value="80">
         </div>
       </div>
-      <div class="opt-row" data-opt="musicLoop">
-        <span class="label">播放方式</span>
-        <div class="opt-choices">
-          <button type="button" data-val="one">單曲重複</button>
-          <button type="button" data-val="all">依序輪播</button>
-        </div>
-      </div>
       <div class="opt-row" data-opt="voice">
         <span class="label">語音</span>
         <div class="opt-choices">
@@ -514,6 +507,12 @@
           <button type="button" data-val="chungum">清陰關</button>
           <button type="button" data-val="rexue">熱血江湖</button>
           <button type="button" data-val="off">關</button>
+          <!-- 播放方式: 單曲重複 (∞, the knob at the right) or 依序輪播 (the knob at the left) -->
+          <button type="button" class="loop-switch" id="loopSwitch" role="switch" aria-checked="false" aria-label="單曲重複" title="單曲重複" data-quiet>
+            <span class="loop-icon one" aria-hidden="true">∞</span>
+            <span class="loop-icon all" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h11M4 12h8M4 17h6M17 10l4 4-4 4M14 14h7"/></svg></span>
+            <span class="loop-knob" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
     </section>

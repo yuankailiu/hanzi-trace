@@ -1920,3 +1920,41 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 
 /* every example character shown as text, and every 注音, in 標楷體 */
 .sentence .glyph, .text-glyph, .zy-v, .chip .text-glyph { font-family: var(--font-kai); }
+
+/* 播放方式: a small switch at the end of the music choices; ∞ in warm red = 單曲重複, the list in jade = 依序輪播 */
+.opt-choices .loop-switch {
+  position: relative;
+  justify-self: start;
+  width: 76px;
+  height: 34px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 17px;
+  background: #f3d3c9;
+  border-color: #b8553f;
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.18);
+  transition: background 0.22s ease, border-color 0.22s ease;
+}
+.loop-switch:active:not(:disabled) { transform: none; box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.18); }
+.loop-switch[aria-checked="true"] { background: #cfe8dd; border-color: #3f8a6c; }
+.loop-icon { line-height: 1; transition: opacity 0.18s ease; }
+.loop-icon.one { font-size: 1.35rem; font-weight: 700; color: #b8553f; }
+.loop-icon.all { color: #2f7556; opacity: 0; }
+.loop-icon.all svg { display: block; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.loop-switch[aria-checked="true"] .loop-icon.one { opacity: 0; }
+.loop-switch[aria-checked="true"] .loop-icon.all { opacity: 1; }
+.loop-knob {
+  position: absolute;
+  top: 3px;
+  left: calc(100% - 29px);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fffaf0;
+  border: 1.5px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 #ffffff;
+  transition: left 0.24s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.loop-switch[aria-checked="true"] .loop-knob { left: 3px; }
