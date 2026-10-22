@@ -53,8 +53,12 @@ function dollImage(path) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function () {
-      entry.img = img;
-      dollWake();
+      const ready = function () {
+        entry.img = img;
+        dollWake();
+      };
+      if (img.decode) img.decode().then(ready, ready);
+      else ready();
     };
     img.onerror = function () {
       entry.failed = true;

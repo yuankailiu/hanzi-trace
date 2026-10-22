@@ -13,8 +13,8 @@ function reducedMotion() {
 function rand(a, b) {
   return a + Math.random() * (b - a);
 }
-function setupCanvas(canvas, w, h) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+function setupCanvas(canvas, w, h, maxDpr) {
+  const dpr = Math.min(window.devicePixelRatio || 1, maxDpr || 2);
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
   canvas.style.width = w + 'px';
@@ -833,13 +833,13 @@ function celebrate(nodes, sub) {
   sky.canvas = document.getElementById('sky');
   sky.w = window.innerWidth;
   sky.h = window.innerHeight;
-  sky.ctx = setupCanvas(sky.canvas, sky.w, sky.h);
+  sky.ctx = setupCanvas(sky.canvas, sky.w, sky.h, 1);
   sky.parts = [];
   sky.lanterns = [];
   sky.paper = [];
   sky.start = performance.now();
   sky.bursts = [];
-  for (const t of [150, 500, 900, 1300, 1750, 2250, 2800, 3300]) sky.bursts.push({ t: t, done: false });
+  for (const t of [150, 600, 1200, 1900, 2700]) sky.bursts.push({ t: t, done: false });
 
   const unit = Math.min(sky.w, sky.h);
   for (let i = 0; i < 6; i++) {
@@ -851,7 +851,7 @@ function celebrate(nodes, sub) {
       phase: Math.random() * Math.PI * 2,
     });
   }
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 36; i++) {
     sky.paper.push({
       x: Math.random() * sky.w,
       y: -rand(10, sky.h * 0.6),
@@ -875,7 +875,7 @@ function celebrate(nodes, sub) {
 
 function burst(x, y) {
   const unit = Math.min(sky.w, sky.h) / 700;
-  const count = 64;
+  const count = 40;
   const hue = BURST_COLORS[Math.floor(Math.random() * BURST_COLORS.length)];
   for (let i = 0; i < count; i++) {
     const a = i / count * Math.PI * 2 + rand(-0.1, 0.1);

@@ -1617,7 +1617,16 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .sentence .target.now .glyph {
+  position: relative;
   box-shadow: 0 3px 0 #7d2412, 0 4px 6px rgba(0, 0, 0, 0.25), 0 0 10px rgba(255, 205, 110, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.sentence .target.now .glyph::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 16px rgba(255, 205, 110, 0.95);
+  pointer-events: none;
   animation: tile-glow 1.6s ease-in-out infinite;
 }
 .sentence .target.done .glyph {
@@ -1628,7 +1637,8 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .sentence .target.done.now .glyph { box-shadow: 0 3px 0 #4f150b, 0 0 10px rgba(255, 205, 110, 0.6); }
 .sentence .target.inked .glyph { animation: inked 0.8s ease-out; }
 @keyframes tile-glow {
-  50% { box-shadow: 0 3px 0 #7d2412, 0 4px 6px rgba(0, 0, 0, 0.25), 0 0 16px rgba(255, 205, 110, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 @keyframes inked {
   from { color: transparent; }
@@ -1837,3 +1847,19 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 
 /* the 客棧: the sprite hero stands tall in its slot */
 .hero-slot canvas.doll { aspect-ratio: 48 / 54; max-width: 112px; }
+
+/* the 紫光 shine repaints every frame: kept still where it sits during practice */
+.player .honor.legend, .hero-slot .honor.legend { animation: none; }
+/* 我的俠客 tabs: a small picture before each name */
+.tab-icon { width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Hanzi Writer draws its own copy of the stroke being written (made transparent; the brush canvas shows it):
+   hidden, so the big SVG is not laid out again on every pen move */
+#writer svg > g > path:last-child { display: none; }
+/* six tabs on a phone: the picture above the name, the width shared out */
+@media (max-width: 560px) {
+  #shopTabs { padding: 0 2px; gap: 2px; }
+  #shopTabs button { flex: 1 1 0; min-width: 0; display: grid; justify-items: center; gap: 1px; padding: 5px 2px 4px; font-size: 0.74rem; letter-spacing: 0; }
+  #shopTabs button[aria-selected="true"] { padding-top: 8px; }
+  #shopTabs .tab-icon { margin: 0; }
+}

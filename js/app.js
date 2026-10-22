@@ -129,8 +129,16 @@ function zhuyinAt(text, i, data) {
   if (r && r.length === Array.from(text).length && r[i]) return r[i];
   return data && data.zy && data.zy.length ? data.zy[0] : '';
 }
-let shopSlot = 'scrolls';
-const HERO_TABS = [{ id: 'scrolls', name: '字訣本' }, { id: 'honors', name: '稱號' }].concat(SLOTS);
+let shopSlot = 'weapon';
+const HERO_TABS = SLOTS.concat([{ id: 'scrolls', name: '字訣本' }, { id: 'honors', name: '稱號' }]);
+const TAB_ICONS = {
+  weapon: '<path d="M19 3h2v2L9 17l-2-2zM6 14l4 4M4 20l3-3M5 15l4 4"/>',
+  acc: '<path d="M12 3l4 5-4 12-4-12z"/><path d="M8 8h8"/>',
+  pet: '<circle cx="7" cy="9" r="1.8"/><circle cx="11" cy="6" r="1.8"/><circle cx="15" cy="6.5" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M8 17c0-3 2-5 4.5-5S17 14 17 17c0 2-2 2.5-4.5 2.5S8 19 8 17z"/>',
+  treasure: '<path d="M4 11h16v9H4zM4 11a8 5 0 0 1 16 0M12 13v3M4 14h16"/>',
+  scrolls: '<path d="M7 4h11a2 2 0 0 1 0 4H7zM7 4a2 2 0 0 0-2 2v12a2 2 0 0 0 4 0V8M9 20h9a2 2 0 0 0 2-2V8M12 12h5M12 15h5"/>',
+  honors: '<path d="M8 3l4 6 4-6"/><circle cx="12" cy="15" r="5.5"/><path d="M12 12.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z"/>',
+};
 
 let writer = null;
 let charData = null;
@@ -756,6 +764,18 @@ function pickWord() {
   }
   return pool[pool.length - 1].w;
 }
+// the next word is chosen while this one is practised and its stroke data fetched meanwhile, so a slow
+// connection does not hold up the next word
+let upcoming = null;
+function prepareNext() {
+  upcoming = null;
+  if (sentenceContent()) return;
+  if (!words.length && !(state.content === 'list' && state.list.length)) return;
+  const text = pickWord().w;
+  if (text === state.text) return;
+  upcoming = { content: state.content, text: text };
+  for (const ch of Array.from(text)) getCharData(ch);
+}
 function nextWord(speak) {
   if (sentenceContent()) {
     const sent = pickSentence();
@@ -763,7 +783,11 @@ function nextWord(speak) {
     return;
   }
   if (!words.length && !(state.content === 'list' && state.list.length)) return;
-  loadText(pickWord().w, speak);
+  let text = pickWord().w;
+  if (upcoming && upcoming.content === state.content && upcoming.text !== state.text) text = upcoming.text;
+  upcoming = null;
+  loadText(text, speak);
+  setTimeout(prepareNext, 2500);
 }
 
 // ---------- 句子: a sentence to read with 注音; its marked characters are written one by one ----------
@@ -1265,7 +1289,7 @@ function renderHero() {
     t.type = 'button';
     t.setAttribute('role', 'tab');
     t.setAttribute('aria-selected', slot.id === shopSlot ? 'true' : 'false');
-    t.textContent = slot.name;
+    t.innerHTML = '<svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">' + (TAB_ICONS[slot.id] || '') + '</svg>' + slot.name;
     t.addEventListener('click', function () {
       shopSlot = slot.id;
       renderHero();
@@ -1818,6 +1842,8 @@ function strokeSpeed() {
 }
 function stepStroke() {
   if (state.mode !== 'watch' || !writer) return;
+  // every stroke shown: the next character or 描一描 is on its way
+  if (stepNum > 0 && stepNum >= strokeCount[currentChar()] && !watchStep.busy) return;
   restartAnimation(box, 'press');
   sfxTick(1318);
   if (watchStep.busy) {
@@ -2303,7 +2329,7 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.getElementById('playerCard').addEventListener('click', function () {
-  shopSlot = 'scrolls';
+  shopSlot = 'weapon';
   renderHero();
   openSheet(document.getElementById('heroSheet'));
 });
@@ -3495,7 +3521,7 @@ function renderHonors(grid) {
   const own = document.createElement('div');
   own.className = 'row honor-own';
   const input = document.createElement('input');
-  input.maxLength = 20;
+  input.maxLength = 8;
   input.placeholder = '自己取一個稱號';
   input.value = purse.customHonor;
   const wear = document.createElement('button');
@@ -3511,10 +3537,7 @@ function renderHonors(grid) {
   off.textContent = '摘下稱號';
   off.addEventListener('click', function () { wearHonor(''); });
   own.append(input, wear, off);
-  const decor = document.createElement('div');
-  decor.className = 'decor';
-  buildDecor(decor, input, function () {});
-  grid.append(list, own, decor);
+  grid.append(list, own);
 }
 
 // 奇遇: after each finished character, one thing not yet owned that the 名望 has reached is tried at its rate
