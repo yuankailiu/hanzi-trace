@@ -1958,3 +1958,29 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
   transition: left 0.24s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 .loop-switch[aria-checked="true"] .loop-knob { left: 3px; }
+
+/* 設定: a small picture before each row name, and on the choices that a picture makes plain */
+.row-ico { width: 17px; height: 17px; margin-right: 5px; vertical-align: -3px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+.opt-choices button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.opt-art { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.opt-glyph { flex: none; font-size: 1.25rem; line-height: 1; letter-spacing: 0; }
+.opt-glyph.kai { font-family: var(--font-kai); }
+.opt-glyph.hand { font-family: "Iansui", var(--font-display); transform: rotate(-6deg); }
+.opt-glyph.radical { font-family: var(--font-kai); letter-spacing: -0.42em; padding-right: 0.42em; }
+.opt-glyph.radical b { font-weight: 400; color: var(--radical); }
+.opt-glyph.radical.off b { color: inherit; }
+.opt-choices button[aria-pressed="true"] .opt-glyph.radical b { color: #cfe0ff; }
+.opt-choices button[aria-pressed="true"] .opt-glyph.radical.off b { color: inherit; }
+/* the item card: 賣回, asking once more before it sells */
+.sell-btn { display: inline-flex; align-items: center; gap: 4px; }
+.sell-btn .sycee { width: 20px; height: 14px; }
+.sell-btn.armed { background: #c8322a; color: #fff6ee; border-color: #7d2412; }
+#itemTitle, #itemBig { cursor: pointer; }
+.bank-btn { display: inline-flex; align-items: center; gap: 4px; }
+.bank-btn .sycee { width: 18px; height: 13px; }
+
+/* the card: the hero's name large in red, the 名望 in the pill (and so in 我的俠客) */
+.player .alias { padding: 0; border: 0; background: none; font-size: 1.3rem; letter-spacing: 0.1em; line-height: 1.2; color: var(--accent); }
+.player .rank-tag, #heroRank.plain-btn { padding: 0 10px; border: 2px solid var(--panel-edge); border-radius: 999px; background: var(--btn); font-size: 0.9rem; letter-spacing: 0.08em; line-height: 1.5; color: var(--ink); }
+#heroRank.plain-btn { font-size: 1.05rem; padding: 1px 12px; }
+.title-row { align-items: center; }

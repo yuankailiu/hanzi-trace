@@ -56,7 +56,7 @@ const state = {
   gender: 'boy',
   genderLock: '',
   theme: 'light',
-  grid: 'tian',
+  grid: 'jiu',
   lenient: true,
   slow: true,
   sound: true,
@@ -1452,6 +1452,11 @@ function exchange(ingots) {
   sfxTick(ingots > 0 ? 2093 : 1568);
 }
 document.getElementById('bankBtn').addEventListener('click', function () {
+  for (const id of ['bankTaelsDelta', 'bankIngotsDelta']) {
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.classList.remove('pop');
+  }
   renderBank();
   openSheet(document.getElementById('bankSheet'));
 });
@@ -1463,8 +1468,36 @@ document.getElementById('bankBuy').addEventListener('click', function () {
 });
 
 // the zoomed item card: a big picture, the name with 注音 (read aloud), and buy or wear
+// 賣回: nine tenths of the price, in 兩 (a 元寶 counts 100); a thing met by chance has no price and is kept
+function sellValue(it) {
+  const price = it.ingots ? it.ingots * INGOT_TAELS : (it.taels || 0);
+  return Math.floor(price * 0.9);
+}
+function sellItem(it) {
+  const value = sellValue(it);
+  const at = purse.owned.indexOf(it.id);
+  if (at < 0 || value <= 0) return;
+  purse.owned.splice(at, 1);
+  for (const place in purse.gear) {
+    if (purse.gear[place] === it.id) purse.gear[place] = '';
+  }
+  purse.taels += value;
+  shown.taels = purse.taels;
+  save();
+  renderPurse();
+  renderHero();
+  sfxTick(2093);
+  toast('賣出「' + it.name + '」，得到 ' + value + ' 兩');
+}
+let itemShown = null;
+function sayItemShown() {
+  if (itemShown && state.sound) say(itemShown.name);
+}
+document.getElementById('itemTitle').addEventListener('click', sayItemShown);
+document.getElementById('itemBig').addEventListener('click', sayItemShown);
 function openItem(it) {
   const tIdx = titleIndex();
+  itemShown = null;
   const place = placeOf(it);
   const owned = purse.owned.indexOf(it.id) >= 0;
   const wearing = purse.gear[place] === it.id;
@@ -1488,6 +1521,34 @@ function openItem(it) {
         closeSheet(sheet);
       });
       actions.append(btn);
+      // 賣回 asks once more: a second tap within three seconds sells
+      const value = sellValue(it);
+      if (value > 0) {
+        const sell = document.createElement('button');
+        sell.type = 'button';
+        sell.className = 'sell-btn';
+        sell.setAttribute('data-quiet', '');
+        sell.innerHTML = '賣回　' + syceeHtml('silver') + value + ' 兩';
+        let armed = 0;
+        sell.addEventListener('click', function () {
+          if (!armed) {
+            sell.classList.add('armed');
+            sell.textContent = '確定賣掉？再按一次';
+            if (state.sound) say('確定要賣掉嗎？再按一次');
+            armed = setTimeout(function () {
+              armed = 0;
+              sell.classList.remove('armed');
+              sell.innerHTML = '賣回　' + syceeHtml('silver') + value + ' 兩';
+            }, 3000);
+            return;
+          }
+          clearTimeout(armed);
+          if (state.sound) say('賣出' + it.name + '，得到' + value + '兩');
+          sellItem(it);
+          closeSheet(sheet);
+        });
+        actions.append(sell);
+      }
     } else {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1511,6 +1572,7 @@ function openItem(it) {
   openSheet(sheet);
   const big = document.getElementById('itemBig');
   drawItemIcon(big, it, known ? '' : '#2b2233');
+  if (known) itemShown = it;
   if (known && state.sound) say(it.name);
 }
 
@@ -2296,7 +2358,7 @@ document.addEventListener('click', function (e) {
   if (!found) return;
   let text = found.join(' ');
   const label = el.closest('.opt-row') ? el.closest('.opt-row').querySelector('.label') : null;
-  if (label && text.length <= 2) text = label.textContent.trim() + ' ' + text;
+  if (label && text.length === 1) text = label.textContent.trim() + ' ' + text;
   say(text);
 });
 
