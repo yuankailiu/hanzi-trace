@@ -198,6 +198,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     cursor: pointer;
   }
   .hero-stage canvas { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+  .hero-stage canvas.doll { object-position: center 40%; }
   /* the card keeps a small bust: the same canvas, zoomed on the head and shoulders */
   .player .avatar-tile { width: 66px; height: 60px; }
   .player #avatar { width: 144px; height: 108px; margin: -6px 0 0 -27px; }
@@ -1833,3 +1834,6 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 }
 .honor.revoked { opacity: 0.55; text-decoration: line-through; text-decoration-color: #c8322a; text-decoration-thickness: 2px; }
 .gift-slip-break { flex-basis: 100%; height: 0; border-top: 1px dashed #d9c6a3; }
+
+/* the 客棧: the sprite hero stands tall in its slot */
+.hero-slot canvas.doll { aspect-ratio: 48 / 54; max-width: 112px; }

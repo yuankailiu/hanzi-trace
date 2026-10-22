@@ -1498,7 +1498,7 @@ function avatarRender(now) {
     }
     const hurt = avatar.action === 'hurt';
     const look = { title: outfitIndex(), gear: purse.gear, action: hurt ? 'idle' : avatar.action, t: now - avatar.since, hurt: hurt };
-    drawHeroOn(avatar.canvases[0], Object.assign({ view: 'bust' }, look));
+    drawHeroOn(avatar.canvases[0], { view: 'bust', title: look.title, gear: look.gear });
     drawHeroOn(avatar.canvases[1], Object.assign({ view: 'stage', shadow: true }, look));
     return;
   }
@@ -2683,7 +2683,7 @@ function drawGate() {
   gate.frame += 1;
   for (const s of gate.slots) {
     const pose = IDLE_SEQ[(gate.frame + s.phase) % IDLE_SEQ.length];
-    drawHeroOn(s.canvas, { title: s.look.outfit, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame, t: performance.now() + s.phase * 230 });
+    drawHeroOn(s.canvas, { view: 'full', title: s.look.outfit, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame, t: performance.now() + s.phase * 230 });
   }
 }
 function enterGame(alias) {

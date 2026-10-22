@@ -10,13 +10,17 @@ const DOLL_BASES = ['sprites/', 'https://yuankailiu.github.io/hanzi-trace/sprite
 // state: loading, ready or failed; waiting: canvases to draw again once their pictures arrive
 const doll = { base: '', M: null, state: 'loading', images: new Map(), waiting: new Map() };
 
-// the part of the full frame a canvas shows (4:3): bust = head and shoulders for the small tile; card and stage
-// leave room for a companion on the left and a treasure on the right
+// the part of the full frame a canvas shows: bust = head and shoulders for the small tile, full = the whole hero
+// close up (the 客棧); card and stage leave room for a companion on the left and a treasure on the right, the
+// stage with some ground under the feet so the hero stands mid-stage
 const DOLL_VIEWS = {
   bust: { x: 110, y: 76, w: 48, h: 36 },
+  full: { x: 110, y: 74, w: 48, h: 54 },
   card: { x: 90, y: 69, w: 76, h: 57 },
-  stage: { x: 78, y: 42, w: 112, h: 84 },
+  stage: { x: 88, y: 75, w: 84, h: 78 },
 };
+// views that show the hero alone, without companion or treasure
+const DOLL_ALONE = ['bust', 'full'];
 const PET_GAP = 12;
 const FLY_LIFT = 26;
 
@@ -230,7 +234,7 @@ function dollDraw(canvas, o, viewName) {
   if (!images || !L.clip) return false;
   const gear = o.gear || {};
   // the bust is the hero alone
-  const alone = viewName === 'bust';
+  const alone = DOLL_ALONE.indexOf(viewName) >= 0;
   const pet = gear.pet && !alone ? dollPet(gear.pet, t) : null;
   const treasure = gear.treasure && !alone ? dollTreasure(gear.treasure, t) : null;
   if ((gear.pet && !alone && !pet) || (gear.treasure && !alone && !treasure)) return false;
