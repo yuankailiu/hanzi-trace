@@ -1863,3 +1863,6 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
   #shopTabs button[aria-selected="true"] { padding-top: 8px; }
   #shopTabs .tab-icon { margin: 0; }
 }
+
+/* a voice the device does not have */
+.opt-choices button:disabled { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; }

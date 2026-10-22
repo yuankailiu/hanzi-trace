@@ -50,6 +50,7 @@ const state = {
   // settings
   content: 'mix',
   music: 'xiangqi',
+  voice: 'meijia',
   volume: 0.8,
   gender: 'boy',
   genderLock: '',
@@ -328,7 +329,7 @@ function serializeProfile() {
     v: 4,
     savedAt: Date.now(),
     settings: {
-      content: state.content, music: state.music, volume: state.volume, gender: state.gender, genderLock: state.genderLock, theme: state.theme, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, voice: state.voice, volume: state.volume, gender: state.gender, genderLock: state.genderLock, theme: state.theme, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -357,7 +358,7 @@ function applyProfile(source) {
   resetProgress();
   state.genderLock = '';
   if (p.settings) {
-    for (const key of ['content', 'music', 'gender', 'genderLock', 'theme', 'grid']) {
+    for (const key of ['content', 'music', 'voice', 'gender', 'genderLock', 'theme', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
@@ -2526,6 +2527,26 @@ volumeRange.addEventListener('change', function () {
   save();
   sfxTick(1568);
 });
+// 語音: a voice this device does not have is greyed out; if the chosen one is missing, the note says which speaks
+function renderVoices() {
+  document.querySelectorAll('.opt-row[data-opt="voice"] button').forEach(function (b) {
+    b.disabled = !voiceFor(b.dataset.val);
+  });
+  const note = document.getElementById('voiceNote');
+  const used = speakingVoice();
+  if (!used) {
+    note.hidden = false;
+    note.textContent = '這台裝置找不到中文語音。';
+    return;
+  }
+  if (voiceFor(state.voice)) {
+    note.hidden = true;
+    return;
+  }
+  note.hidden = false;
+  note.textContent = '這台裝置沒有「' + VOICE_CHOICES[state.voice].name + '」，先用「' + used.name + '」。在 iPad 的「設定 → 輔助使用 → 朗讀內容 → 聲音 → 中文（台灣）」可以下載。';
+}
+if ('speechSynthesis' in window) window.speechSynthesis.addEventListener('voiceschanged', renderVoices);
 function renderOptions() {
   applyTheme();
   volumeRange.value = Math.round(state.volume * 100);
@@ -2535,12 +2556,13 @@ function renderOptions() {
   document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
-    if (['grid', 'theme', 'content', 'music', 'gender'].indexOf(opt) >= 0) current = state[opt];
+    if (['grid', 'theme', 'content', 'music', 'gender', 'voice'].indexOf(opt) >= 0) current = state[opt];
     else current = state[opt] ? '1' : '0';
     row.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
     });
   });
+  renderVoices();
 }
 document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
   row.addEventListener('click', function (e) {
@@ -2584,6 +2606,13 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
       state[opt] = b.dataset.val;
       renderOptions();
       save();
+      return;
+    }
+    if (opt === 'voice') {
+      state.voice = b.dataset.val;
+      renderOptions();
+      save();
+      say('你好，我是' + VOICE_CHOICES[state.voice].name.replace('（加強）', ''));
       return;
     }
     state[opt] = b.dataset.val === '1';

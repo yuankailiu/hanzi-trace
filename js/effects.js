@@ -522,6 +522,24 @@ function chineseVoices() {
   out.sort(function (a, b) { return voiceScore(b) - voiceScore(a); });
   return out;
 }
+// the voices one can choose in 設定: 美佳 (Taiwan), her enhanced download, 婷婷 (mainland)
+const VOICE_CHOICES = {
+  meijia: { name: '美佳', test: function (v) { return /Meijia|美佳/i.test(v.name) && !/Premium|Enhanced|高品質|優化|加強/i.test(v.name); } },
+  meijiaPlus: { name: '美佳（加強）', test: function (v) { return /Meijia|美佳/i.test(v.name) && /Premium|Enhanced|高品質|優化|加強/i.test(v.name); } },
+  tingting: { name: '婷婷', test: function (v) { return /Ting-?Ting|婷婷/i.test(v.name); } },
+};
+function voiceFor(id) {
+  const choice = VOICE_CHOICES[id];
+  if (!choice || !('speechSynthesis' in window)) return null;
+  for (const v of chineseVoices()) {
+    if (choice.test(v)) return v;
+  }
+  return null;
+}
+// the chosen voice when this device has it, else the best Chinese one
+function speakingVoice() {
+  return voiceFor(state.voice) || chineseVoices()[0] || null;
+}
 // when speech last started, so a generic button handler can tell a specific one already spoke
 let lastSaidAt = 0;
 let sayToken = 0;
@@ -558,7 +576,7 @@ function speakOnce(text, myToken, retry, finish) {
   let spoken = text;
   for (const pair of SPEAK_AS) spoken = spoken.split(pair[0]).join(pair[1]);
   const u = new SpeechSynthesisUtterance(spoken);
-  const v = chineseVoices()[0];
+  const v = speakingVoice();
   u.lang = v ? v.lang : 'zh-TW';
   u.rate = 0.75;
   u.volume = state.volume;
