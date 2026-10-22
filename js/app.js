@@ -1479,7 +1479,7 @@ function equip(place, id) {
 
 // ---------- the 俠客 on the main screen ----------
 // sprite hero: attack = 普攻 (attack1), cheer = 招式 (attack2), hurt = standing, shaken; then idle again
-const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0, action: 'idle', since: 0, until: 0 };
+const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0, action: 'idle', since: 0, until: 0, bustKey: '' };
 const DOLL_ACTIONS = { attack: 'attack1', cheer: 'attack2', hurt: 'hurt' };
 const HURT_MS = 420;
 function avatarPlay(name) {
@@ -1498,8 +1498,14 @@ function avatarRender(now) {
     }
     const hurt = avatar.action === 'hurt';
     const look = { title: outfitIndex(), gear: purse.gear, action: hurt ? 'idle' : avatar.action, t: now - avatar.since, hurt: hurt };
-    drawHeroOn(avatar.canvases[0], { view: 'bust', title: look.title, gear: look.gear });
-    drawHeroOn(avatar.canvases[1], Object.assign({ view: 'stage', shadow: true }, look));
+    const bustKey = look.title + JSON.stringify(look.gear) + state.gender;
+    if (bustKey !== avatar.bustKey || !avatar.canvases[0].classList.contains('doll')) {
+      avatar.bustKey = bustKey;
+      drawHeroOn(avatar.canvases[0], { view: 'bust', title: look.title, gear: look.gear });
+    }
+    if (avatar.canvases[1].offsetParent !== null) {
+      drawHeroOn(avatar.canvases[1], Object.assign({ view: 'stage', shadow: true }, look));
+    }
     return;
   }
   let pose;
@@ -1518,7 +1524,7 @@ function avatarRender(now) {
 // the pixel hero steps like a sprite, faster during an action
 function avatarTick(now) {
   let wait = avatar.queue.length ? 95 : 170;
-  if (doll.state === 'ready') wait = 40;
+  if (doll.state === 'ready') wait = 80;
   if (now - avatar.last >= wait) {
     avatar.last = now;
     avatarRender(now);
@@ -1844,9 +1850,26 @@ function playStep() {
       if (watchStep.pending > 0 && state.mode === 'watch') {
         watchStep.pending -= 1;
         playStep();
+        return;
       }
+      if (state.mode === 'watch' && stepNum >= total) afterSteppedThrough(myWriter);
     },
   });
+}
+// every stroke tapped through: the next character, and after the last one 描一描 from the first
+function afterSteppedThrough(myWriter) {
+  setTimeout(function () {
+    if (writer !== myWriter || state.mode !== 'watch' || watchStep.busy) return;
+    if (state.idx < state.chars.length - 1) {
+      state.idx += 1;
+      renderChips();
+      build();
+      return;
+    }
+    state.idx = 0;
+    if (state.sound) say('描一描');
+    setMode('trace');
+  }, 700);
 }
 box.addEventListener('pointerdown', stepStroke);
 
@@ -1855,7 +1878,7 @@ box.addEventListener('pointerdown', stepStroke);
 // presses hard, narrow where it moves fast. The start presses down (頓筆); a quick lift tapers
 // the end to a point (出鋒). The shape is a chain of circles joined by trapezoids, one SVG path.
 const brushEl = document.getElementById('brush');
-const brush = { live: false, id: null, points: [], color: '' };
+const brush = { live: false, id: null, points: [], color: '', rect: null, raf: 0 };
 
 function setupBrush(size) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1959,7 +1982,7 @@ function drawBrush(finished) {
   ctx.fill(new Path2D(d));
 }
 function brushPoint(e) {
-  const rect = box.getBoundingClientRect();
+  const rect = brush.rect || box.getBoundingClientRect();
   const k = builtSize / rect.width;
   return {
     x: (e.clientX - rect.left) * k,
@@ -1972,6 +1995,7 @@ function brushPoint(e) {
 box.addEventListener('pointerdown', function (e) {
   if (!brush.live || brush.id !== null) return;
   brush.id = e.pointerId;
+  brush.rect = box.getBoundingClientRect();
   brush.points = [brushPoint(e)];
   brushEl.classList.remove('fade');
   drawBrush(false);
@@ -1984,11 +2008,20 @@ window.addEventListener('pointermove', function (e) {
     const last = brush.points[brush.points.length - 1];
     if (Math.hypot(p.x - last.x, p.y - last.y) >= 1.5) brush.points.push(p);
   }
-  drawBrush(false);
+  // a pencil reports far more often than the screen shows: draw once per frame
+  if (!brush.raf) {
+    brush.raf = requestAnimationFrame(function () {
+      brush.raf = 0;
+      if (brush.id !== null) drawBrush(false);
+    });
+  }
 });
 function endBrush(e) {
   if (e.pointerId !== brush.id) return;
   brush.id = null;
+  brush.rect = null;
+  cancelAnimationFrame(brush.raf);
+  brush.raf = 0;
   drawBrush(true);
   brushEl.classList.add('fade');
 }

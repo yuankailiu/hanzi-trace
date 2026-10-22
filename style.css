@@ -700,13 +700,13 @@ canvas.pixel {
 }
 .arena.thump { animation: thump 0.22s ease-out; }
 @keyframes thump {
-  40% { transform: translateY(3px) scale(0.995); }
+  40% { transform: translateY(3px); }
 }
-#writer.ink, #mine.ink { animation: inkbleed 1.6s ease-out forwards; }
-@keyframes inkbleed {
-  0% { filter: drop-shadow(0 0 0 var(--ink-halo)); }
-  35% { filter: drop-shadow(0 0 6px var(--ink-halo)) blur(0.5px); }
-  100% { filter: drop-shadow(0 0 1.2px var(--ink-halo)); }
+/* the ink settles without a filter on the big character (a filter there blurred it for a moment on iPad) */
+#writer.ink, #mine.ink { animation: inksettle 0.6s ease-out; }
+@keyframes inksettle {
+  0% { opacity: 0.85; }
+  100% { opacity: 1; }
 }
 .seal {
   position: absolute;

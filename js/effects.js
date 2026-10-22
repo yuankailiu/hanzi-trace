@@ -665,21 +665,24 @@ function fxFrame(now) {
     const samples = s.samples;
 
     let headPt = samples[0];
-    ctx.shadowColor = s.color;
-    ctx.shadowBlur = 5;
     ctx.strokeStyle = s.color;
     for (let i = 1; i < samples.length; i++) {
       if (samples[i].d > head) break;
       const ratio = head > 0 ? samples[i].d / head : 1;
-      ctx.globalAlpha = fade * 0.55 * (0.1 + 0.9 * ratio * ratio);
-      ctx.lineWidth = width * (0.4 + 0.6 * ratio);
+      const alpha = fade * 0.55 * (0.1 + 0.9 * ratio * ratio);
+      const lineW = width * (0.4 + 0.6 * ratio);
+      // the glow: the same segment, wider and fainter
+      ctx.globalAlpha = alpha * 0.3;
+      ctx.lineWidth = lineW * 2.6;
       ctx.beginPath();
       ctx.moveTo(samples[i - 1].x, samples[i - 1].y);
       ctx.lineTo(samples[i].x, samples[i].y);
       ctx.stroke();
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = lineW;
+      ctx.stroke();
       headPt = samples[i];
     }
-    ctx.shadowBlur = 0;
 
     // small bright tip at the leading edge
     ctx.globalAlpha = fade * 0.6;
