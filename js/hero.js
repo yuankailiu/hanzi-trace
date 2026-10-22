@@ -43,55 +43,11 @@ function realmOf(i) {
 
 // shop: weapons are held, accessories are worn at the head, waist or back, companions stand beside.
 // minTitle: the title index needed before an item even shows; price in taels or ingots.
-const ITEMS = [
-  { id: 'wood', slot: 'weapon', name: '木劍', taels: 20, minTitle: 0, qi: '#A9834F' },
-  { id: 'staff', slot: 'weapon', name: '竹棍', taels: 35, minTitle: 0, qi: '#7E9A4E' },
-  { id: 'umbrella', slot: 'weapon', name: '油紙傘', taels: 50, minTitle: 1, qi: '#D0473F' },
-  { id: 'fan', slot: 'weapon', name: '鐵扇', taels: 60, minTitle: 1, qi: '#7F8C99' },
-  { id: 'brush', slot: 'weapon', name: '判官筆', taels: 80, minTitle: 2, qi: '#3B3B3B' },
-  { id: 'whisk', slot: 'weapon', name: '拂塵', taels: 100, minTitle: 2, qi: '#C9C2B4' },
-  { id: 'whip', slot: 'weapon', name: '長鞭', taels: 120, minTitle: 3, qi: '#8E5A34' },
-  { id: 'flute', slot: 'weapon', name: '玉笛', taels: 140, minTitle: 3, qi: '#4FA37A' },
-  { id: 'spear', slot: 'weapon', name: '紅纓槍', taels: 160, minTitle: 4, qi: '#C2453C' },
-  { id: 'dao', slot: 'weapon', name: '柳葉刀', taels: 180, minTitle: 4, qi: '#AEB8C2' },
-  { id: 'emei', slot: 'weapon', name: '峨嵋刺', taels: 200, minTitle: 5, qi: '#9AA4AE' },
-  { id: 'ring', slot: 'weapon', name: '九環刀', taels: 240, minTitle: 5, qi: '#C9A03A' },
-  { id: 'jian', slot: 'weapon', name: '青鋼劍', taels: 280, minTitle: 6, qi: '#6F9FC0' },
-  { id: 'hammer', slot: 'weapon', name: '流星錘', taels: 320, minTitle: 6, qi: '#5F6B76' },
-  { id: 'guandao', slot: 'weapon', name: '青龍偃月刀', taels: 380, minTitle: 7, qi: '#3E8E7E' },
-  { id: 'halberd', slot: 'weapon', name: '方天畫戟', taels: 450, minTitle: 8, qi: '#D9A441' },
-  { id: 'zhanlu', slot: 'weapon', name: '湛盧劍', ingots: 3, minTitle: 9, qi: '#5B7FB5' },
-  { id: 'ganjiang', slot: 'weapon', name: '干將莫邪', ingots: 5, minTitle: 11, qi: '#8E6FB8' },
-
-  { id: 'flower', slot: 'acc', place: 'head', name: '小紅花', taels: 30, minTitle: 0 },
-  { id: 'feather', slot: 'acc', place: 'head', name: '雉雞翎', taels: 70, minTitle: 2 },
-  { id: 'hairpin', slot: 'acc', place: 'head', name: '玉簪', taels: 120, minTitle: 4 },
-  { id: 'bellband', slot: 'acc', place: 'head', name: '金鈴髮帶', taels: 180, minTitle: 6 },
-  { id: 'phoenix', slot: 'acc', place: 'head', name: '鳳冠', ingots: 4, minTitle: 10 },
-  { id: 'bell', slot: 'acc', place: 'waist', name: '鈴鐺', taels: 30, minTitle: 0 },
-  { id: 'sachet', slot: 'acc', place: 'waist', name: '香包', taels: 50, minTitle: 1 },
-  { id: 'gourd', slot: 'acc', place: 'waist', name: '葫蘆', taels: 60, minTitle: 1 },
-  { id: 'jade', slot: 'acc', place: 'waist', name: '玉佩', taels: 90, minTitle: 2 },
-  { id: 'pouch', slot: 'acc', place: 'waist', name: '錦囊', taels: 140, minTitle: 4 },
-  { id: 'scroll', slot: 'acc', place: 'back', name: '書卷', taels: 80, minTitle: 1 },
-  { id: 'cloak', slot: 'acc', place: 'back', name: '披風', taels: 120, minTitle: 2 },
-  { id: 'swordbox', slot: 'acc', place: 'back', name: '劍匣', taels: 220, minTitle: 5 },
-  { id: 'goldcloak', slot: 'acc', place: 'back', name: '金縷披風', ingots: 5, minTitle: 9 },
-
-  { id: 'bunny', slot: 'pet', name: '小白兔', taels: 60, minTitle: 0 },
-  { id: 'cat', slot: 'pet', name: '小花貓', taels: 70, minTitle: 0 },
-  { id: 'dog', slot: 'pet', name: '小黃狗', taels: 90, minTitle: 1 },
-  { id: 'monkey', slot: 'pet', name: '小猴子', taels: 130, minTitle: 2 },
-  { id: 'panda', slot: 'pet', name: '熊貓寶寶', ingots: 2, minTitle: 3 },
-  { id: 'koi', slot: 'pet', name: '錦鯉', taels: 180, minTitle: 4 },
-  { id: 'crane', slot: 'pet', name: '仙鶴', ingots: 4, minTitle: 6 },
-  { id: 'dragon', slot: 'pet', name: '小青龍', ingots: 8, minTitle: 10 },
-  { id: 'qilin', slot: 'pet', name: '麒麟', ingots: 10, minTitle: 13 },
-];
 const SLOTS = [
   { id: 'weapon', name: '兵器' },
   { id: 'acc', name: '飾品' },
   { id: 'pet', name: '夥伴' },
+  { id: 'treasure', name: '寶物' },
 ];
 // 稱號: won by special feats and worn before the name, unlike the 名望 that rises with practice.
 // tier sets the look: bronze 竹簡, gold 令牌, legend 紫電. 'master' belongs to the 管理員 alone.
@@ -636,7 +592,8 @@ function silhouette(canvas, color) {
 }
 
 // shop picture of one item, centered in the 160 x 120 frame
-function drawItemIcon(canvas, item) {
+// v0: the hand-drawn shop pictures of the first items (the sprite pack's icons are drawn by doll.js)
+function drawItemIconV0(canvas, item) {
   const ctx = prepareHeroCanvas(canvas);
   const id = item.id;
   if (item.slot === 'weapon') {

@@ -74,7 +74,7 @@ const purse = {
   ingots: 0,
   xp: 0,
   owned: [],
-  gear: { weapon: '', head: '', waist: '', back: '', pet: '' },
+  gear: { weapon: '', head: '', waist: '', back: '', hair: '', pet: '', treasure: '' },
   scrolls: [],
   words: [],
   lastDay: '',
@@ -280,6 +280,28 @@ function outfitFor(xp, gear) {
 function outfitIndex() {
   return outfitFor(purse.xp, purse.gear);
 }
+// the first items (v0) by the ids they have in the sprite pack: the same things, the same names
+const OLD_ITEM_IDS = {
+  wood: 'sword_mujian', staff: 'spear_zhugun', umbrella: 'spear_san', fan: 'sword_tieshan', brush: 'sword_panguan',
+  whisk: 'sword_fuchen', whip: 'spear_bian', flute: 'sword_yudi', spear: 'spear_hongying', dao: 'sabre_liuye',
+  emei: 'fist_emei', ring: 'sabre_jiuhuan', jian: 'sword_qinggang', hammer: 'hidden_liuxing', guandao: 'spear_yanyue',
+  halberd: 'spear_huaji', zhanlu: 'sword_zhanlu', ganjiang: 'sword_ganjiang',
+  bunny: 'pet_tuzi', cat: 'pet_mao', dog: 'pet_gou', monkey: 'pet_houzi', panda: 'pet_xiongmao', koi: 'pet_jinli',
+  crane: 'pet_he', dragon: 'pet_qinglong', qilin: 'pet_qilin',
+  flower: 'head_hong', feather: 'head_zhiling', hairpin: 'head_yuzan', bellband: 'head_jinling', phoenix: 'head_fengguan',
+  bell: 'waist_lingdang', sachet: 'waist_xiangbao', gourd: 'waist_hulu', jade: 'waist_yupei', pouch: 'waist_jinnang',
+  scroll: 'back_shujuan', cloak: 'back_pifeng', swordbox: 'back_jianxia', goldcloak: 'back_jinlv',
+};
+function newItemId(id) {
+  return OLD_ITEM_IDS[id] || id;
+}
+function newGear(gear) {
+  const out = {};
+  for (const place in gear || {}) {
+    out[place] = place === 'outfit' ? gear[place] : newItemId(gear[place]);
+  }
+  return out;
+}
 function itemById(id) {
   for (const it of ITEMS) {
     if (it.id === id) return it;
@@ -319,7 +341,7 @@ function resetProgress() {
   state.slist = [];
   state.sentence = null;
   state.text = '';
-  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', pet: '' }, scrolls: [], words: [], lastDay: '', streak: 0, honors: [], honor: '', customHonor: '', granted: [], perfectRun: 0 });
+  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', hair: '', pet: '', treasure: '' }, scrolls: [], words: [], lastDay: '', streak: 0, honors: [], honor: '', customHonor: '', granted: [], perfectRun: 0 });
 }
 function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
@@ -352,8 +374,11 @@ function applyProfile(source) {
     purse.ingots = old.ingots || 0;
     // earlier versions called it 'earned' and held one weapon in 'equipped'
     purse.xp = old.xp !== undefined ? old.xp : (old.earned || 0);
-    purse.owned = old.owned || [];
-    if (old.gear) Object.assign(purse.gear, old.gear);
+    purse.owned = [];
+    for (const id of old.owned || []) {
+      if (purse.owned.indexOf(newItemId(id)) < 0) purse.owned.push(newItemId(id));
+    }
+    if (old.gear) Object.assign(purse.gear, newGear(old.gear));
     else if (old.equipped) purse.gear.weapon = old.equipped;
     // earlier versions had one accessory slot
     if (purse.gear.acc) {
@@ -1082,9 +1107,24 @@ function queueCelebration(delay, fn) {
   celebrationFreeAt = at + 5200;
   setTimeout(fn, at - now);
 }
-// the pixel hero on a 48 x 36 canvas, shown scaled up
+// The 俠客 on a canvas: o = { title, gear, gender, view card / stage, action idle / attack1 / attack2, t ms
+// into it, hurt }. From the sprite pack once it has loaded; the v0 pixel hero (pose, frame) if it cannot be.
 function drawHeroOn(canvas, o) {
+  if (doll.state === 'ready') {
+    const look = { title: o.title, gear: o.gear, gender: o.gender || state.gender, action: o.action, t: o.t, hurt: o.hurt, shadow: o.shadow };
+    if (!dollDraw(canvas, look, o.view)) doll.waiting.set(canvas, function () { drawHeroOn(canvas, o); });
+    return;
+  }
+  if (doll.state === 'loading') {
+    doll.waiting.set(canvas, function () { drawHeroOn(canvas, o); });
+    return;
+  }
+  drawHeroV0(canvas, o);
+}
+// v0: the pixel hero on a 48 x 36 canvas, shown scaled up (it knows only its own first items)
+function drawHeroV0(canvas, o) {
   canvas.classList.add('pixel');
+  canvas.classList.remove('doll');
   if (canvas.width !== AV_W || canvas.height !== AV_H) {
     canvas.width = AV_W;
     canvas.height = AV_H;
@@ -1099,7 +1139,7 @@ function drawHeroOn(canvas, o) {
     ctx.fillRect(AV_CX - 6, AV_GY + 1, 13, 1);
     if (o.gear && o.gear.pet) ctx.fillRect(1, AV_GY, 10, 1);
   }
-  drawAvatar(ctx, o.title, o.gear, o.pose || 'stand', o.frame || 0, o.qi, o.gender || state.gender);
+  drawAvatar(ctx, o.title, {}, o.pose || 'stand', o.frame || 0, o.qi, o.gender || state.gender);
 }
 function titleCanvas(idx) {
   const c = document.createElement('canvas');
@@ -1190,6 +1230,7 @@ function renderPurse() {
 // an item stays a shadow named ？？？ until the title is high enough and its price is within reach
 function itemKnown(it, owned, tIdx) {
   if (owned) return true;
+  if (it.shop === false) return false;
   if (tIdx < it.minTitle) return false;
   if (it.ingots) return it.ingots <= purse.ingots * 2 + 1;
   return it.taels <= purse.taels * 2 + 20;
@@ -1285,8 +1326,7 @@ function renderHero() {
     });
     grid.append(card);
     // drawn once the card is laid out, so the picture matches its box
-    drawItemIcon(c, it);
-    if (!known) silhouette(c, '#2b2233');
+    drawItemIcon(c, it, known ? '' : '#2b2233');
   }
 }
 
@@ -1401,13 +1441,13 @@ function openItem(it) {
     }
   } else {
     title.innerHTML = '<span class="mystery">？？？</span>';
-    note.textContent = tIdx < it.minTitle ? '名望再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
+    if (it.shop === false) note.textContent = '這件寶貝買不到，要靠奇遇才遇得到。';
+    else note.textContent = tIdx < it.minTitle ? '名望再高一點，就能看清楚這是什麼。' : '再多存一些銀兩，就能看清楚這是什麼。';
   }
 
   openSheet(sheet);
   const big = document.getElementById('itemBig');
-  drawItemIcon(big, it);
-  if (!known) silhouette(big, '#2b2233');
+  drawItemIcon(big, it, known ? '' : '#2b2233');
   if (known && state.sound) say(it.name);
 }
 
@@ -1438,12 +1478,30 @@ function equip(place, id) {
 }
 
 // ---------- the 俠客 on the main screen ----------
-const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0 };
+// sprite hero: attack = 普攻 (attack1), cheer = 招式 (attack2), hurt = standing, shaken; then idle again
+const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0, action: 'idle', since: 0, until: 0 };
+const DOLL_ACTIONS = { attack: 'attack1', cheer: 'attack2', hurt: 'hurt' };
+const HURT_MS = 420;
 function avatarPlay(name) {
   avatar.queue = ACTIONS[name].slice();
+  avatar.action = DOLL_ACTIONS[name] || 'idle';
+  avatar.since = performance.now();
+  const look = { title: outfitIndex(), gear: purse.gear };
+  avatar.until = avatar.since + (avatar.action === 'hurt' ? HURT_MS : dollActionLength(look, avatar.action));
   if (reducedMotion()) avatarRender(performance.now());
 }
 function avatarRender(now) {
+  if (doll.state === 'ready') {
+    if (avatar.action !== 'idle' && now >= avatar.until) {
+      avatar.action = 'idle';
+      avatar.since = now;
+    }
+    const hurt = avatar.action === 'hurt';
+    const look = { title: outfitIndex(), gear: purse.gear, action: hurt ? 'idle' : avatar.action, t: now - avatar.since, hurt: hurt };
+    drawHeroOn(avatar.canvases[0], Object.assign({ view: 'bust' }, look));
+    drawHeroOn(avatar.canvases[1], Object.assign({ view: 'stage', shadow: true }, look));
+    return;
+  }
   let pose;
   if (avatar.queue.length) {
     pose = avatar.queue.shift();
@@ -1459,7 +1517,8 @@ function avatarRender(now) {
 }
 // the pixel hero steps like a sprite, faster during an action
 function avatarTick(now) {
-  const wait = avatar.queue.length ? 95 : 170;
+  let wait = avatar.queue.length ? 95 : 170;
+  if (doll.state === 'ready') wait = 40;
   if (now - avatar.last >= wait) {
     avatar.last = now;
     avatarRender(now);
@@ -1967,6 +2026,7 @@ function finish(mistakes) {
     toast('習得「' + ch + '」字訣');
   }
   checkHonors(mistakes);
+  checkEncounter();
   // a character traced or written counts the word as practiced
   if (!state.sentence) {
     const at = state.recent.indexOf(state.text);
@@ -2549,7 +2609,7 @@ let bootAlias = '';
 // what a 俠客 looks like, from experience, worn gear and gender
 function lookFor(xp, gear, gender) {
   const level = levelInfo(xp || 0).level;
-  return { title: titleIndexFor(level), outfit: outfitFor(xp, gear), level: level, gear: gear || {}, gender: gender || 'boy' };
+  return { title: titleIndexFor(level), outfit: outfitFor(xp, gear), level: level, gear: newGear(gear), gender: gender || 'boy' };
 }
 
 // ---------- 開始: one of the recent 俠客 on this device, or a guest ----------
@@ -2623,7 +2683,7 @@ function drawGate() {
   gate.frame += 1;
   for (const s of gate.slots) {
     const pose = IDLE_SEQ[(gate.frame + s.phase) % IDLE_SEQ.length];
-    drawHeroOn(s.canvas, { title: s.look.outfit, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame });
+    drawHeroOn(s.canvas, { title: s.look.outfit, gear: s.look.gear, gender: s.look.gender, pose: pose, frame: gate.frame, t: performance.now() + s.phase * 230 });
   }
 }
 function enterGame(alias) {
@@ -2753,7 +2813,7 @@ document.getElementById('outfitNext').addEventListener('click', function () { st
 
 // ---------- 我的俠客: tap the hero and it moves ----------
 const SHEET_ACTIONS = ['attack', 'cheer', 'hurt'];
-const sheetHero = { timer: 0, next: 0 };
+const sheetHero = { timer: 0, next: 0, raf: 0 };
 // the next of 出招 / 歡呼 / 受傷, with its sound
 function nextHeroAction() {
   const name = SHEET_ACTIONS[sheetHero.next % SHEET_ACTIONS.length];
@@ -2769,6 +2829,24 @@ document.getElementById('heroStage').addEventListener('click', function () {
 document.getElementById('heroAvatar').addEventListener('click', function (e) {
   const canvas = e.currentTarget;
   const name = nextHeroAction();
+  if (doll.state === 'ready') {
+    const look = { title: outfitIndex(), gear: purse.gear };
+    const action = DOLL_ACTIONS[name] === 'hurt' ? 'idle' : DOLL_ACTIONS[name];
+    const length = name === 'hurt' ? HURT_MS : dollActionLength(look, action);
+    const start = performance.now();
+    cancelAnimationFrame(sheetHero.raf);
+    const step = function (now) {
+      const t = now - start;
+      if (t >= length) {
+        drawHeroOn(canvas, look);
+        return;
+      }
+      drawHeroOn(canvas, Object.assign({ action: action, t: t, hurt: name === 'hurt' }, look));
+      sheetHero.raf = requestAnimationFrame(step);
+    };
+    sheetHero.raf = requestAnimationFrame(step);
+    return;
+  }
   const queue = ACTIONS[name].slice();
   let frame = 0;
   clearInterval(sheetHero.timer);
@@ -2804,7 +2882,8 @@ function wholeNumber(v) {
 function receiveGifts(body) {
   purse.taels += wholeNumber(body.taels);
   purse.ingots += wholeNumber(body.ingots);
-  for (const id of body.items || []) {
+  for (const old of body.items || []) {
+    const id = newItemId(old);
     if (itemById(id) && purse.owned.indexOf(id) < 0) purse.owned.push(id);
   }
   // from the 管理員: a gender, a 稱號
@@ -2840,7 +2919,7 @@ function giftText(body, voice) {
   if (wholeNumber(body.taels)) parts.push('銀兩 ' + wholeNumber(body.taels));
   if (wholeNumber(body.ingots)) parts.push('元寶 ' + wholeNumber(body.ingots));
   for (const id of body.items || []) {
-    const it = itemById(id);
+    const it = itemById(newItemId(id));
     if (it) parts.push(it.name);
   }
   if (body.gender === 'boy') parts.push('變成少俠');
@@ -2921,7 +3000,8 @@ function giftSlip(body) {
     badge.textContent = framedHonor(body.honor);
     add(badge, '稱號');
   }
-  for (const id of body.items || []) {
+  for (const old of body.items || []) {
+    const id = newItemId(old);
     const it = itemById(id);
     if (!it) continue;
     const c = document.createElement('canvas');
@@ -3402,6 +3482,26 @@ function renderHonors(grid) {
   decor.className = 'decor';
   buildDecor(decor, input, function () {});
   grid.append(list, own, decor);
+}
+
+// 奇遇: after each finished character, one thing not yet owned that the 名望 has reached is tried at its rate
+function checkEncounter() {
+  const tIdx = titleIndex();
+  const candidates = [];
+  for (const it of ITEMS) {
+    if (it.encounter && it.encounter.minTitle <= tIdx && purse.owned.indexOf(it.id) < 0) candidates.push(it);
+  }
+  if (!candidates.length) return;
+  const it = candidates[Math.floor(Math.random() * candidates.length)];
+  if (Math.random() >= it.encounter.rate) return;
+  purse.owned.push(it.id);
+  save();
+  queueCelebration(1800, function () {
+    sfxGong(0.6);
+    avatarPlay('cheer');
+    toast('奇遇！得到「' + it.name + '」');
+    if (state.sound) say('奇遇！得到 ' + it.name);
+  });
 }
 
 // 稱號 won with the character just finished, each shown as a token after the stamp

@@ -23,9 +23,10 @@
 ## 檔案
 
 - `app.html`：頁面結構（也是 Claude artifact 的來源）。改完執行 `python3 build.py` 產生 GitHub Pages 用的 `index.html`。
-- `style.css`（Catppuccin Latte / Mocha 配色）、`js/app.js`（練習流程、題庫、等級、帳號）、`js/effects.js`（音效、語音、劍氣、煙火、錢幣）、`js/pixel.js`（像素俠客、16 個頭銜、商店物品）。
+- `style.css`（Catppuccin Latte / Mocha 配色）、`js/app.js`（練習流程、題庫、等級、帳號）、`js/effects.js`（音效、語音、劍氣、煙火、錢幣）、`js/doll.js`（俠客紙娃娃：把美術素材包的圖層疊起來畫、商店圖示）、`js/catalog.js`（物品清單，由素材包產生，不要手改）、`js/pixel.js`（v0 手繪像素俠客，素材載入不到時才用；git 標籤 `pixel-v0` 是換素材前的版本）。
 - `js/config.js`：雲端同步設定（Supabase）。留空時進度只存在該裝置。
 - `data/cNNN.json`：筆順、部首、注音；`data/words.json`：詞語題庫；`data/sentences.json`：句子題庫。
+- `sprites/`：美術素材包裡遊戲用得到的部分（圖層、寵物、寶物、背景、商店圖示），由 `tools/sync_sprites.py` 複製，不要手改。
 - `manifest.webmanifest`、`icons/`：加入主畫面用的 App 設定與圖示。
 
 ## 重新產生資料
@@ -34,9 +35,13 @@
 python3 tools/make_data.py <hanzi-writer-data 資料夾> <makemeahanzi dictionary.txt> <zh-stroke-data/json 資料夾> data <moedict dict-revised.json>
 python3 tools/make_words.py <SHREST1.DBF> <shrest2.dbf>      # 來自報告書的 download/result.zip
 python3 -I tools/make_sentences.py <dict_mini xlsx> <SHREST1.DBF> <moedict dict-revised.json>   # data/sentences.json
-python3 -I tools/make_sentences.py <dict_mini xlsx> <SHREST1.DBF> <moedict dict-revised.json>   # data/sentences.json
+python3 -I tools/sync_sprites.py <sprite_pack 資料夾>              # sprites/ 與 js/catalog.js；美術素材包更新後執行
 python3 tools/make_icon.py                                   # icons/icon.svg，再轉成各尺寸 PNG
 ```
+
+## 美術素材
+
+俠客、兵器、飾品、髮色、夥伴、寶物的圖由另一邊的美術素材包提供（含 `manifest.json` 與說明）。遊戲只讀不改；素材包更新後執行 `tools/sync_sprites.py` 再建置即可。遊戲這邊對素材的需求與回饋記在 `tools/SPRITE_FEEDBACK.md`。
 
 ## 跨裝置同步（俠客帳號）
 
