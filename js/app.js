@@ -50,6 +50,7 @@ const state = {
   // settings
   content: 'mix',
   music: 'xiangqi',
+  musicLoop: 'one',
   voice: 'meijia',
   volume: 0.8,
   gender: 'boy',
@@ -329,7 +330,7 @@ function serializeProfile() {
     v: 4,
     savedAt: Date.now(),
     settings: {
-      content: state.content, music: state.music, voice: state.voice, volume: state.volume, gender: state.gender, genderLock: state.genderLock, theme: state.theme, grid: state.grid, lenient: state.lenient,
+      content: state.content, music: state.music, musicLoop: state.musicLoop, voice: state.voice, volume: state.volume, gender: state.gender, genderLock: state.genderLock, theme: state.theme, grid: state.grid, lenient: state.lenient,
       slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
     },
     stars: state.stars,
@@ -358,7 +359,7 @@ function applyProfile(source) {
   resetProgress();
   state.genderLock = '';
   if (p.settings) {
-    for (const key of ['content', 'music', 'voice', 'gender', 'genderLock', 'theme', 'grid']) {
+    for (const key of ['content', 'music', 'musicLoop', 'voice', 'gender', 'genderLock', 'theme', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
     for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
@@ -1424,6 +1425,43 @@ function renderScrollbook(grid) {
   }
 }
 
+// ---------- 錢莊: one 元寶 for 100 兩, both ways ----------
+const INGOT_TAELS = 100;
+function renderBank() {
+  document.getElementById('bankTaels').textContent = purse.taels;
+  document.getElementById('bankIngots').textContent = purse.ingots;
+  document.getElementById('bankSell').disabled = purse.ingots < 1;
+  document.getElementById('bankBuy').disabled = purse.taels < INGOT_TAELS;
+}
+function bankDelta(id, text) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  restartAnimation(el, 'pop');
+}
+function exchange(ingots) {
+  purse.ingots += ingots;
+  purse.taels -= ingots * INGOT_TAELS;
+  shown.taels = purse.taels;
+  shown.ingots = purse.ingots;
+  save();
+  renderPurse();
+  renderHero();
+  renderBank();
+  bankDelta('bankIngotsDelta', (ingots > 0 ? '+' : '−') + Math.abs(ingots));
+  bankDelta('bankTaelsDelta', (ingots > 0 ? '−' : '+') + Math.abs(ingots) * INGOT_TAELS);
+  sfxTick(ingots > 0 ? 2093 : 1568);
+}
+document.getElementById('bankBtn').addEventListener('click', function () {
+  renderBank();
+  openSheet(document.getElementById('bankSheet'));
+});
+document.getElementById('bankSell').addEventListener('click', function () {
+  if (purse.ingots >= 1) exchange(-1);
+});
+document.getElementById('bankBuy').addEventListener('click', function () {
+  if (purse.taels >= INGOT_TAELS) exchange(1);
+});
+
 // the zoomed item card: a big picture, the name with 注音 (read aloud), and buy or wear
 function openItem(it) {
   const tIdx = titleIndex();
@@ -1688,6 +1726,9 @@ async function build() {
   mineEl.classList.remove('ink');
   mineEl.innerHTML = '';
   if (!ch) return;
+  // a character not traced yet is traced first
+  if (state.mode === 'write' && !canWrite()) state.mode = 'trace';
+  renderModes();
 
   let data = null;
   try {
@@ -1795,6 +1836,7 @@ function startMode(myToken) {
   writer.quiz({
     leniency: state.lenient ? 1.5 : 1.0,
     showHintAfterMisses: hintAfter,
+    markStrokeCorrectAfterMisses: 4,
     highlightOnComplete: false,
     onCorrectStroke: function (d) {
       if (keepMode()) {
@@ -2078,6 +2120,7 @@ function finish(mistakes) {
   if (!state.stars[ch]) state.stars[ch] = {};
   const prev = state.stars[ch][state.mode] || 0;
   if (grade > prev) state.stars[ch][state.mode] = grade;
+  renderModes();
 
   const reward = award(grade, mistakes);
   // written alone: the character goes into the 字訣本
@@ -2186,9 +2229,19 @@ function finish(mistakes) {
 }
 
 // ---------- controls ----------
+// 自己寫 opens for a character once it has been traced (or written before): rewards come with writing alone,
+// and a child should not skip 描一描 to get them
+function canWrite() {
+  const marks = state.stars[currentChar()] || {};
+  return Boolean(marks.trace || marks.write);
+}
 function renderModes() {
   document.querySelectorAll('#modes button').forEach(function (b) {
     b.setAttribute('aria-pressed', b.dataset.mode === state.mode ? 'true' : 'false');
+    if (b.dataset.mode === 'write') {
+      b.classList.toggle('locked', !canWrite());
+      b.setAttribute('aria-disabled', canWrite() ? 'false' : 'true');
+    }
   });
 }
 // switching modes stays on the character the child picked
@@ -2206,6 +2259,13 @@ document.querySelectorAll('#modes button').forEach(function (b) {
     const now = performance.now();
     const doubleTap = lastModeTap.mode === b.dataset.mode && now - lastModeTap.at < 450;
     lastModeTap = { mode: b.dataset.mode, at: now };
+    if (b.dataset.mode === 'write' && !canWrite()) {
+      sfxWood();
+      restartAnimation(b, 'nudge');
+      toast('先描一描這個字，才能自己寫');
+      if (state.sound) say('先描一描，再自己寫');
+      return;
+    }
     if (doubleTap) state.idx = 0;
     else if (state.sound) say(b.textContent.trim());
     setMode(b.dataset.mode);
@@ -2552,11 +2612,12 @@ function renderOptions() {
   volumeRange.value = Math.round(state.volume * 100);
   setVolume(state.volume);
   box.classList.toggle('mi', state.grid === 'mi');
+  box.classList.toggle('jiu', state.grid === 'jiu');
   keepBtn.setAttribute('aria-pressed', state.keep ? 'true' : 'false');
   document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     const opt = row.dataset.opt;
     let current;
-    if (['grid', 'theme', 'content', 'music', 'gender', 'voice'].indexOf(opt) >= 0) current = state[opt];
+    if (['grid', 'theme', 'content', 'music', 'musicLoop', 'gender', 'voice'].indexOf(opt) >= 0) current = state[opt];
     else current = state[opt] ? '1' : '0';
     row.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.dataset.val === current ? 'true' : 'false');
@@ -2604,6 +2665,13 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
     }
     if (opt === 'grid' || opt === 'theme') {
       state[opt] = b.dataset.val;
+      renderOptions();
+      save();
+      return;
+    }
+    if (opt === 'musicLoop') {
+      state.musicLoop = b.dataset.val;
+      if (music.el) music.el.loop = state.musicLoop !== 'all';
       renderOptions();
       save();
       return;

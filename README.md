@@ -35,6 +35,7 @@
 python3 tools/make_data.py <hanzi-writer-data 資料夾> <makemeahanzi dictionary.txt> <zh-stroke-data/json 資料夾> data <moedict dict-revised.json>
 python3 tools/make_words.py <SHREST1.DBF> <shrest2.dbf>      # 來自報告書的 download/result.zip
 python3 -I tools/make_sentences.py <dict_mini xlsx> <SHREST1.DBF> <moedict dict-revised.json>   # data/sentences.json
+python3 -I tools/make_kai.py <TW-Kai-98_1.ttf> <SHREST1.DBF>      # fonts/tw-kai.woff2：範例字的標楷體（全字庫正楷體子集）
 python3 -I tools/sync_sprites.py <sprite_pack 資料夾>              # sprites/ 與 js/catalog.js；美術素材包更新後執行
 python3 tools/make_icon.py                                   # icons/icon.svg，再轉成各尺寸 PNG
 ```

@@ -1,3 +1,10 @@
+/* 標楷體 for the example characters, as in a 國小 生字簿: 全字庫正楷體 cut to the game's characters
+   (tools/make_kai.py); the artifact, without the file beside it, takes the copy on GitHub Pages */
+@font-face {
+  font-family: "TW-Kai";
+  src: url("fonts/tw-kai.woff2") format("woff2"), url("https://yuankailiu.github.io/hanzi-trace/fonts/tw-kai.woff2") format("woff2");
+  font-display: swap;
+}
 /* Layout: one-screen app — a top bar with the word's characters and tool icons;
    landscape: the 擂台 (writing box) fills the left, a side column holds the pixel 俠客 card, character card, modes and controls;
    portrait: 俠客 strip on top, 擂台 in the middle, card + modes + controls at the bottom. Nothing scrolls.
@@ -56,6 +63,8 @@
   --gold-line: rgba(224, 185, 87, 0.8);
 
   --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "STKaiti", "DFKai-SB", serif;
+  /* the example characters and their 注音 */
+  --font-kai: "TW-Kai", "BiauKai", "DFKai-SB", "標楷體", "LXGW WenKai TC", "Kaiti TC", serif;
   --font-body: "Noto Serif TC", "Songti TC", "PMingLiU", "MingLiU", serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -666,8 +675,11 @@ canvas.pixel {
 }
 .grid .frame { fill: none; stroke: var(--frame); stroke-width: 2.5; }
 .grid .guide { stroke: var(--grid); stroke-width: 1.2; stroke-dasharray: 6 6; }
-.grid .diag { display: none; }
+.grid .diag, .grid .third { display: none; }
 .box.mi .grid .diag { display: inline; }
+/* 九宮格: the thirds, without the middle cross */
+.box.jiu .grid .third { display: inline; }
+.box.jiu .grid .guide:not(.third) { display: none; }
 .box .missing-msg {
   position: absolute; inset: 0;
   display: grid; place-content: center; text-align: center;
@@ -1866,3 +1878,45 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 
 /* a voice the device does not have */
 .opt-choices button:disabled { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; }
+
+/* Portrait: the character card sits on the 俠客 card's row, at the right; the modes get a row of their own */
+@media (max-aspect-ratio: 1/1) {
+  .app {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "top top"
+      "player info"
+      "stage stage"
+      "modes modes"
+      "controls controls";
+  }
+  .lower { display: contents; }
+  .lower .info { grid-area: info; align-self: stretch; }
+  .lower .seg { grid-area: modes; }
+  .lower .controls { grid-area: controls; }
+}
+/* 自己寫 before the character is traced */
+.seg button.locked { opacity: 0.45; filter: grayscale(0.8); }
+/* 錢莊 */
+.bank-btn { padding: 3px 10px; font-size: 0.85rem; font-weight: 600; }
+.bank-purse { display: flex; justify-content: center; gap: 28px; font-size: 1.3rem; }
+.bank-coin { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.bank-coin b { font-size: 1.6rem; min-width: 2.5ch; text-align: right; }
+.bank-coin .sycee { width: 30px; height: 21px; }
+.bank-delta { position: absolute; right: -6px; top: -18px; font-style: normal; font-weight: 700; color: var(--accent); opacity: 0; }
+.bank-delta.pop { animation: bank-pop 0.9s ease-out; }
+@keyframes bank-pop {
+  0% { opacity: 0; transform: translateY(6px); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+.bank-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bank-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 8px; }
+.bank-actions .sycee { width: 22px; height: 15px; }
+.bank-actions button:disabled { opacity: 0.45; }
+/* 錢莊 opens over 我的俠客 */
+#bankSheet { z-index: 32; }
+
+/* every example character shown as text, and every 注音, in 標楷體 */
+.sentence .glyph, .text-glyph, .zy-v, .chip .text-glyph { font-family: var(--font-kai); }

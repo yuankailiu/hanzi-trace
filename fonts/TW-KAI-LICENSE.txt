@@ -1,0 +1,4 @@
+全字庫正楷體（TW-Kai）之子集，供本遊戲顯示範例字。
+來源：國家發展委員會 CNS11643 中文標準交換碼全字庫，https://data.gov.tw/dataset/5961（Fonts_Kai.zip，TW-Kai-98_1.ttf）。
+依「政府資料開放授權條款－第1版」使用（https://data.gov.tw/license）；原字型亦以 SIL Open Font License 1.1 提供。
+本檔只保留遊戲用到的字（詞庫、句子庫、兒童常用字、注音與標點），其餘未改動。

@@ -425,7 +425,12 @@ const TRACKS = {
 };
 const MUSIC_VOLUME = 0.3;
 const MUSIC_FADE = 1.6;
-const music = { el: null, gain: null, track: '', fadingOut: false, started: false };
+const music = { el: null, gain: null, track: '', fadingOut: false, started: false, lastTime: 0 };
+// 依序輪播: the track after this one
+function nextTrackId(id) {
+  const ids = Object.keys(TRACKS);
+  return ids[(ids.indexOf(id) + 1) % ids.length];
+}
 
 function musicGraph() {
   if (music.el) return true;
@@ -437,16 +442,30 @@ function musicGraph() {
   music.gain = ac.createGain();
   music.gain.gain.value = 0;
   ac.createMediaElementSource(music.el).connect(music.gain).connect(audioOut());
+  // 單曲重複 loops in the element itself (an iPad may not report the end of a track); the fade out near the end
+  // and back in when it comes round are done here
   music.el.addEventListener('timeupdate', function () {
     const el = music.el;
+    if (el.currentTime + 1 < music.lastTime) {
+      music.fadingOut = false;
+      musicFade(MUSIC_VOLUME, MUSIC_FADE);
+    }
+    music.lastTime = el.currentTime;
     if (!music.fadingOut && el.duration && el.duration - el.currentTime < MUSIC_FADE) {
       music.fadingOut = true;
       musicFade(0, MUSIC_FADE);
     }
   });
   music.el.addEventListener('ended', function () {
-    music.el.currentTime = 0;
     music.fadingOut = false;
+    music.lastTime = 0;
+    if (state.musicLoop === 'all') {
+      state.music = nextTrackId(music.track);
+      playMusic(state.music);
+      if (typeof renderOptions === 'function') renderOptions();
+      return;
+    }
+    music.el.currentTime = 0;
     music.el.play().then(function () { musicFade(MUSIC_VOLUME, MUSIC_FADE); }, function () {});
   });
   return true;
@@ -477,6 +496,7 @@ function playMusic(id) {
     music.el.src = TRACKS[id];
     music.el.currentTime = 0;
   }
+  music.el.loop = state.musicLoop !== 'all';
   music.fadingOut = false;
   music.started = true;
   music.el.play().then(function () { musicFade(MUSIC_VOLUME, MUSIC_FADE); }, function () {});
