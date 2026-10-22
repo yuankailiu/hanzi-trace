@@ -1,4 +1,4 @@
-// 筆順描字本: practice flow, MOE word bank, 俠客 levels and shop, profiles (local + optional cloud).
+// 一筆江湖: practice flow, MOE word bank, 俠客 levels and shop, profiles (local + optional cloud).
 
 const N_CHUNKS = 128;
 const TRANSPARENT = 'rgba(0,0,0,0)';
@@ -1542,7 +1542,7 @@ function equip(place, id) {
 
 // ---------- the 俠客 on the main screen ----------
 // sprite hero: attack = 普攻 (attack1), cheer = 招式 (attack2), hurt = standing, shaken; then idle again
-const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0, action: 'idle', since: 0, until: 0, bustKey: '' };
+const avatar = { canvases: [], queue: [], idle: 0, frame: 0, last: 0, action: 'idle', since: 0, until: 0 };
 const DOLL_ACTIONS = { attack: 'attack1', cheer: 'attack2', hurt: 'hurt' };
 const HURT_MS = 420;
 function avatarPlay(name) {
@@ -1561,11 +1561,9 @@ function avatarRender(now) {
     }
     const hurt = avatar.action === 'hurt';
     const look = { title: outfitIndex(), gear: purse.gear, action: hurt ? 'idle' : avatar.action, t: now - avatar.since, hurt: hurt };
-    const bustKey = look.title + JSON.stringify(look.gear) + state.gender;
-    if (bustKey !== avatar.bustKey || !avatar.canvases[0].classList.contains('doll')) {
-      avatar.bustKey = bustKey;
-      drawHeroOn(avatar.canvases[0], { view: 'bust', title: look.title, gear: look.gear });
-    }
+    // the card: the hero standing at ease, idle, the weapon put away
+    const bare = Object.assign({}, look.gear, { weapon: '' });
+    drawHeroOn(avatar.canvases[0], { view: 'bust', title: look.title, gear: bare, t: now });
     if (avatar.canvases[1].offsetParent !== null) {
       drawHeroOn(avatar.canvases[1], Object.assign({ view: 'stage', shadow: true }, look));
     }
@@ -2871,14 +2869,12 @@ const profileSheet = document.getElementById('profileSheet');
 function openGate(rise) {
   profileSheet.classList.add('gate');
   profileSheet.classList.toggle('rising', Boolean(rise));
-  document.getElementById('profileTitle').textContent = '墨香客棧';
   showProfilePane('rosterPane');
   openSheet(profileSheet);
 }
 function leaveGate() {
   clearInterval(gate.timer);
   profileSheet.classList.remove('gate', 'rising');
-  document.getElementById('profileTitle').textContent = '俠客';
   closeSheet(profileSheet);
 }
 // switch without saving first, so a newer copy in the cloud is still taken

@@ -13,7 +13,7 @@ HEAD = """<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="描字本">
+<meta name="apple-mobile-web-app-title" content="一筆江湖">
 <meta name="theme-color" content="#e6e9ef">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <link rel="icon" href="icons/favicon-32.png?v=3" sizes="32x32" type="image/png">
