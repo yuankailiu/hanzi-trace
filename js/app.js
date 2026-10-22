@@ -2937,7 +2937,7 @@ function announceEntry() {
     }, 1100);
   });
 }
-// at start the 俠客 sheet opens on 墨香客棧 (the 俠客 of this device) and stays until someone is chosen, a guest included;
+// at start the 俠客帳號 sheet opens on its 客棧 tab (the 俠客 of this device) and stays until someone is chosen, a guest included;
 // rise: after the opening gong, the sheet comes up from below like a page turned up
 const profileSheet = document.getElementById('profileSheet');
 function openGate(rise) {
