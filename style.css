@@ -1987,3 +1987,9 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 
 /* sheets with tabs keep their top edge still while a tab changes their height */
 .sheet.top { place-items: start center; padding-top: max(4dvh, 14px); }
+
+/* 錢莊: a 銀兩 behind, a 元寶 in front */
+.bank-coins { position: relative; display: inline-block; width: 26px; height: 18px; flex: none; }
+.bank-coins .sycee { position: absolute; width: 18px; height: 13px; }
+.bank-coins .silver { left: 0; top: 0; }
+.bank-coins .gold { left: 8px; top: 5px; filter: drop-shadow(-1px 0 0 var(--btn)); }
