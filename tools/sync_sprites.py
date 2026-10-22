@@ -5,7 +5,7 @@ This copies the layer sheets, pets, treasures, backgrounds and the 96 px shop ic
 combos), and writes sprites/manifest.json with only what the game reads. js/catalog.js gets the items for the
 shop: weapons, accessories, hair dyes, pets and treasures, with prices, the 名望 they need, and chance encounters.
 
-Pets that are other companies' characters stay out of the public site (EXCLUDE).
+Pets listed in EXCLUDE are left out (none at present: all of the pack's pets are in).
 
 usage: python3 -I tools/sync_sprites.py <sprite_pack folder>
 """
@@ -19,11 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 PACK = Path(sys.argv[1]).resolve()
 OUT = ROOT / 'sprites'
 
-# characters owned by game and toy companies: not published here
-EXCLUDE = {
-    'pet_pikachu', 'pet_yoshi', 'pet_diddy', 'pet_pacman', 'pet_kirby',
-    'pet_mogu', 'pet_guodong', 'pet_nenbao', 'pet_feifei',
-}
+# pets to leave out of the game, by id
+EXCLUDE = set()
 # the sword-qi colour of each weapon class
 QI = {'Sword': '#6F9FC0', 'Sabre': '#AEB8C2', 'Spear': '#C2453C', 'Fist': '#C9A03A', 'HiddenWeapon': '#8E6FB8'}
 
