@@ -51,6 +51,8 @@ const state = {
   content: 'mix',
   music: 'xiangqi',
   musicLoop: 'one',
+  // 特效 精簡 (true) or 完整; null until decided: older iPads start with 精簡
+  lite: null,
   voice: 'meijia',
   volume: 0.8,
   gender: 'boy',
@@ -77,6 +79,8 @@ const purse = {
   xp: 0,
   owned: [],
   gear: { weapon: '', head: '', waist: '', back: '', hair: '', pet: '', treasure: '' },
+  // 要複習的字: { character: { box: 0-4, due: 'YYYY-MM-DD', misses } }
+  review: {},
   scrolls: [],
   words: [],
   lastDay: '',
@@ -355,7 +359,7 @@ function serializeProfile() {
     savedAt: Date.now(),
     settings: {
       content: state.content, music: state.music, musicLoop: state.musicLoop, voice: state.voice, volume: state.volume, gender: state.gender, genderLock: state.genderLock, theme: state.theme, grid: state.grid, lenient: state.lenient,
-      slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep,
+      slow: state.slow, sound: state.sound, radical: state.radical, keep: state.keep, lite: state.lite,
     },
     stars: state.stars,
     myName: state.myName,
@@ -375,7 +379,7 @@ function resetProgress() {
   state.slist = [];
   state.sentence = null;
   state.text = '';
-  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', hair: '', pet: '', treasure: '' }, scrolls: [], words: [], lastDay: '', streak: 0, honors: [], honor: '', customHonor: '', granted: [], perfectRun: 0 });
+  Object.assign(purse, { taels: 0, ingots: 0, xp: 0, owned: [], gear: { weapon: '', head: '', waist: '', back: '', hair: '', pet: '', treasure: '' }, scrolls: [], words: [], lastDay: '', streak: 0, honors: [], honor: '', customHonor: '', granted: [], perfectRun: 0, review: {} });
 }
 function applyProfile(source) {
   // work on a copy: a carried-over guest profile shares the live purse object
@@ -386,7 +390,7 @@ function applyProfile(source) {
     for (const key of ['content', 'music', 'musicLoop', 'voice', 'gender', 'genderLock', 'theme', 'grid']) {
       if (typeof p.settings[key] === 'string') state[key] = p.settings[key];
     }
-    for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep']) {
+    for (const key of ['lenient', 'slow', 'sound', 'radical', 'keep', 'lite']) {
       if (typeof p.settings[key] === 'boolean') state[key] = p.settings[key];
     }
     if (typeof p.settings.volume === 'number') state.volume = p.settings.volume;
@@ -429,6 +433,7 @@ function applyProfile(source) {
     purse.customHonor = old.customHonor || '';
     purse.granted = old.granted || [];
     purse.perfectRun = old.perfectRun || 0;
+    purse.review = old.review || {};
   }
   // a character with a 自己寫 grade has been written alone, even if an older version did not record it
   for (const ch in state.stars) {
@@ -796,6 +801,70 @@ function pickWord() {
   }
   return pool[pool.length - 1].w;
 }
+// ---------- 錯字本: characters that took many tries come back for review ----------
+// A character written alone (自己寫) with three mistakes or more goes into 要複習的字, due the next day. Written
+// again on or after its day with at most one mistake, it waits longer (1, 3, 7, 14, 30 days) and after the last
+// one it is done; two mistakes keep it for tomorrow, three or more start it over. Every few words a due
+// character is slipped in, to be written alone; the die shows how many are due today.
+const REVIEW_MISSES = 3;
+const REVIEW_DAYS = [1, 3, 7, 14, 30];
+const REVIEW_EVERY = 4;
+let reviewGap = 0;
+let reviewing = '';
+function dayAfter(day, n) {
+  const d = new Date(day + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  return localDay(d);
+}
+function dueReviews() {
+  const today = localDay(new Date());
+  const out = [];
+  for (const ch in purse.review) {
+    if (purse.review[ch].due <= today) out.push(ch);
+  }
+  out.sort(function (a, b) { return purse.review[a].due < purse.review[b].due ? -1 : 1; });
+  return out;
+}
+function reviewAfter(ch, mistakes) {
+  const today = localDay(new Date());
+  const r = purse.review[ch];
+  if (mistakes >= REVIEW_MISSES) {
+    purse.review[ch] = { box: 0, due: dayAfter(today, 1), misses: (r ? r.misses : 0) + 1 };
+    if (!r) toast('「' + ch + '」收進要複習的字，明天再來寫');
+  } else if (r && r.due <= today) {
+    if (mistakes <= 1) {
+      const box = r.box + 1;
+      if (box >= REVIEW_DAYS.length) {
+        delete purse.review[ch];
+        toast('「' + ch + '」複習過關，學會了！');
+      } else {
+        r.box = box;
+        r.due = dayAfter(today, REVIEW_DAYS[box]);
+        toast('「' + ch + '」寫得好，' + REVIEW_DAYS[box] + ' 天後再複習');
+      }
+    } else {
+      r.due = dayAfter(today, 1);
+    }
+  }
+  if (reviewing === ch) reviewing = '';
+  save();
+  renderReviewBadge();
+}
+function startReview(ch, speak) {
+  reviewing = ch;
+  toast('複習：「' + ch + '」');
+  loadText(ch, speak);
+  // a review is written alone (a new text starts at 看筆順)
+  if (canWrite()) setMode('write');
+}
+// the die: how many characters are due today
+function renderReviewBadge() {
+  const n = dueReviews().length;
+  const die = document.getElementById('diceBtn');
+  if (n) die.dataset.due = n;
+  else delete die.dataset.due;
+}
+
 // the next word is chosen while this one is practised and its stroke data fetched meanwhile, so a slow
 // connection does not hold up the next word
 let upcoming = null;
@@ -815,6 +884,13 @@ function nextWord(speak) {
     return;
   }
   if (!words.length && !(state.content === 'list' && state.list.length)) return;
+  reviewGap += 1;
+  const due = dueReviews();
+  if (reviewGap >= REVIEW_EVERY && due.length) {
+    reviewGap = 0;
+    startReview(due[0], speak);
+    return;
+  }
   let text = pickWord().w;
   if (upcoming && upcoming.content === state.content && upcoming.text !== state.text) text = upcoming.text;
   upcoming = null;
@@ -1305,6 +1381,7 @@ function announceLevels(before, after) {
 }
 
 function renderPurse() {
+  renderReviewBadge();
   const aliasTag = document.getElementById('aliasTag');
   aliasTag.textContent = account.alias;
   aliasTag.hidden = !account.alias;
@@ -1465,6 +1542,7 @@ function fillGlyphsWithZhuyin(el, text) {
 }
 
 function renderScrollbook(grid) {
+  renderReviewCards(grid);
   const nChars = purse.scrolls.length;
   const nWords = purse.words.length;
   document.getElementById('scrollCount').textContent = '自己寫學會的：' + nChars + ' 個字、' + nWords + ' 個詞。點一下會念出來。';
@@ -1488,6 +1566,40 @@ function renderScrollbook(grid) {
     b.append(glyphs, zy);
     fillGlyphs(glyphs, text, zy);
     b.addEventListener('click', function () { say(text); });
+    grid.append(b);
+  }
+}
+
+// 要複習的字 at the top of 字訣本: when each is due; a tap writes it now
+function renderReviewCards(grid) {
+  const list = Object.keys(purse.review);
+  if (!list.length) return;
+  const today = localDay(new Date());
+  list.sort(function (a, b) { return purse.review[a].due < purse.review[b].due ? -1 : 1; });
+  const head = document.createElement('p');
+  head.className = 'review-head';
+  head.textContent = '要複習的字（' + list.length + '）：點一下馬上寫';
+  grid.append(head);
+  for (const ch of list) {
+    const r = purse.review[ch];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'scroll-card review-card';
+    if (r.due <= today) b.classList.add('due');
+    b.setAttribute('aria-label', '複習 ' + ch);
+    const glyphs = document.createElement('span');
+    glyphs.className = 'glyphs';
+    const when = document.createElement('span');
+    when.className = 'review-when';
+    const days = Math.round((new Date(r.due + 'T12:00:00') - new Date(today + 'T12:00:00')) / 86400000);
+    when.textContent = days <= 0 ? '今天' : days === 1 ? '明天' : days + ' 天後';
+    b.append(glyphs, when);
+    fillGlyphs(glyphs, ch);
+    b.addEventListener('click', function () {
+      closeSheet(document.getElementById('heroSheet'));
+      reviewGap = 0;
+      startReview(ch, true);
+    });
     grid.append(b);
   }
 }
@@ -1714,7 +1826,7 @@ function avatarRender(now) {
 // the pixel hero steps like a sprite, faster during an action
 function avatarTick(now) {
   let wait = avatar.queue.length ? 95 : 170;
-  if (doll.state === 'ready') wait = 80;
+  if (doll.state === 'ready') wait = state.lite ? 160 : 80;
   if (now - avatar.last >= wait) {
     avatar.last = now;
     avatarRender(now);
@@ -2389,6 +2501,7 @@ function finish(mistakes) {
   const prev = state.stars[ch][state.mode] || 0;
   if (grade > prev) state.stars[ch][state.mode] = grade;
   renderModes();
+  if (state.mode === 'write') reviewAfter(ch, mistakes);
 
   const reward = award(grade, mistakes);
   // written alone: the character goes into the 字訣本
@@ -2865,9 +2978,10 @@ function renderVoices() {
   // what this device offers, in small letters: when a voice is missing, this says what the browser gives
   const names = [];
   if ('speechSynthesis' in window) {
-    for (const v of chineseVoices()) names.push(v.name);
+    for (const v of chineseVoices()) names.push(v.name + '［' + (v.voiceURI || '').split('.').slice(-3).join('.') + '］');
   }
-  document.getElementById('voiceList').textContent = '這台裝置的中文語音：' + (names.length ? names.join('、') : '（沒有）');
+  document.getElementById('voiceList').textContent = '這台裝置的中文語音：' + (names.length ? names.join('、') : '（沒有）') +
+    '。選「系統設定」時，用裝置設定（輔助使用 → 朗讀內容 → 聲音 → 中文（台灣））裡選的聲音。';
   const note = document.getElementById('voiceNote');
   const used = speakingVoice();
   if (!used) {
@@ -2875,7 +2989,7 @@ function renderVoices() {
     note.textContent = '這台裝置找不到中文語音。';
     return;
   }
-  if (voiceFor(state.voice)) {
+  if (state.voice === 'system' || voiceFor(state.voice)) {
     note.hidden = true;
     return;
   }
@@ -2901,7 +3015,17 @@ document.getElementById('loopSwitch').addEventListener('click', function () {
   sfxClack();
   say(loopName(state.musicLoop));
 });
+// an iPad with the 9.7-inch screen (5th, 6th generation, Air 2...) is slow for the full effects
+function slowDevice() {
+  const ipad = /iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  return ipad && Math.min(screen.width, screen.height) <= 768;
+}
+function applyLite() {
+  if (state.lite === null || state.lite === undefined) state.lite = slowDevice();
+  document.documentElement.classList.toggle('lite', Boolean(state.lite));
+}
 function renderOptions() {
+  applyLite();
   renderLoopSwitch();
   applyTheme();
   volumeRange.value = Math.round(state.volume * 100);
@@ -2968,7 +3092,7 @@ document.querySelectorAll('.opt-row[data-opt]').forEach(function (row) {
       state.voice = b.dataset.val;
       renderOptions();
       save();
-      say('你好，我是' + VOICE_CHOICES[state.voice].name.replace('（加強）', ''));
+      say(state.voice === 'system' ? '你好，這是裝置設定的聲音' : '你好，我是' + VOICE_CHOICES[state.voice].name.replace('（加強）', ''));
       return;
     }
     state[opt] = b.dataset.val === '1';

@@ -558,6 +558,9 @@ const VOICE_CHOICES = {
   meijia: { name: '美佳', test: function (v) { return MEIJIA.test(v.name) && !isUpgraded(v); } },
   meijiaPlus: { name: '美佳（加強）', test: function (v) { return MEIJIA.test(v.name) && isUpgraded(v); } },
   tingting: { name: '婷婷', test: function (v) { return /Ting-?Ting|婷婷/i.test(v.name); } },
+  // no voice named: the device speaks Taiwan Mandarin in the voice chosen in its own settings. On an iPad
+  // Safari lists only the plain voices, but this way a downloaded Enhanced or Premium voice may still be used
+  system: { name: '系統設定', test: function (v) { return /TW/i.test(v.lang); } },
 };
 function voiceFor(id) {
   const choice = VOICE_CHOICES[id];
@@ -569,6 +572,7 @@ function voiceFor(id) {
 }
 // the chosen voice when this device has it, else the best Chinese one
 function speakingVoice() {
+  if (state.voice === 'system') return null;
   return voiceFor(state.voice) || chineseVoices()[0] || null;
 }
 // when speech last started, so a generic button handler can tell a specific one already spoke
@@ -664,6 +668,7 @@ function setupFx(canvas, size) {
 
 // pts: points in Hanzi Writer's character frame, as {x, y}
 function swordQi(pts, color) {
+  if (state.lite) return;
   if (reducedMotion() || !pts || pts.length < 2) return;
 
   const screen = [];
@@ -877,7 +882,7 @@ function celebrate(nodes, sub) {
   clearTimeout(bannerTimer);
   bannerTimer = setTimeout(function () { bannerEl.hidden = true; }, reducedMotion() ? 3500 : 4800);
   sfxGong();
-  if (reducedMotion()) return;
+  if (reducedMotion() || state.lite) return;
 
   sky.canvas = document.getElementById('sky');
   sky.w = window.innerWidth;

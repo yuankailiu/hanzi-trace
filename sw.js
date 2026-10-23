@@ -3,7 +3,8 @@
 // served from the device first and refreshed from the network in the background, so the app opens and plays
 // without a connection. Progress lives in the device's storage already and goes to the cloud when online.
 // Music is not kept (players read it in ranges) and the cloud (Supabase) is never cached.
-const VERSION = 'v1.0.0';
+// change with every release: the old caches are cleared
+const VERSION = 'v1.0.0-2';
 const SHELL = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 const SHELL_FILES = [
