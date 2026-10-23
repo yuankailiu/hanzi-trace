@@ -2009,3 +2009,9 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
   white-space: nowrap;
   pointer-events: none;
 }
+
+/* 對照字帖: her kept strokes glide onto the model */
+#mine { transform-origin: 0 0; transition: transform 0.6s cubic-bezier(0.3, 1.2, 0.5, 1); }
+
+/* the result row: marks and reward, then the buttons on the next line when they do not all fit */
+.actions.result-row { flex-wrap: wrap; row-gap: 8px; }

@@ -1803,6 +1803,7 @@ async function build() {
   writerEl.classList.remove('ink');
   mineEl.classList.remove('ink');
   mineEl.innerHTML = '';
+  mineEl.style.transform = '';
   if (!ch) return;
   // a character not traced yet is traced first
   if (state.mode === 'write' && !canWrite()) state.mode = 'trace';
@@ -1910,16 +1911,21 @@ function startMode(myToken) {
   else writer.showOutline();
   brush.live = true;
   quizStartedAt = performance.now();
+  fitReset(state.mode === 'write');
 
-  writer.quiz({
+  const quizWriter = writer;
+  const quizStarted = writer.quiz({
     leniency: state.lenient ? 1.5 : 1.0,
     showHintAfterMisses: hintAfter,
     markStrokeCorrectAfterMisses: 4,
     highlightOnComplete: false,
     onCorrectStroke: function (d) {
+      // where she really drew it; a stroke let through after many misses tells nothing about her placement
+      const drawn = fit.drawn || d.drawnPath.points;
+      if (fit.on && d.mistakesOnStroke < 3) fitAdd(drawn, charData.medians[d.strokeNum]);
       if (keepMode()) {
         addMine();
-        swordQi(d.drawnPath.points, qiColor());
+        swordQi(drawn, qiColor());
       } else {
         const median = [];
         for (const p of charData.medians[d.strokeNum]) median.push({ x: p[0], y: p[1] });
@@ -1939,6 +1945,141 @@ function startMode(myToken) {
       finish(d.totalMistakes);
     },
   });
+  // the quiz exists once the character is laid out: the fit goes in when it has begun
+  fitWriter(quizWriter);
+  if (quizStarted && quizStarted.then) quizStarted.then(function () { fitWriter(quizWriter); });
+}
+
+// ---------- 自己寫: judged where the child put her own character ----------
+// Hanzi Writer compares each stroke with the model stroke at the model's place. A child who writes the
+// character a little small, large or off to one side gets later strokes refused although they sit right in her
+// own character (給: the dots of 糸 under her 幺). So in 自己寫, from the strokes accepted so far we estimate how
+// her character sits against the model, user = s * model + t on each axis (least squares over matched points,
+// pulled towards no change while there is little to go on). A stroke is judged as drawn first; only if Hanzi
+// Writer refuses it is it judged again mapped back into the model's frame, so the fit can only help. Shape,
+// direction and order are still checked by Hanzi Writer as before. 對照字帖 uses the same fit to lay her
+// strokes over the model.
+const FIT_POINTS = 12;
+const FIT_PULL = 800;
+const FIT_MIN_SPREAD = 70;
+const FIT_SCALE = [0.65, 1.35];
+const FIT_SHIFT = 256;
+const fit = { on: false, sx: 1, sy: 1, tx: 0, ty: 0, model: [], user: [], drawn: null };
+function fitReset(on) {
+  fit.on = on;
+  fit.sx = 1;
+  fit.sy = 1;
+  fit.tx = 0;
+  fit.ty = 0;
+  fit.model = [];
+  fit.user = [];
+  fit.drawn = null;
+}
+function fitToModel(p) {
+  return { x: (p.x - fit.tx) / fit.sx, y: (p.y - fit.ty) / fit.sy };
+}
+function fitFromModel(p) {
+  return { x: fit.sx * p.x + fit.tx, y: fit.sy * p.y + fit.ty };
+}
+// n points evenly spaced along a polyline of {x, y}
+function resample(points, n) {
+  const lengths = [0];
+  for (let i = 1; i < points.length; i++) {
+    lengths.push(lengths[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
+  }
+  const total = lengths[lengths.length - 1];
+  const out = [];
+  let k = 1;
+  for (let i = 0; i < n; i++) {
+    const at = total * i / (n - 1);
+    while (k < points.length - 1 && lengths[k] < at) k += 1;
+    const span = lengths[k] - lengths[k - 1] || 1;
+    const r = Math.min(1, Math.max(0, (at - lengths[k - 1]) / span));
+    out.push({
+      x: points[k - 1].x + (points[k].x - points[k - 1].x) * r,
+      y: points[k - 1].y + (points[k].y - points[k - 1].y) * r,
+    });
+  }
+  return out;
+}
+// one axis: the scale and shift that best carry the model values onto the user's, pulled towards 1 and 0
+function fitAxis(model, user) {
+  const n = model.length;
+  let mm = 0;
+  let mu = 0;
+  for (let i = 0; i < n; i++) {
+    mm += model[i];
+    mu += user[i];
+  }
+  mm /= n;
+  mu /= n;
+  let varM = 0;
+  let cov = 0;
+  for (let i = 0; i < n; i++) {
+    varM += (model[i] - mm) * (model[i] - mm);
+    cov += (model[i] - mm) * (user[i] - mu);
+  }
+  let scale = 1;
+  // a scale only once the strokes so far reach across this axis
+  if (Math.sqrt(varM / n) >= FIT_MIN_SPREAD) scale = (cov + FIT_PULL * n) / (varM + FIT_PULL * n);
+  scale = Math.min(FIT_SCALE[1], Math.max(FIT_SCALE[0], scale));
+  const shift = Math.min(FIT_SHIFT, Math.max(-FIT_SHIFT, mu - scale * mm));
+  return { scale: scale, shift: shift };
+}
+// an accepted stroke: where she drew it (character coordinates, before mapping) and the model's median
+function fitAdd(drawn, median) {
+  const model = [];
+  for (const p of median) model.push({ x: p[0], y: p[1] });
+  const u = resample(drawn, FIT_POINTS);
+  const m = resample(model, FIT_POINTS);
+  for (let i = 0; i < FIT_POINTS; i++) {
+    fit.user.push(u[i]);
+    fit.model.push(m[i]);
+  }
+  const xs = fitAxis(fit.model.map(function (p) { return p.x; }), fit.user.map(function (p) { return p.x; }));
+  const ys = fitAxis(fit.model.map(function (p) { return p.y; }), fit.user.map(function (p) { return p.y; }));
+  fit.sx = xs.scale;
+  fit.tx = xs.shift;
+  fit.sy = ys.scale;
+  fit.ty = ys.shift;
+}
+// as a stroke ends: judged as drawn, quietly; if refused, judged again (for real) mapped back through the fit
+function fitWriter(w) {
+  const quiz = w._quiz;
+  if (!quiz || quiz.fitted) return;
+  const end = quiz.endUserStroke.bind(quiz);
+  quiz.endUserStroke = function () {
+    const stroke = quiz._userStroke;
+    fit.drawn = stroke && stroke.points.length > 1 ? stroke.points.slice() : null;
+    if (!fit.on || !fit.drawn || !fit.model.length) return end();
+    // the first look: a refusal is not yet a mistake, shows no hint and is not let through
+    const failure = quiz._handleFailure;
+    const opts = quiz._options;
+    const hint = opts.showHintAfterMisses;
+    const force = opts.markStrokeCorrectAfterMisses;
+    let refused = false;
+    quiz._handleFailure = function () { refused = true; };
+    opts.showHintAfterMisses = false;
+    opts.markStrokeCorrectAfterMisses = false;
+    end();
+    quiz._handleFailure = failure;
+    opts.showHintAfterMisses = hint;
+    opts.markStrokeCorrectAfterMisses = force;
+    if (!refused) return;
+    stroke.points = fit.drawn.map(fitToModel);
+    quiz._userStroke = stroke;
+    return end();
+  };
+  quiz.fitted = true;
+}
+// 對照字帖: her kept strokes (screen pixels of the box) moved and scaled onto the model, by the fit
+function fitScreenMatrix() {
+  const pad = boxPadding(builtSize);
+  const k = (builtSize - 2 * pad) / 1024;
+  const c0 = builtSize - pad - 124 * k;
+  const ex = pad * (1 - 1 / fit.sx) - k * fit.tx / fit.sx;
+  const ey = c0 * (1 - 1 / fit.sy) + k * fit.ty / fit.sy;
+  return 'matrix(' + (1 / fit.sx) + ', 0, 0, ' + (1 / fit.sy) + ', ' + ex + ', ' + ey + ')';
 }
 
 // a ripple at the starting point (起筆) of a stroke
@@ -2401,6 +2542,8 @@ compareBtn.addEventListener('click', function () {
   const color = on ? COMPARE_RED : TRANSPARENT;
   writer.updateColor('strokeColor', color, { duration: 300 });
   writer.updateColor('radicalColor', color, { duration: 300 });
+  // her strokes glide onto the model by the fit of this character (none in 描一描: they are drawn on it)
+  mineEl.style.transform = on && fit.model.length ? fitScreenMatrix() : '';
 });
 document.getElementById('nextBtn').addEventListener('click', function (e) {
   const action = e.currentTarget.dataset.action;
