@@ -2018,3 +2018,5 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 
 /* the version, last in 設定 */
 .app-version { margin: 0; text-align: center; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--muted); opacity: 0.7; }
+
+#settingsSheet .opt-group > .voice-list { font-size: 0.72rem; opacity: 0.75; }

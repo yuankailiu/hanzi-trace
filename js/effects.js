@@ -521,13 +521,24 @@ document.addEventListener('visibilitychange', function () {
 // Apple's novelty voices (Eloquence) read Chinese oddly; they are never used
 const NOVELTY_VOICES = /Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox/i;
 
-// rank: Taiwan Mandarin first, 美佳 (Meijia) and its Enhanced/Premium versions above the rest
+// 美佳 under any of her names: Meijia, Mei-Jia (older iOS), 美佳
+const MEIJIA = /Mei-?Jia|美佳/i;
+// a better download of a voice, by its name in any language or by its id (com.apple.voice.premium.zh-TW.Meijia):
+// Premium (iOS 16+, the most natural) or Enhanced
+function isUpgraded(v) {
+  return /Premium|Enhanced|高品質|增強|增强|加強|優化|進階|高級/i.test(v.name) || /premium|enhanced/i.test(v.voiceURI || '');
+}
+function isPremium(v) {
+  return /Premium|高品質|進階/i.test(v.name) || /premium/i.test(v.voiceURI || '');
+}
+// rank: Taiwan Mandarin first, 美佳 and her Premium, then Enhanced, versions above the rest
 function voiceScore(v) {
   let score = 0;
   if (/TW/i.test(v.lang)) score += 100;
   else if (/CN|cmn/i.test(v.lang)) score += 50;
-  if (/Meijia|美佳/i.test(v.name)) score += 40;
-  if (/Premium|Enhanced|高品質|優化|加強/i.test(v.name)) score += 30;
+  if (MEIJIA.test(v.name)) score += 40;
+  if (isUpgraded(v)) score += 30;
+  if (isPremium(v)) score += 5;
   if (v.localService) score += 5;
   return score;
 }
@@ -544,8 +555,8 @@ function chineseVoices() {
 }
 // the voices one can choose in 設定: 美佳 (Taiwan), her enhanced download, 婷婷 (mainland)
 const VOICE_CHOICES = {
-  meijia: { name: '美佳', test: function (v) { return /Meijia|美佳/i.test(v.name) && !/Premium|Enhanced|高品質|優化|加強/i.test(v.name); } },
-  meijiaPlus: { name: '美佳（加強）', test: function (v) { return /Meijia|美佳/i.test(v.name) && /Premium|Enhanced|高品質|優化|加強/i.test(v.name); } },
+  meijia: { name: '美佳', test: function (v) { return MEIJIA.test(v.name) && !isUpgraded(v); } },
+  meijiaPlus: { name: '美佳（加強）', test: function (v) { return MEIJIA.test(v.name) && isUpgraded(v); } },
   tingting: { name: '婷婷', test: function (v) { return /Ting-?Ting|婷婷/i.test(v.name); } },
 };
 function voiceFor(id) {

@@ -2813,6 +2813,12 @@ function renderVoices() {
   document.querySelectorAll('.opt-row[data-opt="voice"] button').forEach(function (b) {
     b.disabled = !voiceFor(b.dataset.val);
   });
+  // what this device offers, in small letters: when a voice is missing, this says what the browser gives
+  const names = [];
+  if ('speechSynthesis' in window) {
+    for (const v of chineseVoices()) names.push(v.name);
+  }
+  document.getElementById('voiceList').textContent = '這台裝置的中文語音：' + (names.length ? names.join('、') : '（沒有）');
   const note = document.getElementById('voiceNote');
   const used = speakingVoice();
   if (!used) {
