@@ -911,6 +911,8 @@ const SENTENCE_PAD = 10;
 let picking = false;
 let pickDraft = [];
 const SENTENCE_GAP = 30;
+// below the characters: the small source note
+const SOURCE_ROOM = 16;
 let justInked = -1;
 function isLandscape() {
   return window.matchMedia('(min-aspect-ratio: 1001/1000)').matches;
@@ -924,9 +926,26 @@ function renderSentence() {
   sentenceEl.classList.toggle('vertical', vertical);
   const chars = Array.from(sent.s);
   const now = sent.k[state.idx];
-  const g = vertical
-    ? Math.max(26, Math.min(40, stage.clientHeight / 17))
-    : Math.max(22, Math.min(34, stage.clientWidth / 13));
+  // The panel keeps one size for every sentence, so the writing box does not move: two columns of the full
+  // character size (portrait: two rows) along the whole stage. A longer sentence gets smaller characters to fit
+  // in those two; the speaker and the 挑字 pencil take a cell each, the source note sits below.
+  const pad = 2 * SENTENCE_PAD;
+  const half = Math.ceil((chars.length + 2) / 2);
+  const along = (vertical ? stage.clientHeight : stage.clientWidth) - 2 * ARENA_PAD;
+  const room = along - pad - SOURCE_ROOM;
+  let full;
+  let g;
+  if (vertical) {
+    full = Math.max(26, Math.min(40, stage.clientHeight / 17));
+    g = Math.max(12, Math.min(full, room / (1.34 * half)));
+    sentenceEl.style.width = Math.round(2 * 2 * full + pad) + 'px';
+    sentenceEl.style.height = Math.round(along) + 'px';
+  } else {
+    full = Math.max(22, Math.min(34, stage.clientWidth / 13));
+    g = Math.max(12, Math.min(full, room / (2 * half)));
+    sentenceEl.style.width = Math.round(along) + 'px';
+    sentenceEl.style.height = Math.round(2 * 1.34 * full + pad + SOURCE_ROOM) + 'px';
+  }
   sentenceEl.style.setProperty('--g', g + 'px');
   sentenceEl.innerHTML = '';
   const whole = document.createElement('button');
@@ -944,6 +963,19 @@ function renderSentence() {
   pick.innerHTML = '<svg aria-hidden="true"><use href="#i-pencil"></use></svg>';
   sentenceEl.append(whole, pick);
   sentenceEl.classList.toggle('picking', picking);
+  // where the sentence comes from, in small letters at the corner
+  const source = document.createElement('span');
+  source.className = 'sentence-src';
+  if (sent.src === 'c') {
+    source.textContent = '簡編本「' + sent.r + '」';
+    source.title = '教育部《國語辭典簡編本》「' + sent.r + '」條';
+  } else if (sent.src === 'm') {
+    source.textContent = '小字典「' + sent.r + '」';
+    source.title = '教育部《國語小字典》「' + sent.r + '」條';
+  } else if (sent.src === 'b') {
+    source.textContent = '自編';
+  }
+  if (source.textContent) sentenceEl.append(source);
   chars.forEach(function (ch, i) {
     const cell = document.createElement('span');
     cell.className = 'cell';
@@ -971,20 +1003,6 @@ function renderSentence() {
     sentenceEl.append(cell);
   });
   justInked = -1;
-  // as many cells per column (or row) as the stage has room for; the speaker takes one cell
-  const cellW = g * 2;
-  const cellH = g * 1.34;
-  const n = chars.length + 2;
-  const pad = 2 * SENTENCE_PAD;
-  if (vertical) {
-    const perCol = Math.max(4, Math.floor((stage.clientHeight - 2 * ARENA_PAD - pad) / cellH));
-    sentenceEl.style.width = Math.ceil(n / perCol) * cellW + pad + 'px';
-    sentenceEl.style.height = Math.min(n, perCol) * cellH + pad + 'px';
-  } else {
-    const perRow = Math.max(4, Math.floor((stage.clientWidth - 2 * ARENA_PAD - pad) / cellW));
-    sentenceEl.style.width = Math.min(n, perRow) * cellW + pad + 'px';
-    sentenceEl.style.height = Math.ceil(n / perRow) * cellH + pad + 'px';
-  }
   if (!sent.z) {
     sentenceVoice(sent).then(function (r) {
       sent.z = r.z;

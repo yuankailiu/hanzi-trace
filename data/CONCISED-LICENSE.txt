@@ -1,0 +1,8 @@
+data/sentences.json 中標示 src "c" 的例句，取自教育部《國語辭典簡編本》釋義中的［例］，內容未經改動；r 為所屬詞條。
+資料版本：dict_concised_2014_20260929（教育部國語辭典公眾授權網下載，https://language.moe.gov.tw/001/Upload/Files/site_content/M0001/respub/dict_concised_download.html）。
+例句中詞條的注音依該詞條；其餘字的注音由本程式依《重編國語辭典修訂本》詞語讀音標注，讀音無法確定的例句未收錄。
+
+姓名標示：
+中華民國教育部（Ministry of Education, R.O.C.）。《國語辭典簡編本》（版本編號：2014_20260929）網址： https://dict.concised.moe.edu.tw/
+
+授權：創用 CC－姓名標示－禁止改作 3.0 臺灣（https://creativecommons.org/licenses/by-nd/3.0/tw/legalcode），並依教育部公眾授權使用說明使用（見上方下載頁）。

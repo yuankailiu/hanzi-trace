@@ -1993,3 +1993,19 @@ button.danger { background: #7a2a26; color: #ffe9e2; border-color: #4a1612; box-
 .bank-coins .sycee { position: absolute; width: 18px; height: 13px; }
 .bank-coins .silver { left: 0; top: 0; }
 .bank-coins .gold { left: 8px; top: 5px; filter: drop-shadow(-1px 0 0 var(--btn)); }
+
+/* where the sentence comes from: small and faint, in the corner, outside the flow of characters */
+.sentence { position: relative; }
+.sentence-src {
+  position: absolute;
+  right: 8px;
+  bottom: 3px;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  letter-spacing: 0;
+  color: var(--muted);
+  opacity: 0.6;
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
+  pointer-events: none;
+}
