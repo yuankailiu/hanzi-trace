@@ -245,11 +245,35 @@ function glyphSvg(data) {
 
 // ---------- stroke data (bundled in 128 chunk files) ----------
 const chunkCache = new Map();
+// the chunks kept on this device by the offline cache (sw.js): without a connection, only words whose
+// stroke data is here are picked
+const keptChunks = new Set();
+if ('caches' in window) {
+  caches.keys().then(async function (names) {
+    for (const name of names) {
+      const cache = await caches.open(name);
+      for (const r of await cache.keys()) {
+        const m = /\/data\/c(\d{3})\.json$/.exec(r.url);
+        if (m) keptChunks.add(Number(m[1]));
+      }
+    }
+  }).catch(function () {});
+}
+function offline() {
+  return navigator.onLine === false;
+}
+function playableHere(text) {
+  for (const ch of Array.from(text)) {
+    if (/\p{Script=Han}/u.test(ch) && !keptChunks.has(ch.codePointAt(0) % N_CHUNKS)) return false;
+  }
+  return true;
+}
 function loadChunk(i) {
   if (!chunkCache.has(i)) {
     const url = 'data/c' + String(i).padStart(3, '0') + '.json';
     const p = fetch(url).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
+      keptChunks.add(i);
       return r.json();
     });
     p.catch(function () { chunkCache.delete(i); });
@@ -523,6 +547,11 @@ document.addEventListener('visibilitychange', function () {
     checkInbox();
   });
 });
+window.addEventListener('online', function () {
+  if (!account.alias) return;
+  cloudSave();
+  checkInbox();
+});
 // waits for the cloud at most a few seconds, so a slow network never blocks practice
 function cloudRefreshWithin(ms) {
   return Promise.race([
@@ -752,6 +781,7 @@ function pickWord() {
     if (w.t > tier) continue;
     if ((w.w.length === 1) !== single) continue;
     if (seen.indexOf(w.w) >= 0 || state.recent.indexOf(w.w) >= 0) continue;
+    if (offline() && !playableHere(w.w)) continue;
     let weight = 1;
     if (w.t === tier) weight = 4;
     else if (w.t === tier - 1) weight = 2;
@@ -843,6 +873,7 @@ function pickSentence() {
   let total = 0;
   for (const s of sentences) {
     if (s.t > tier || seen.indexOf(s.s) >= 0) continue;
+    if (offline() && !playableHere(s.k.map(function (k) { return Array.from(s.s)[k]; }).join(''))) continue;
     let weight = 1;
     if (s.t === tier) weight = 4;
     else if (s.t === tier - 1) weight = 2;
@@ -4015,4 +4046,9 @@ async function removeHero() {
   }
   toast('包打聽已把消息傳遍江湖：「' + h.alias + '」被逐出江湖了');
   renderNews();
+}
+
+// ---------- offline: sw.js keeps the app on the device (GitHub Pages and local testing; not inside the artifact) ----------
+if ('serviceWorker' in navigator && /github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)) {
+  navigator.serviceWorker.register('sw.js').catch(function () {});
 }

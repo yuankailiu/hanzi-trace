@@ -28,6 +28,7 @@
 - `data/cNNN.json`：筆順、部首、注音；`data/words.json`：詞語題庫；`data/sentences.json`：句子題庫。
 - `sprites/`：美術素材包裡遊戲用得到的部分（圖層、寵物、寶物、背景、商店圖示），由 `tools/sync_sprites.py` 複製，不要手改。
 - `manifest.webmanifest`、`icons/`：加入主畫面用的 App 設定與圖示。
+- `sw.js`：離線快取。遊戲檔案存在裝置上，沒有網路也能玩；改版時更新其中的 VERSION。
 
 ## 重新產生資料
 
