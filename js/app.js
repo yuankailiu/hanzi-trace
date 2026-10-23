@@ -183,7 +183,7 @@ function boxSize() {
   let h = stage.clientHeight - 2 * ARENA_PAD - plaqueH;
   const sent = document.getElementById('sentence');
   if (!sent.hidden) {
-    if (isLandscape()) w -= sent.offsetWidth + SENTENCE_GAP;
+    if (sent.classList.contains('vertical')) w -= sent.offsetWidth + SENTENCE_GAP;
     else h -= sent.offsetHeight + SENTENCE_GAP;
   }
   return Math.floor(Math.max(200, Math.min(w, h, 760)));
@@ -910,20 +910,39 @@ const SENTENCE_PAD = 10;
 // in any order; turning it off writes the draft, which must keep at least one character
 let picking = false;
 let pickDraft = [];
-const SENTENCE_GAP = 30;
+const SENTENCE_GAP = 16;
+// a sentence cell, in units of --g: CELL_W wide, 1.34 high; the character with its 注音 beside it
+const CELL_W = 1.7;
 // below the characters: the small source note
 const SOURCE_ROOM = 16;
 let justInked = -1;
 function isLandscape() {
   return window.matchMedia('(min-aspect-ratio: 1001/1000)').matches;
 }
+// the sentence beside the box (a column) or under it (a strip): whichever leaves the bigger writing box
+function sentenceFull(vertical) {
+  return vertical
+    ? Math.max(22, Math.min(34, stage.clientHeight / 20))
+    : Math.max(20, Math.min(32, stage.clientWidth / 14));
+}
+function sentenceVertical() {
+  const plaqueH = parseFloat(getComputedStyle(arena).getPropertyValue('--plaque-h')) || 0;
+  const pad = 2 * SENTENCE_PAD;
+  const w = stage.clientWidth - 2 * ARENA_PAD;
+  const h = stage.clientHeight - 2 * ARENA_PAD - plaqueH;
+  const column = 2 * CELL_W * sentenceFull(true) + pad + SENTENCE_GAP;
+  const strip = 2 * 1.34 * sentenceFull(false) + pad + SOURCE_ROOM + SENTENCE_GAP;
+  return Math.min(w - column, h) >= Math.min(w, h - strip);
+}
 function renderSentence() {
   const sent = state.sentence;
   stage.classList.toggle('with-sentence', Boolean(sent));
   sentenceEl.hidden = !sent;
   if (!sent) return;
-  const vertical = isLandscape();
+  const vertical = sentenceVertical();
   sentenceEl.classList.toggle('vertical', vertical);
+  stage.classList.toggle('sentence-below', !vertical);
+  sentenceEl.dataset.stage = stage.clientWidth + 'x' + stage.clientHeight;
   const chars = Array.from(sent.s);
   const now = sent.k[state.idx];
   // The panel keeps one size for every sentence, so the writing box does not move: two columns of the full
@@ -933,17 +952,16 @@ function renderSentence() {
   const half = Math.ceil((chars.length + 2) / 2);
   const along = (vertical ? stage.clientHeight : stage.clientWidth) - 2 * ARENA_PAD;
   const room = along - pad - SOURCE_ROOM;
-  let full;
+  // the length along the stage follows the stage itself (a rotation can come before the layout settles)
+  const full = sentenceFull(vertical);
   let g;
   if (vertical) {
-    full = Math.max(26, Math.min(40, stage.clientHeight / 17));
     g = Math.max(12, Math.min(full, room / (1.34 * half)));
-    sentenceEl.style.width = Math.round(2 * 2 * full + pad) + 'px';
-    sentenceEl.style.height = Math.round(along) + 'px';
+    sentenceEl.style.width = Math.round(2 * CELL_W * full + pad) + 'px';
+    sentenceEl.style.height = 'calc(100% - ' + 2 * ARENA_PAD + 'px)';
   } else {
-    full = Math.max(22, Math.min(34, stage.clientWidth / 13));
-    g = Math.max(12, Math.min(full, room / (2 * half)));
-    sentenceEl.style.width = Math.round(along) + 'px';
+    g = Math.max(12, Math.min(full, room / (CELL_W * half)));
+    sentenceEl.style.width = 'calc(100% - ' + 2 * ARENA_PAD + 'px)';
     sentenceEl.style.height = Math.round(2 * 1.34 * full + pad + SOURCE_ROOM) + 'px';
   }
   sentenceEl.style.setProperty('--g', g + 'px');
@@ -2943,6 +2961,7 @@ function renderAll() {
 
 // rebuild only when the box would change size noticeably (rotation, window resize)
 new ResizeObserver(function () {
+  if (state.sentence && sentenceEl.dataset.stage !== stage.clientWidth + 'x' + stage.clientHeight) renderSentence();
   if (!state.chars.length) return;
   if (Math.abs(boxSize() - builtSize) > 16) build();
 }).observe(stage);
